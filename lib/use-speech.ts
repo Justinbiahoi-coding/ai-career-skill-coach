@@ -2,6 +2,38 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// Câu "khóa" để người dùng báo hiệu rõ ràng đã trả lời xong, thay vì để AI
+// đoán qua khoảng lặng (dễ nhầm lúc họ chỉ tạm ngừng để suy nghĩ). Giống
+// "over" trong bộ đàm — nói ra là biết chắc chắn, không cần chờ/đoán.
+const DONE_KEYWORD_REGEX = /\bi\s*'?\s*m\s+done\b|\bi\s+am\s+done\b/i;
+
+export const VOICE_DONE_KEYWORD = "I'm done";
+
+export const VOICE_INTRO_HINT =
+  'Quick tip: say "I\'m done" out loud when you finish each answer, so I know right away instead of waiting.';
+
+// Nếu mic nghe im lặng liên tục quá lâu (không có chunk nhận diện mới nào),
+// AI chủ động nhắc thay vì cứ chờ mãi trong im lặng — người dùng có thể chỉ
+// đang suy nghĩ, không phải đã xong.
+export const SILENCE_NUDGE_MS = 8000;
+
+export function buildSilenceNudgeText(): string {
+  return `Take your time — just say "${VOICE_DONE_KEYWORD}" when you're ready, or tap the mic to stop.`;
+}
+
+// Cắt cụm từ khóa ra khỏi text (không đưa vào nội dung câu trả lời thật),
+// đồng thời báo có phát hiện từ khóa hay không.
+export function stripDoneKeyword(text: string): { cleaned: string; isDone: boolean } {
+  const match = text.match(DONE_KEYWORD_REGEX);
+  if (!match || match.index === undefined) return { cleaned: text.trim(), isDone: false };
+  const cleaned = text
+    .slice(0, match.index)
+    .trim()
+    .replace(/[.,!?;:]+$/, "")
+    .trim();
+  return { cleaned, isDone: true };
+}
+
 // Web Speech API chưa có trong lib.dom mặc định của TypeScript nên phải tự
 // khai báo phần tối thiểu mình dùng. Chỉ Chrome/Edge hỗ trợ tốt phần nhận
 // diện giọng nói (webkit-prefixed); Safari/Firefox có thể không có.
@@ -92,7 +124,10 @@ export function useSpeech(onTranscript: (text: string) => void): UseSpeechResult
 
     const recognition = new Ctor();
     recognition.lang = "en-US";
-    recognition.continuous = false;
+    // continuous=true: một khoảng lặng ngắn (ngừng để nghỉ/suy nghĩ) không
+    // bị coi là "đã nói xong" và tự dừng — chỉ dừng khi người dùng bấm dừng
+    // hoặc trình duyệt tự timeout sau im lặng khá dài.
+    recognition.continuous = true;
     recognition.interimResults = false;
 
     recognition.onresult = (event) => {

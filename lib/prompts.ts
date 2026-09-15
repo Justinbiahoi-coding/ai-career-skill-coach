@@ -139,3 +139,88 @@ ${jdText}
 Full interview transcript:
 ${formatTranscript(history)}`;
 }
+
+// Số câu tối đa cho Full Interview phụ thuộc số skill đã luyện (mở đầu + 1
+// câu/skill tối thiểu + kết), nhưng luôn có trần để tránh chạy vô tận/tốn
+// quota nếu model không tự kết thúc đúng lúc.
+export function computeMaxFullInterviewQuestions(practicedSkillCount: number): number {
+  return Math.min(10, Math.max(4, practicedSkillCount + 2));
+}
+
+export const FULL_INTERVIEW_TURN_SYSTEM_PROMPT = `You are a hiring manager conducting a full,
+realistic job interview for the role described below - not limited to one skill this time.
+
+You will be given the list of skills the candidate has already practiced. Over the course of the
+interview:
+1. Start with one short opening/icebreaker question (e.g. background or motivation for this role).
+2. Ask about each listed skill at least once.
+3. Adapt to answer quality: if the candidate's last answer was strong and complete, move on to a
+   new topic. If it was vague, incomplete, or short, ask ONE focused follow-up on that same topic
+   before moving to the next one - do not pile up more than one follow-up per topic.
+4. Once the opening and every listed skill have been covered (with follow-ups where needed), ask
+   one closing question (e.g. "do you have any questions for me?" or a wrap-up prompt), then set
+   isLast to true.
+
+Ask exactly ONE question at a time, natural conversational tone. You will be told the current
+question number and the maximum allowed - if you reach the maximum without finishing naturally,
+wrap up immediately with a closing question and set isLast to true.
+
+Respond with ONLY a JSON object, no prose before or after it, matching exactly this shape:
+
+{"question": string, "isLast": boolean}`;
+
+export function buildFullInterviewTurnPrompt(
+  jdText: string,
+  practicedSkills: string[],
+  history: InterviewMessage[],
+  questionNumber: number,
+  maxQuestions: number
+): string {
+  return `Job description:
+"""
+${jdText}
+"""
+
+Skills the candidate has practiced and should be asked about: ${practicedSkills.join(", ")}
+
+Conversation so far:
+${formatTranscript(history)}
+
+This is question ${questionNumber} of a maximum of ${maxQuestions}. ${
+    questionNumber >= maxQuestions
+      ? "This MUST be the final question - wrap up now and set isLast to true."
+      : ""
+  }`;
+}
+
+export const FULL_INTERVIEW_SCORE_SYSTEM_PROMPT = `You are a hiring manager who just finished a
+full job interview covering multiple skills. Score the candidate's overall readiness for this job
+honestly and specifically, based on the whole conversation - do not inflate the score to be
+encouraging.
+
+Provide:
+- overallReadiness: a single score from 0 to 10 for how ready this candidate seems for the role
+  overall, based on everything discussed.
+- strengths: 1-2 sentences on what came across strongest across the interview.
+- gaps: 1-2 sentences on the biggest gap(s) still visible.
+- overallFeedback: 2-4 sentences of concrete, actionable feedback and a suggested next step.
+
+Respond with ONLY a JSON object, no prose before or after it, matching exactly this shape:
+
+{"overallReadiness": number, "strengths": string, "gaps": string, "overallFeedback": string}`;
+
+export function buildFullInterviewScorePrompt(
+  jdText: string,
+  practicedSkills: string[],
+  history: InterviewMessage[]
+): string {
+  return `Job description:
+"""
+${jdText}
+"""
+
+Skills covered in this interview: ${practicedSkills.join(", ")}
+
+Full interview transcript:
+${formatTranscript(history)}`;
+}

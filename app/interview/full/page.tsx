@@ -7,12 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "cn";
-import { MAX_INTERVIEW_QUESTIONS } from "@/lib/prompts";
+import { computeMaxFullInterviewQuestions } from "@/lib/prompts";
 import {
   loadExtractedSkills,
-  loadSelectedGap,
-  markSkillPracticed,
-  saveInterviewScore,
+  loadPracticedSkills,
+  saveFullInterviewScore,
 } from "@/lib/session-store";
 import {
   useSpeech,
@@ -22,18 +21,18 @@ import {
   VOICE_DONE_KEYWORD,
   VOICE_INTRO_HINT,
 } from "@/lib/use-speech";
-import type { InterviewMessage, InterviewTurnResult, Skill } from "@/lib/types";
+import type { FullInterviewTurnResult, InterviewMessage } from "@/lib/types";
 
 const MAX_ANSWER_LENGTH = 2000;
 
-interface InterviewContext {
-  skill: Skill;
+interface FullInterviewContext {
   jdText: string;
+  practicedSkills: string[];
 }
 
-export default function InterviewPage() {
+export default function FullInterviewPage() {
   const router = useRouter();
-  const [context, setContext] = useState<InterviewContext | null>(null);
+  const [context, setContext] = useState<FullInterviewContext | null>(null);
   const [checkedStorage, setCheckedStorage] = useState(false);
 
   const [transcript, setTranscript] = useState<InterviewMessage[]>([]);
@@ -45,24 +44,12 @@ export default function InterviewPage() {
   const [answer, setAnswer] = useState("");
   const [finishing, setFinishing] = useState(false);
   const [voiceMode, setVoiceMode] = useState(true);
-  // Chế độ hội thoại: AI đọc xong -> tự bật mic -> nói xong tự gửi. Tắt được
-  // để quay về thao tác tay khi phòng ồn hoặc nhận diện sai nhiều.
   const [autoConverse, setAutoConverse] = useState(true);
 
-  // true nếu lượt nói vừa rồi kết thúc bằng từ khóa "I'm done" (tín hiệu rõ
-  // ràng) thay vì chỉ im lặng (tín hiệu mơ hồ) — quyết định thời gian chờ
-  // trước khi tự gửi ở effect bên dưới.
   const explicitDoneRef = useRef(false);
-  // Refs cho các hàm từ useSpeech: cần gọi được từ trong handleTranscript
-  // (định nghĩa trước khi useSpeech trả về chúng) và từ trong callback
-  // setTimeout (tránh dùng closure cũ nếu identity của hàm đổi giữa chừng).
   const stopListeningRef = useRef<() => void>(() => {});
   const startListeningRef = useRef<() => void>(() => {});
   const speakRef = useRef<(text: string, onEnd?: () => void) => void>(() => {});
-
-  // Đánh dấu lượt dừng mic hiện tại là do chính app chủ động dừng để nhắc im
-  // lặng (không phải người dùng thật sự dừng) — effect tự gửi bên dưới cần
-  // biết để KHÔNG coi đây là đã trả lời xong.
   const nudgeInProgressRef = useRef(false);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,9 +58,6 @@ export default function InterviewPage() {
     silenceTimerRef.current = null;
   }, []);
 
-  // Đặt lại "đồng hồ im lặng": nếu không có hoạt động gì mới trong
-  // SILENCE_NUDGE_MS, AI chủ động dừng mic, nhắc nhẹ bằng giọng nói, rồi mở
-  // mic nghe tiếp — không tự gửi câu trả lời dở dang.
   const scheduleSilenceNudge = useCallback(() => {
     clearSilenceTimer();
     silenceTimerRef.current = setTimeout(() => {
@@ -83,11 +67,6 @@ export default function InterviewPage() {
     }, SILENCE_NUDGE_MS);
   }, [clearSilenceTimer]);
 
-  // Text nhận diện được đổ thẳng vào ô trả lời để người dùng đọc lại/sửa
-  // trước khi gửi — quan trọng vì phòng thi ồn và giọng Việt nói tiếng Anh
-  // dễ bị nhận sai. Nếu chứa từ khóa "I'm done", cắt bỏ từ khóa và đánh dấu
-  // đã kết thúc rõ ràng, tự dừng mic ngay. Có hoạt động thật (nói được gì
-  // đó) thì đặt lại đồng hồ im lặng.
   const handleTranscript = useCallback(
     (text: string) => {
       const { cleaned, isDone } = stripDoneKeyword(text);
@@ -122,8 +101,6 @@ export default function InterviewPage() {
     speakRef.current = speak;
   }, [stopListening, startListening, speak]);
 
-  // Mic bắt đầu nghe -> khởi động đồng hồ im lặng; mic dừng (vì bất kỳ lý do
-  // gì) -> huỷ đồng hồ, không nhắc nhở khi không còn đang nghe.
   useEffect(() => {
     if (listening) {
       scheduleSilenceNudge();
@@ -134,12 +111,13 @@ export default function InterviewPage() {
   }, [listening, scheduleSilenceNudge, clearSilenceTimer]);
 
   useEffect(() => {
-    const selectedGap = loadSelectedGap();
     const extracted = loadExtractedSkills();
+    const practicedSkills = loadPracticedSkills();
+    const allDone =
+      extracted && practicedSkills.length > 0 &&
+      extracted.skills.every((s) => practicedSkills.includes(s.name));
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setContext(
-      selectedGap && extracted ? { skill: selectedGap.skill, jdText: extracted.jdText } : null
-    );
+    setContext(allDone ? { jdText: extracted.jdText, practicedSkills } : null);
     setCheckedStorage(true);
   }, []);
 
@@ -149,13 +127,8 @@ export default function InterviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context]);
 
-  // Giữ bản mới nhất của hàm gửi để các effect bên dưới gọi được mà không
-  // phải đưa nó vào dependency (tránh effect chạy lại mỗi lần render).
   const submitRef = useRef<() => void>(() => {});
 
-  // Đọc to câu hỏi mới. Ở chế độ hội thoại, đọc xong thì tự bật mic luôn —
-  // mic chỉ bật khi AI đã nói xong nên không thu lại chính giọng AI. Câu hỏi
-  // đầu tiên được ghép thêm hướng dẫn về từ khóa "I'm done" (chỉ nói 1 lần).
   useEffect(() => {
     if (!voiceMode || !pendingQuestion) return;
     const isFirstTurn = transcript.length === 0;
@@ -166,9 +139,6 @@ export default function InterviewPage() {
         startListening();
       }
     });
-    // autoConverse/recognitionSupported/transcript cố ý không nằm trong
-    // deps: chỉ cần giá trị tại thời điểm câu hỏi mới xuất hiện, không cần
-    // đọc lại câu hỏi khi người dùng bật/tắt chế độ giữa chừng.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuestion, voiceMode, speak]);
 
@@ -189,8 +159,6 @@ export default function InterviewPage() {
     const stoppedListening = wasListeningRef.current && !listening;
     wasListeningRef.current = listening;
 
-    // Lần dừng này là do app tự dừng để nhắc im lặng, không phải người dùng
-    // thật sự ngừng trả lời — bỏ qua, đừng tự gửi câu trả lời dở dang.
     if (stoppedListening && nudgeInProgressRef.current) {
       nudgeInProgressRef.current = false;
       return;
@@ -199,9 +167,6 @@ export default function InterviewPage() {
     if (!stoppedListening || !autoConverse || !voiceMode) return;
     if (!pendingQuestion || loading || finishing || !answer.trim()) return;
 
-    // Nói "I'm done" (tín hiệu rõ ràng) -> gần như gửi ngay. Chỉ dừng vì im
-    // lặng (tín hiệu mơ hồ, có thể do tiếng ồn) -> chờ lâu hơn, cho cơ hội
-    // Cancel.
     const wasExplicit = explicitDoneRef.current;
     explicitDoneRef.current = false;
     const delay = wasExplicit ? 400 : 1500;
@@ -218,21 +183,20 @@ export default function InterviewPage() {
     };
   }, [listening, autoConverse, voiceMode, pendingQuestion, loading, finishing, answer]);
 
-  // Đồng bộ hàm gửi vào ref sau mỗi lần render (không đụng ref lúc render).
-  useEffect(() => {
-    submitRef.current = handleSubmitAnswer;
-  });
-
   async function fetchNextQuestion(history: InterviewMessage[]) {
     if (!context) return;
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/interview-turn", {
+      const res = await fetch("/api/full-interview-turn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skillName: context.skill.name, jdText: context.jdText, history }),
+        body: JSON.stringify({
+          jdText: context.jdText,
+          practicedSkills: context.practicedSkills,
+          history,
+        }),
       });
 
       if (!res.ok) {
@@ -240,7 +204,7 @@ export default function InterviewPage() {
         throw new Error(body.error ?? "Request failed");
       }
 
-      const data: InterviewTurnResult = await res.json();
+      const data: FullInterviewTurnResult = await res.json();
       setPendingQuestion(data.question);
       setIsLastQuestion(data.isLast);
       setUsedFallback(data.usedFallback);
@@ -257,12 +221,12 @@ export default function InterviewPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/interview-score", {
+      const res = await fetch("/api/full-interview-score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          skillName: context.skill.name,
           jdText: context.jdText,
+          practicedSkills: context.practicedSkills,
           history: fullHistory,
         }),
       });
@@ -273,9 +237,8 @@ export default function InterviewPage() {
       }
 
       const score = await res.json();
-      saveInterviewScore(score);
-      markSkillPracticed(context.skill.name);
-      router.push("/result");
+      saveFullInterviewScore(score);
+      router.push("/result/full");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setFinishing(false);
@@ -285,8 +248,6 @@ export default function InterviewPage() {
   async function handleSubmitAnswer() {
     if (!pendingQuestion || !answer.trim()) return;
 
-    // Dừng mic và giọng đọc trước khi chuyển lượt, tránh thu nhầm câu hỏi
-    // tiếp theo đang được đọc to vào phần trả lời.
     stopListening();
     stopSpeaking();
 
@@ -307,13 +268,17 @@ export default function InterviewPage() {
     }
   }
 
+  useEffect(() => {
+    submitRef.current = handleSubmitAnswer;
+  });
+
   if (checkedStorage && !context) {
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-4 px-4 py-16 text-center">
         <p className="text-muted-foreground text-sm">
-          No skill selected for this session. Start from the beginning.
+          You haven&apos;t practiced every skill yet — the full interview unlocks once you have.
         </p>
-        <Button onClick={() => router.push("/")}>Back to start</Button>
+        <Button onClick={() => router.push("/gap")}>Back to skills</Button>
       </div>
     );
   }
@@ -327,17 +292,24 @@ export default function InterviewPage() {
   }
 
   const questionNumber = Math.floor(transcript.length / 2) + 1;
+  const maxQuestions = computeMaxFullInterviewQuestions(context.practicedSkills.length);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
       <div className="flex flex-col gap-2 text-center sm:text-left">
         <div className="flex items-center justify-center gap-2 sm:justify-start">
-          <h1 className="text-2xl font-semibold tracking-tight">4. Mock interview</h1>
-          <Badge>{context.skill.name}</Badge>
+          <h1 className="text-2xl font-semibold tracking-tight">🎯 Full Interview</h1>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+          {context.practicedSkills.map((name) => (
+            <Badge key={name} variant="secondary">
+              {name}
+            </Badge>
+          ))}
         </div>
         <div className="flex items-center justify-center gap-3 sm:justify-start">
           <p className="text-muted-foreground text-sm">
-            Question {Math.min(questionNumber, MAX_INTERVIEW_QUESTIONS)} of {MAX_INTERVIEW_QUESTIONS}
+            Question {Math.min(questionNumber, maxQuestions)} of ~{maxQuestions}
           </p>
           <Button
             type="button"
@@ -371,12 +343,6 @@ export default function InterviewPage() {
             </Button>
           )}
         </div>
-        {voiceMode && autoConverse && recognitionSupported && (
-          <p className="text-muted-foreground text-xs">
-            Hands-free: the mic starts automatically after each question, and your answer sends
-            when you stop speaking. Switch to Manual if the room is noisy.
-          </p>
-        )}
       </div>
 
       <div className="flex flex-col gap-3">
@@ -457,8 +423,6 @@ export default function InterviewPage() {
                     } else {
                       cancelAutoSend();
                       explicitDoneRef.current = false;
-                      // Tắt giọng đọc trước khi bật mic, tránh mic thu lại
-                      // chính câu hỏi đang được đọc to.
                       stopSpeaking();
                       startListening();
                     }
@@ -488,12 +452,6 @@ export default function InterviewPage() {
               </div>
             )}
             {speechError && <p className="text-sm text-amber-600">{speechError}</p>}
-            {!recognitionSupported && (
-              <p className="text-muted-foreground text-xs">
-                Voice answering isn&apos;t supported in this browser — use Chrome or Edge for it, or
-                just type your answer.
-              </p>
-            )}
 
             <Button
               onClick={() => {
