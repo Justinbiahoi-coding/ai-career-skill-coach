@@ -14,7 +14,12 @@ import {
   markSkillPracticed,
   saveInterviewScore,
 } from "@/lib/session-store";
-import { useSpeech } from "@/lib/use-speech";
+import {
+  useSpeech,
+  stripDoneKeyword,
+  VOICE_DONE_KEYWORD,
+  VOICE_INTRO_HINT,
+} from "@/lib/use-speech";
 import type { InterviewMessage, InterviewTurnResult, Skill } from "@/lib/types";
 
 const MAX_ANSWER_LENGTH = 2000;
@@ -42,11 +47,25 @@ export default function InterviewPage() {
   // để quay về thao tác tay khi phòng ồn hoặc nhận diện sai nhiều.
   const [autoConverse, setAutoConverse] = useState(true);
 
+  // true nếu lượt nói vừa rồi kết thúc bằng từ khóa "I'm done" (tín hiệu rõ
+  // ràng) thay vì chỉ im lặng (tín hiệu mơ hồ) — quyết định thời gian chờ
+  // trước khi tự gửi ở effect bên dưới.
+  const explicitDoneRef = useRef(false);
+  const stopListeningRef = useRef<() => void>(() => {});
+
   // Text nhận diện được đổ thẳng vào ô trả lời để người dùng đọc lại/sửa
   // trước khi gửi — quan trọng vì phòng thi ồn và giọng Việt nói tiếng Anh
-  // dễ bị nhận sai.
+  // dễ bị nhận sai. Nếu chứa từ khóa "I'm done", cắt bỏ từ khóa và đánh dấu
+  // đã kết thúc rõ ràng, tự dừng mic ngay.
   const handleTranscript = useCallback((text: string) => {
-    setAnswer((prev) => (prev ? `${prev} ${text}` : text));
+    const { cleaned, isDone } = stripDoneKeyword(text);
+    if (cleaned) {
+      setAnswer((prev) => (prev ? `${prev} ${cleaned}` : cleaned));
+    }
+    if (isDone) {
+      explicitDoneRef.current = true;
+      stopListeningRef.current();
+    }
   }, []);
 
   const {
@@ -59,6 +78,10 @@ export default function InterviewPage() {
     speak,
     stopSpeaking,
   } = useSpeech(handleTranscript);
+
+  useEffect(() => {
+    stopListeningRef.current = stopListening;
+  }, [stopListening]);
 
   useEffect(() => {
     const selectedGap = loadSelectedGap();
@@ -81,15 +104,21 @@ export default function InterviewPage() {
   const submitRef = useRef<() => void>(() => {});
 
   // Đọc to câu hỏi mới. Ở chế độ hội thoại, đọc xong thì tự bật mic luôn —
-  // mic chỉ bật khi AI đã nói xong nên không thu lại chính giọng AI.
+  // mic chỉ bật khi AI đã nói xong nên không thu lại chính giọng AI. Câu hỏi
+  // đầu tiên được ghép thêm hướng dẫn về từ khóa "I'm done" (chỉ nói 1 lần).
   useEffect(() => {
     if (!voiceMode || !pendingQuestion) return;
-    speak(pendingQuestion, () => {
-      if (autoConverse && recognitionSupported) startListening();
+    const isFirstTurn = transcript.length === 0;
+    const textToSpeak = isFirstTurn ? `${VOICE_INTRO_HINT} ${pendingQuestion}` : pendingQuestion;
+    speak(textToSpeak, () => {
+      if (autoConverse && recognitionSupported) {
+        explicitDoneRef.current = false;
+        startListening();
+      }
     });
-    // autoConverse/recognitionSupported cố ý không nằm trong deps: chỉ cần
-    // giá trị tại thời điểm câu hỏi mới xuất hiện, không cần đọc lại câu hỏi
-    // khi người dùng bật/tắt chế độ giữa chừng.
+    // autoConverse/recognitionSupported/transcript cố ý không nằm trong
+    // deps: chỉ cần giá trị tại thời điểm câu hỏi mới xuất hiện, không cần
+    // đọc lại câu hỏi khi người dùng bật/tắt chế độ giữa chừng.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuestion, voiceMode, speak]);
 
@@ -112,12 +141,19 @@ export default function InterviewPage() {
     if (!stoppedListening || !autoConverse || !voiceMode) return;
     if (!pendingQuestion || loading || finishing || !answer.trim()) return;
 
+    // Nói "I'm done" (tín hiệu rõ ràng) -> gần như gửi ngay. Chỉ dừng vì im
+    // lặng (tín hiệu mơ hồ, có thể do tiếng ồn) -> chờ lâu hơn, cho cơ hội
+    // Cancel.
+    const wasExplicit = explicitDoneRef.current;
+    explicitDoneRef.current = false;
+    const delay = wasExplicit ? 400 : 1500;
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAutoSendPending(true);
     autoSendTimerRef.current = setTimeout(() => {
       setAutoSendPending(false);
       submitRef.current();
-    }, 1500);
+    }, delay);
 
     return () => {
       if (autoSendTimerRef.current) clearTimeout(autoSendTimerRef.current);
@@ -362,6 +398,7 @@ export default function InterviewPage() {
                       stopListening();
                     } else {
                       cancelAutoSend();
+                      explicitDoneRef.current = false;
                       // Tắt giọng đọc trước khi bật mic, tránh mic thu lại
                       // chính câu hỏi đang được đọc to.
                       stopSpeaking();
@@ -376,8 +413,8 @@ export default function InterviewPage() {
 
             {listening && (
               <p className="text-muted-foreground text-xs">
-                Listening… speak your answer, pausing briefly is fine. Tap ⏹ when done, or edit the
-                text before sending.
+                Listening… pausing briefly is fine. Say &quot;{VOICE_DONE_KEYWORD}&quot; or tap ⏹
+                when finished.
               </p>
             )}
             {autoSendPending && (

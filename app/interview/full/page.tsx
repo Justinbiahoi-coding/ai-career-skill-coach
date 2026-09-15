@@ -13,7 +13,12 @@ import {
   loadPracticedSkills,
   saveFullInterviewScore,
 } from "@/lib/session-store";
-import { useSpeech } from "@/lib/use-speech";
+import {
+  useSpeech,
+  stripDoneKeyword,
+  VOICE_DONE_KEYWORD,
+  VOICE_INTRO_HINT,
+} from "@/lib/use-speech";
 import type { FullInterviewTurnResult, InterviewMessage } from "@/lib/types";
 
 const MAX_ANSWER_LENGTH = 2000;
@@ -39,8 +44,18 @@ export default function FullInterviewPage() {
   const [voiceMode, setVoiceMode] = useState(true);
   const [autoConverse, setAutoConverse] = useState(true);
 
+  const explicitDoneRef = useRef(false);
+  const stopListeningRef = useRef<() => void>(() => {});
+
   const handleTranscript = useCallback((text: string) => {
-    setAnswer((prev) => (prev ? `${prev} ${text}` : text));
+    const { cleaned, isDone } = stripDoneKeyword(text);
+    if (cleaned) {
+      setAnswer((prev) => (prev ? `${prev} ${cleaned}` : cleaned));
+    }
+    if (isDone) {
+      explicitDoneRef.current = true;
+      stopListeningRef.current();
+    }
   }, []);
 
   const {
@@ -53,6 +68,10 @@ export default function FullInterviewPage() {
     speak,
     stopSpeaking,
   } = useSpeech(handleTranscript);
+
+  useEffect(() => {
+    stopListeningRef.current = stopListening;
+  }, [stopListening]);
 
   useEffect(() => {
     const extracted = loadExtractedSkills();
@@ -75,8 +94,13 @@ export default function FullInterviewPage() {
 
   useEffect(() => {
     if (!voiceMode || !pendingQuestion) return;
-    speak(pendingQuestion, () => {
-      if (autoConverse && recognitionSupported) startListening();
+    const isFirstTurn = transcript.length === 0;
+    const textToSpeak = isFirstTurn ? `${VOICE_INTRO_HINT} ${pendingQuestion}` : pendingQuestion;
+    speak(textToSpeak, () => {
+      if (autoConverse && recognitionSupported) {
+        explicitDoneRef.current = false;
+        startListening();
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuestion, voiceMode, speak]);
@@ -100,12 +124,16 @@ export default function FullInterviewPage() {
     if (!stoppedListening || !autoConverse || !voiceMode) return;
     if (!pendingQuestion || loading || finishing || !answer.trim()) return;
 
+    const wasExplicit = explicitDoneRef.current;
+    explicitDoneRef.current = false;
+    const delay = wasExplicit ? 400 : 1500;
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAutoSendPending(true);
     autoSendTimerRef.current = setTimeout(() => {
       setAutoSendPending(false);
       submitRef.current();
-    }, 1500);
+    }, delay);
 
     return () => {
       if (autoSendTimerRef.current) clearTimeout(autoSendTimerRef.current);
@@ -351,6 +379,7 @@ export default function FullInterviewPage() {
                       stopListening();
                     } else {
                       cancelAutoSend();
+                      explicitDoneRef.current = false;
                       stopSpeaking();
                       startListening();
                     }
@@ -363,8 +392,8 @@ export default function FullInterviewPage() {
 
             {listening && (
               <p className="text-muted-foreground text-xs">
-                Listening… speak your answer, pausing briefly is fine. Tap ⏹ when done, or edit the
-                text before sending.
+                Listening… pausing briefly is fine. Say &quot;{VOICE_DONE_KEYWORD}&quot; or tap ⏹
+                when finished.
               </p>
             )}
             {autoSendPending && (
