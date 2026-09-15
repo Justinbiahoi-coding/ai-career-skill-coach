@@ -16,7 +16,8 @@ export function getGeminiClient(): GoogleGenerativeAI {
   return client;
 }
 
-// Gemini 2.5 Flash (KHÔNG phải Flash-Lite) — free tier qua Google AI Studio,
-// chất lượng suy luận/chấm điểm tốt hơn Flash-Lite, vẫn đủ nhanh cho demo
-// trực tiếp. Dùng cho tất cả 5 API call của sản phẩm.
-export const DEFAULT_MODEL = "gemini-2.5-flash";
+// `gemini-2.5-flash` đã bị Google ngừng cấp cho API key mới (lỗi 404 xác
+// nhận trực tiếp từ generativelanguage.googleapis.com lúc test thật ngày
+// 2026-09-15), khuyến nghị chuyển sang `gemini-3.6-flash`. Dùng cho tất cả
+// 5 API call của sản phẩm.
+export const DEFAULT_MODEL = "gemini-3.6-flash";
