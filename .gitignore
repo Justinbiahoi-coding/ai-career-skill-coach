@@ -1,6 +1,9 @@
 # macOS
 .DS_Store
 
+# Project context/strategy — kept local only, not pushed to the (public) repo
+CLAUDE.md
+
 # Node / Next.js (dự án sẽ được khởi tạo ở bước sau)
 node_modules/
 .next/
