@@ -203,6 +203,28 @@ lõi chạy được thật (không chỉ mockup), (3) có vết tích kiểm th
 - No-code/Low-code: Replit, Lovable, Google AI Studio/Gemini.
 - Pitch & Present: Canva, Google Slides.
 
+**Lựa chọn của Team 15 (đã chốt 2026-09-15):** dùng **Claude API (Anthropic)** thay cho Gemini cho
+toàn bộ AI call trong sản phẩm — hợp lệ theo FAQ #5 của Handbook ("không bắt buộc dùng Google AI
+Studio/Gemini, có thể dùng công cụ AI hợp pháp khác"). Model: **`claude-haiku-4-5`** cho
+extract-skills, generate-lesson, grade-exercise, interview-turn; **`claude-sonnet-4-6`** riêng cho
+`/api/interview-score` (bước chấm điểm cuối, cần nhận xét sâu hơn). SDK: `@anthropic-ai/sdk`. Coding
+tool: Claude Code (đang dùng để build sản phẩm này).
+
+## Quy trình Git (đã thiết lập 2026-09-15)
+
+Repo: `https://github.com/Justinbiahoi-coding/ai-career-skill-coach` (Public — bắt buộc để bật được
+Branch Protection miễn phí trên GitHub).
+
+- Nhánh `main` được **bảo vệ**: không cho push thẳng, không cho force-push/xoá nhánh — mọi thay đổi
+  phải đi qua **Pull Request** rồi merge (kể cả khi chỉ có 1 người code, để giữ lịch sử rõ ràng và
+  tạo thói quen chuyên nghiệp).
+- Đặt tên nhánh theo tiền tố: `feat/...` (tính năng mới), `fix/...` (sửa lỗi), `docs/...` (tài liệu/
+  CLAUDE.md), `chore/...` (cấu hình, scaffolding).
+- Có `.github/pull_request_template.md` — mỗi PR cần điền checklist (đã test thủ công, không commit
+  `.env`/API key, có cập nhật `CLAUDE.md` nếu ảnh hưởng ngữ cảnh dự án).
+- Vì chỉ 1 người code, PR không yêu cầu approval bắt buộc (`required_approving_review_count: 0`) —
+  vẫn phải tạo PR để merge, nhưng có thể tự merge PR của mình.
+
 ## Quy tắc dùng AI có trách nhiệm (bắt buộc tuân thủ trong toàn bộ code & pitch)
 
 1. **Build what you can explain** — phải hiểu và giải thích được mọi prompt, logic, code, kết quả.
