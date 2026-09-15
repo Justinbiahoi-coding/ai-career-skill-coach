@@ -8,10 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SAMPLE_JDS } from "@/lib/fallback-data";
+import { MAX_JD_LENGTH } from "@/lib/prompts";
 import { saveExtractedSkills } from "@/lib/session-store";
 import type { ExtractSkillsResult, JobDescriptionResult, JobListing, JobSearchResult } from "@/lib/types";
-
-const MAX_JD_LENGTH = 3000;
 
 export default function Home() {
   const router = useRouter();

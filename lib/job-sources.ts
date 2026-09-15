@@ -1,9 +1,9 @@
+import { MAX_JD_LENGTH } from "./prompts";
 import type { JobListing, JobSource } from "./types";
 
-// Giới hạn này khớp với giới hạn jdText của /api/extract-skills — JD thật
-// ngoài thị trường thường dài hơn nhiều (có tin tới 12.000 ký tự), nên phải
-// cắt trước khi đưa vào pipeline.
-const MAX_JD_CHARS = 3000;
+// Dùng chung đúng một hằng số với các API route nhận jdText — cắt dài hơn mức
+// route chấp nhận là JD bị trả lỗi 400 ngay giữa luồng.
+const MAX_JD_CHARS = MAX_JD_LENGTH;
 const FETCH_TIMEOUT_MS = 8000;
 const MAX_PER_SOURCE = 6;
 

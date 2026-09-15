@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
-import { GENERATE_LESSON_SYSTEM_PROMPT, buildGenerateLessonPrompt } from "@/lib/prompts";
+import { GENERATE_LESSON_SYSTEM_PROMPT, MAX_JD_LENGTH, buildGenerateLessonPrompt } from "@/lib/prompts";
 import { buildFallbackLesson } from "@/lib/fallback-data";
 import { extractJsonBlock } from "@/lib/json-utils";
 import type { GenerateLessonResult } from "@/lib/types";
 
-const MAX_JD_LENGTH = 3000;
 const MAX_SKILL_NAME_LENGTH = 200;
 
 function isValidLessonShape(

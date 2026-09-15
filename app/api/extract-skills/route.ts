@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
-import { EXTRACT_SKILLS_SYSTEM_PROMPT, buildExtractSkillsPrompt } from "@/lib/prompts";
+import { EXTRACT_SKILLS_SYSTEM_PROMPT, MAX_JD_LENGTH, buildExtractSkillsPrompt } from "@/lib/prompts";
 import { FALLBACK_SKILLS } from "@/lib/fallback-data";
 import { extractJsonBlock } from "@/lib/json-utils";
 import type { ExtractSkillsResult, Skill } from "@/lib/types";
 
-const MAX_JD_LENGTH = 3000;
 
 function isValidSkillsShape(value: unknown): value is { skills: Skill[] } {
   if (typeof value !== "object" || value === null || !("skills" in value)) {

@@ -4,6 +4,17 @@ import type { InterviewMessage } from "./types";
 // (chốt cứng isLast) và trang /interview (hiển thị tiến độ "Question X/Y").
 export const MAX_INTERVIEW_QUESTIONS = 4;
 
+/**
+ * Độ dài tối đa của jdText, dùng chung cho MỌI nơi chạm tới nó: ô nhập ở
+ * trang chủ, hàm cắt JD trong lib/job-sources.ts, và cả 6 API route nhận
+ * jdText. Phải là một hằng số duy nhất — trước đây con số này bị chép riêng ở
+ * từng file, nên chỉ cần lệch 1 ký tự là JD dài bị trả lỗi 400 ở giữa luồng.
+ *
+ * Mức 10.000 đến từ số đo thật trên 105 JD của cả 4 nguồn: trung vị 3.910 ký
+ * tự, dài nhất 25.344 — mức này giữ trọn vẹn 94% JD.
+ */
+export const MAX_JD_LENGTH = 10000;
+
 export const EXTRACT_SKILLS_SYSTEM_PROMPT = `You are an assistant that reads a real job description and extracts the
 concrete skills it requires, so a student can compare them against their own
 skills.

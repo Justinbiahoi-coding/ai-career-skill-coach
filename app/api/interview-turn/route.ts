@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
-import {
-  INTERVIEW_TURN_SYSTEM_PROMPT,
-  buildInterviewTurnPrompt,
-  MAX_INTERVIEW_QUESTIONS,
-} from "@/lib/prompts";
+import { INTERVIEW_TURN_SYSTEM_PROMPT, MAX_INTERVIEW_QUESTIONS, MAX_JD_LENGTH, buildInterviewTurnPrompt } from "@/lib/prompts";
 import { buildFallbackInterviewTurn } from "@/lib/fallback-data";
 import { extractJsonBlock } from "@/lib/json-utils";
 import type { InterviewMessage, InterviewTurnResult } from "@/lib/types";
 
-const MAX_JD_LENGTH = 3000;
 const MAX_SKILL_NAME_LENGTH = 200;
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_HISTORY_LENGTH = 20;
