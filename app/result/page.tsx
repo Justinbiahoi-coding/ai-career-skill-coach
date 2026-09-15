@@ -88,10 +88,15 @@ export default function ResultPage() {
               <span className="text-3xl font-semibold">{afterScore}/10</span>
             </div>
           </div>
+          {/* Khi điểm "after" là số giả lập (AI chấm điểm lỗi), KHÔNG được rút
+              ra kết luận so sánh — làm vậy là trình bày một nhận định bịa như
+              thể có thật. Nói thẳng là chưa so sánh được. */}
           <p className="text-muted-foreground mt-4 text-center text-sm">
-            {improved
-              ? "Your interview performance came out higher than your initial confidence — a good sign you're more ready than you thought."
-              : "Your interview performance came out at or below your initial confidence — worth another round of practice before the real thing."}
+            {score.usedFallback
+              ? "The AI interviewer couldn't score this session, so there's no real comparison to make yet — try again once it's back."
+              : improved
+                ? "Your interview performance came out higher than your initial confidence — a good sign you're more ready than you thought."
+                : "Your interview performance came out at or below your initial confidence — worth another round of practice before the real thing."}
           </p>
         </CardContent>
       </Card>
