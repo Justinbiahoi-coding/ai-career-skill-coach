@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAnthropicClient, DEFAULT_MODEL } from "@/lib/anthropic";
+import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
 import { EXTRACT_SKILLS_SYSTEM_PROMPT, buildExtractSkillsPrompt } from "@/lib/prompts";
 import { FALLBACK_SKILLS } from "@/lib/fallback-data";
 import type { ExtractSkillsResult, Skill } from "@/lib/types";
@@ -46,17 +46,14 @@ export async function POST(request: Request) {
   }
 
   try {
-    const message = await getAnthropicClient().messages.create({
+    const model = getGeminiClient().getGenerativeModel({
       model: DEFAULT_MODEL,
-      max_tokens: 1024,
-      system: EXTRACT_SKILLS_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildExtractSkillsPrompt(jdText) }],
+      systemInstruction: EXTRACT_SKILLS_SYSTEM_PROMPT,
+      generationConfig: { responseMimeType: "application/json" },
     });
 
-    const rawText = message.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("");
+    const generation = await model.generateContent(buildExtractSkillsPrompt(jdText));
+    const rawText = generation.response.text();
 
     const parsed: unknown = JSON.parse(extractJsonBlock(rawText));
 
