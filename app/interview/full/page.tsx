@@ -16,6 +16,8 @@ import {
 import {
   useSpeech,
   stripDoneKeyword,
+  buildSilenceNudgeText,
+  SILENCE_NUDGE_MS,
   VOICE_DONE_KEYWORD,
   VOICE_INTRO_HINT,
 } from "@/lib/use-speech";
@@ -46,17 +48,41 @@ export default function FullInterviewPage() {
 
   const explicitDoneRef = useRef(false);
   const stopListeningRef = useRef<() => void>(() => {});
+  const startListeningRef = useRef<() => void>(() => {});
+  const speakRef = useRef<(text: string, onEnd?: () => void) => void>(() => {});
+  const nudgeInProgressRef = useRef(false);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleTranscript = useCallback((text: string) => {
-    const { cleaned, isDone } = stripDoneKeyword(text);
-    if (cleaned) {
-      setAnswer((prev) => (prev ? `${prev} ${cleaned}` : cleaned));
-    }
-    if (isDone) {
-      explicitDoneRef.current = true;
-      stopListeningRef.current();
-    }
+  const clearSilenceTimer = useCallback(() => {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    silenceTimerRef.current = null;
   }, []);
+
+  const scheduleSilenceNudge = useCallback(() => {
+    clearSilenceTimer();
+    silenceTimerRef.current = setTimeout(() => {
+      nudgeInProgressRef.current = true;
+      stopListeningRef.current();
+      speakRef.current(buildSilenceNudgeText(), () => startListeningRef.current());
+    }, SILENCE_NUDGE_MS);
+  }, [clearSilenceTimer]);
+
+  const handleTranscript = useCallback(
+    (text: string) => {
+      const { cleaned, isDone } = stripDoneKeyword(text);
+      if (cleaned) {
+        setAnswer((prev) => (prev ? `${prev} ${cleaned}` : cleaned));
+      }
+      if (isDone) {
+        explicitDoneRef.current = true;
+        clearSilenceTimer();
+        stopListeningRef.current();
+      } else if (cleaned) {
+        scheduleSilenceNudge();
+      }
+    },
+    [clearSilenceTimer, scheduleSilenceNudge]
+  );
 
   const {
     recognitionSupported,
@@ -71,7 +97,18 @@ export default function FullInterviewPage() {
 
   useEffect(() => {
     stopListeningRef.current = stopListening;
-  }, [stopListening]);
+    startListeningRef.current = startListening;
+    speakRef.current = speak;
+  }, [stopListening, startListening, speak]);
+
+  useEffect(() => {
+    if (listening) {
+      scheduleSilenceNudge();
+    } else {
+      clearSilenceTimer();
+    }
+    return () => clearSilenceTimer();
+  }, [listening, scheduleSilenceNudge, clearSilenceTimer]);
 
   useEffect(() => {
     const extracted = loadExtractedSkills();
@@ -121,6 +158,12 @@ export default function FullInterviewPage() {
   useEffect(() => {
     const stoppedListening = wasListeningRef.current && !listening;
     wasListeningRef.current = listening;
+
+    if (stoppedListening && nudgeInProgressRef.current) {
+      nudgeInProgressRef.current = false;
+      return;
+    }
+
     if (!stoppedListening || !autoConverse || !voiceMode) return;
     if (!pendingQuestion || loading || finishing || !answer.trim()) return;
 

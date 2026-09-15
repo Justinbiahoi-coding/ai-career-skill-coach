@@ -12,6 +12,15 @@ export const VOICE_DONE_KEYWORD = "I'm done";
 export const VOICE_INTRO_HINT =
   'Quick tip: say "I\'m done" out loud when you finish each answer, so I know right away instead of waiting.';
 
+// Nếu mic nghe im lặng liên tục quá lâu (không có chunk nhận diện mới nào),
+// AI chủ động nhắc thay vì cứ chờ mãi trong im lặng — người dùng có thể chỉ
+// đang suy nghĩ, không phải đã xong.
+export const SILENCE_NUDGE_MS = 8000;
+
+export function buildSilenceNudgeText(): string {
+  return `Take your time — just say "${VOICE_DONE_KEYWORD}" when you're ready, or tap the mic to stop.`;
+}
+
 // Cắt cụm từ khóa ra khỏi text (không đưa vào nội dung câu trả lời thật),
 // đồng thời báo có phát hiện từ khóa hay không.
 export function stripDoneKeyword(text: string): { cleaned: string; isDone: boolean } {

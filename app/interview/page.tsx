@@ -17,6 +17,8 @@ import {
 import {
   useSpeech,
   stripDoneKeyword,
+  buildSilenceNudgeText,
+  SILENCE_NUDGE_MS,
   VOICE_DONE_KEYWORD,
   VOICE_INTRO_HINT,
 } from "@/lib/use-speech";
@@ -51,22 +53,57 @@ export default function InterviewPage() {
   // ràng) thay vì chỉ im lặng (tín hiệu mơ hồ) — quyết định thời gian chờ
   // trước khi tự gửi ở effect bên dưới.
   const explicitDoneRef = useRef(false);
+  // Refs cho các hàm từ useSpeech: cần gọi được từ trong handleTranscript
+  // (định nghĩa trước khi useSpeech trả về chúng) và từ trong callback
+  // setTimeout (tránh dùng closure cũ nếu identity của hàm đổi giữa chừng).
   const stopListeningRef = useRef<() => void>(() => {});
+  const startListeningRef = useRef<() => void>(() => {});
+  const speakRef = useRef<(text: string, onEnd?: () => void) => void>(() => {});
+
+  // Đánh dấu lượt dừng mic hiện tại là do chính app chủ động dừng để nhắc im
+  // lặng (không phải người dùng thật sự dừng) — effect tự gửi bên dưới cần
+  // biết để KHÔNG coi đây là đã trả lời xong.
+  const nudgeInProgressRef = useRef(false);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearSilenceTimer = useCallback(() => {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    silenceTimerRef.current = null;
+  }, []);
+
+  // Đặt lại "đồng hồ im lặng": nếu không có hoạt động gì mới trong
+  // SILENCE_NUDGE_MS, AI chủ động dừng mic, nhắc nhẹ bằng giọng nói, rồi mở
+  // mic nghe tiếp — không tự gửi câu trả lời dở dang.
+  const scheduleSilenceNudge = useCallback(() => {
+    clearSilenceTimer();
+    silenceTimerRef.current = setTimeout(() => {
+      nudgeInProgressRef.current = true;
+      stopListeningRef.current();
+      speakRef.current(buildSilenceNudgeText(), () => startListeningRef.current());
+    }, SILENCE_NUDGE_MS);
+  }, [clearSilenceTimer]);
 
   // Text nhận diện được đổ thẳng vào ô trả lời để người dùng đọc lại/sửa
   // trước khi gửi — quan trọng vì phòng thi ồn và giọng Việt nói tiếng Anh
   // dễ bị nhận sai. Nếu chứa từ khóa "I'm done", cắt bỏ từ khóa và đánh dấu
-  // đã kết thúc rõ ràng, tự dừng mic ngay.
-  const handleTranscript = useCallback((text: string) => {
-    const { cleaned, isDone } = stripDoneKeyword(text);
-    if (cleaned) {
-      setAnswer((prev) => (prev ? `${prev} ${cleaned}` : cleaned));
-    }
-    if (isDone) {
-      explicitDoneRef.current = true;
-      stopListeningRef.current();
-    }
-  }, []);
+  // đã kết thúc rõ ràng, tự dừng mic ngay. Có hoạt động thật (nói được gì
+  // đó) thì đặt lại đồng hồ im lặng.
+  const handleTranscript = useCallback(
+    (text: string) => {
+      const { cleaned, isDone } = stripDoneKeyword(text);
+      if (cleaned) {
+        setAnswer((prev) => (prev ? `${prev} ${cleaned}` : cleaned));
+      }
+      if (isDone) {
+        explicitDoneRef.current = true;
+        clearSilenceTimer();
+        stopListeningRef.current();
+      } else if (cleaned) {
+        scheduleSilenceNudge();
+      }
+    },
+    [clearSilenceTimer, scheduleSilenceNudge]
+  );
 
   const {
     recognitionSupported,
@@ -81,7 +118,20 @@ export default function InterviewPage() {
 
   useEffect(() => {
     stopListeningRef.current = stopListening;
-  }, [stopListening]);
+    startListeningRef.current = startListening;
+    speakRef.current = speak;
+  }, [stopListening, startListening, speak]);
+
+  // Mic bắt đầu nghe -> khởi động đồng hồ im lặng; mic dừng (vì bất kỳ lý do
+  // gì) -> huỷ đồng hồ, không nhắc nhở khi không còn đang nghe.
+  useEffect(() => {
+    if (listening) {
+      scheduleSilenceNudge();
+    } else {
+      clearSilenceTimer();
+    }
+    return () => clearSilenceTimer();
+  }, [listening, scheduleSilenceNudge, clearSilenceTimer]);
 
   useEffect(() => {
     const selectedGap = loadSelectedGap();
@@ -138,6 +188,14 @@ export default function InterviewPage() {
   useEffect(() => {
     const stoppedListening = wasListeningRef.current && !listening;
     wasListeningRef.current = listening;
+
+    // Lần dừng này là do app tự dừng để nhắc im lặng, không phải người dùng
+    // thật sự ngừng trả lời — bỏ qua, đừng tự gửi câu trả lời dở dang.
+    if (stoppedListening && nudgeInProgressRef.current) {
+      nudgeInProgressRef.current = false;
+      return;
+    }
+
     if (!stoppedListening || !autoConverse || !voiceMode) return;
     if (!pendingQuestion || loading || finishing || !answer.trim()) return;
 
