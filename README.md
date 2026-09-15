@@ -16,8 +16,8 @@ a real interview).
 ## Tech stack
 
 - Next.js (App Router) + TypeScript + Tailwind CSS + shadcn/ui
-- Claude API (`@anthropic-ai/sdk`) for skill-gap extraction, lesson/exercise generation, grading,
-  and the mock interview
+- Gemini API (`@google/generative-ai`, model `gemini-2.5-flash`) for skill-gap extraction,
+  lesson/exercise generation, grading, and the mock interview — using Google AI Studio's free tier
 - No database/auth — session state lives in the browser for the MVP
 - Deploy target: Vercel
 
@@ -34,6 +34,6 @@ docs/           Official hackathon reference material (handbook, challenge brief
 
 ```bash
 npm install
-cp .env.example .env.local   # then fill in ANTHROPIC_API_KEY
+cp .env.example .env.local   # then fill in GEMINI_API_KEY (get one free at aistudio.google.com)
 npm run dev
 ```
