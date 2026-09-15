@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "cn";
 import { MAX_INTERVIEW_QUESTIONS } from "@/lib/prompts";
 import { loadExtractedSkills, loadSelectedGap, saveInterviewScore } from "@/lib/session-store";
+import { useSpeech } from "@/lib/use-speech";
 import type { InterviewMessage, InterviewTurnResult, Skill } from "@/lib/types";
 
 const MAX_ANSWER_LENGTH = 2000;
@@ -31,6 +32,25 @@ export default function InterviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
   const [finishing, setFinishing] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(true);
+
+  // Text nhận diện được đổ thẳng vào ô trả lời để người dùng đọc lại/sửa
+  // trước khi gửi — quan trọng vì phòng thi ồn và giọng Việt nói tiếng Anh
+  // dễ bị nhận sai.
+  const handleTranscript = useCallback((text: string) => {
+    setAnswer((prev) => (prev ? `${prev} ${text}` : text));
+  }, []);
+
+  const {
+    recognitionSupported,
+    listening,
+    speaking,
+    speechError,
+    startListening,
+    stopListening,
+    speak,
+    stopSpeaking,
+  } = useSpeech(handleTranscript);
 
   useEffect(() => {
     const selectedGap = loadSelectedGap();
@@ -47,6 +67,11 @@ export default function InterviewPage() {
     fetchNextQuestion([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context]);
+
+  // Đọc to câu hỏi mới khi đang ở chế độ voice.
+  useEffect(() => {
+    if (voiceMode && pendingQuestion) speak(pendingQuestion);
+  }, [pendingQuestion, voiceMode, speak]);
 
   async function fetchNextQuestion(history: InterviewMessage[]) {
     if (!context) return;
@@ -109,6 +134,11 @@ export default function InterviewPage() {
   async function handleSubmitAnswer() {
     if (!pendingQuestion || !answer.trim()) return;
 
+    // Dừng mic và giọng đọc trước khi chuyển lượt, tránh thu nhầm câu hỏi
+    // tiếp theo đang được đọc to vào phần trả lời.
+    stopListening();
+    stopSpeaking();
+
     const fullHistory: InterviewMessage[] = [
       ...transcript,
       { role: "assistant", text: pendingQuestion },
@@ -154,9 +184,28 @@ export default function InterviewPage() {
           <h1 className="text-2xl font-semibold tracking-tight">4. Mock interview</h1>
           <Badge>{context.skill.name}</Badge>
         </div>
-        <p className="text-muted-foreground text-sm">
-          Question {Math.min(questionNumber, MAX_INTERVIEW_QUESTIONS)} of {MAX_INTERVIEW_QUESTIONS}
-        </p>
+        <div className="flex items-center justify-center gap-3 sm:justify-start">
+          <p className="text-muted-foreground text-sm">
+            Question {Math.min(questionNumber, MAX_INTERVIEW_QUESTIONS)} of {MAX_INTERVIEW_QUESTIONS}
+          </p>
+          <Button
+            type="button"
+            variant={voiceMode ? "default" : "outline"}
+            size="xs"
+            onClick={() => {
+              const next = !voiceMode;
+              setVoiceMode(next);
+              if (!next) {
+                stopSpeaking();
+                stopListening();
+              } else if (pendingQuestion) {
+                speak(pendingQuestion);
+              }
+            }}
+          >
+            {voiceMode ? "🔊 Voice on" : "🔇 Voice off"}
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -179,6 +228,15 @@ export default function InterviewPage() {
             <div className="self-start max-w-[85%] rounded-lg bg-muted px-4 py-2 text-sm">
               {pendingQuestion}
             </div>
+            {voiceMode && (
+              <button
+                type="button"
+                onClick={() => (speaking ? stopSpeaking() : speak(pendingQuestion))}
+                className="text-muted-foreground self-start text-xs underline"
+              >
+                {speaking ? "🔊 Speaking… (tap to stop)" : "🔊 Replay question"}
+              </button>
+            )}
             {usedFallback && (
               <p className="text-sm text-amber-600">
                 The AI interviewer failed, so this is an offline sample question instead.
@@ -202,15 +260,53 @@ export default function InterviewPage() {
             <CardTitle className="text-base">Your answer</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Input
-              placeholder="Type your answer..."
-              value={answer}
-              maxLength={MAX_ANSWER_LENGTH}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSubmitAnswer();
-              }}
-            />
+            <div className="flex gap-2">
+              <Input
+                placeholder={listening ? "Listening..." : "Speak or type your answer..."}
+                value={answer}
+                maxLength={MAX_ANSWER_LENGTH}
+                onChange={(e) => setAnswer(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSubmitAnswer();
+                }}
+                className="flex-1"
+              />
+              {recognitionSupported && (
+                <Button
+                  type="button"
+                  variant={listening ? "default" : "outline"}
+                  size="icon"
+                  aria-label={listening ? "Stop recording" : "Answer with your voice"}
+                  onClick={() => {
+                    if (listening) {
+                      stopListening();
+                    } else {
+                      // Tắt giọng đọc trước khi bật mic, tránh mic thu lại
+                      // chính câu hỏi đang được đọc to.
+                      stopSpeaking();
+                      startListening();
+                    }
+                  }}
+                >
+                  {listening ? "⏹" : "🎤"}
+                </Button>
+              )}
+            </div>
+
+            {listening && (
+              <p className="text-muted-foreground text-xs">
+                Listening… speak your answer, then tap ⏹ to stop. You can edit the text before
+                sending.
+              </p>
+            )}
+            {speechError && <p className="text-sm text-amber-600">{speechError}</p>}
+            {!recognitionSupported && (
+              <p className="text-muted-foreground text-xs">
+                Voice answering isn&apos;t supported in this browser — use Chrome or Edge for it, or
+                just type your answer.
+              </p>
+            )}
+
             <Button onClick={handleSubmitAnswer} disabled={loading || !answer.trim()}>
               {isLastQuestion ? "Submit final answer" : "Send"}
             </Button>
