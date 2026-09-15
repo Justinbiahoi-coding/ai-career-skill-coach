@@ -217,12 +217,25 @@ async function searchRemoteOk(query: string): Promise<JobListing[]> {
  * Kết quả được trộn xen kẽ để danh sách không bị một nguồn chiếm hết đầu trang.
  */
 export async function searchAllSources(query: string): Promise<JobListing[]> {
-  const settled = await Promise.allSettled([
-    searchVietnamWorks(query),
-    searchItviec(query),
-    searchTopCv(query),
-    searchRemoteOk(query),
-  ]);
+  const sources: [JobSource, Promise<JobListing[]>][] = [
+    ["VietnamWorks", searchVietnamWorks(query)],
+    ["ITviec", searchItviec(query)],
+    ["TopCV", searchTopCv(query)],
+    ["RemoteOK", searchRemoteOk(query)],
+  ];
+  const settled = await Promise.allSettled(sources.map(([, promise]) => promise));
+
+  // allSettled nuốt lỗi để một nguồn hỏng không kéo sập cả tìm kiếm — nhưng
+  // nuốt im lặng thì không thể biết nguồn nào đang hỏng và vì sao. Ghi log tên
+  // nguồn kèm lý do (timeout/chặn/đổi HTML) để còn lần ra được trên production.
+  settled.forEach((result, i) => {
+    const [name] = sources[i];
+    if (result.status === "rejected") {
+      console.warn(`job source "${name}" failed:`, result.reason);
+    } else if (result.value.length === 0) {
+      console.warn(`job source "${name}" returned no jobs for query "${query}"`);
+    }
+  });
 
   const perSource = settled.map((result) => (result.status === "fulfilled" ? result.value : []));
   const interleaved: JobListing[] = [];
