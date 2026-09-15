@@ -4,6 +4,17 @@ import type { InterviewMessage } from "./types";
 // (chốt cứng isLast) và trang /interview (hiển thị tiến độ "Question X/Y").
 export const MAX_INTERVIEW_QUESTIONS = 4;
 
+/**
+ * Độ dài tối đa của jdText, dùng chung cho MỌI nơi chạm tới nó: ô nhập ở
+ * trang chủ, hàm cắt JD trong lib/job-sources.ts, và cả 6 API route nhận
+ * jdText. Phải là một hằng số duy nhất — trước đây con số này bị chép riêng ở
+ * từng file, nên chỉ cần lệch 1 ký tự là JD dài bị trả lỗi 400 ở giữa luồng.
+ *
+ * Mức 10.000 đến từ số đo thật trên 105 JD của cả 4 nguồn: trung vị 3.910 ký
+ * tự, dài nhất 25.344 — mức này giữ trọn vẹn 94% JD.
+ */
+export const MAX_JD_LENGTH = 10000;
+
 export const EXTRACT_SKILLS_SYSTEM_PROMPT = `You are an assistant that reads a real job description and extracts the
 concrete skills it requires, so a student can compare them against their own
 skills.
@@ -17,6 +28,9 @@ Rules:
   "stakeholder communication").
 - Only extract skills that are actually implied by the text. Do not invent
   skills that are not supported by the job description.
+- Always write "name" in English, even when the job description is in another
+  language (e.g. Vietnamese), because the lessons and mock interview that follow
+  are conducted in English. Keep well-known proper nouns as-is (SQL, Power BI).
 - Respond with ONLY a JSON object, no prose before or after it, matching
   exactly this shape:
 
@@ -78,6 +92,11 @@ on one specific skill - stay on that topic, do not branch into unrelated skills.
 Ask exactly ONE question at a time, in a natural conversational tone. If the candidate already
 answered a previous question, you may ask a short, relevant follow-up based on what they said
 instead of a generic next question.
+
+Always ask in English, even when the job description is written in another language such as
+Vietnamese. This is required: the question is read aloud by an en-US speech synthesiser and the
+candidate's answer is transcribed by an en-US recogniser, so a non-English question would be read
+as gibberish and the answer would not be transcribed at all.
 
 You will be told which question number this is and the maximum number of questions for this
 interview. If this is the final question, set "isLast" to true so the candidate knows to wrap up.
@@ -164,6 +183,11 @@ interview:
 Ask exactly ONE question at a time, natural conversational tone. You will be told the current
 question number and the maximum allowed - if you reach the maximum without finishing naturally,
 wrap up immediately with a closing question and set isLast to true.
+
+Always ask in English, even when the job description is written in another language such as
+Vietnamese. This is required: the question is read aloud by an en-US speech synthesiser and the
+candidate's answer is transcribed by an en-US recogniser, so a non-English question would be read
+as gibberish and the answer would not be transcribed at all.
 
 Respond with ONLY a JSON object, no prose before or after it, matching exactly this shape:
 

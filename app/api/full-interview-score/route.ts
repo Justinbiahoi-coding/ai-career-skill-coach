@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
-import { FULL_INTERVIEW_SCORE_SYSTEM_PROMPT, buildFullInterviewScorePrompt } from "@/lib/prompts";
+import { FULL_INTERVIEW_SCORE_SYSTEM_PROMPT, MAX_JD_LENGTH, buildFullInterviewScorePrompt } from "@/lib/prompts";
 import { FALLBACK_FULL_INTERVIEW_SCORE } from "@/lib/fallback-data";
 import { extractJsonBlock } from "@/lib/json-utils";
 import type { FullInterviewScoreResult, InterviewMessage } from "@/lib/types";
 
-const MAX_JD_LENGTH = 3000;
 const MAX_SKILL_NAME_LENGTH = 200;
 const MAX_SKILLS = 15;
 const MAX_MESSAGE_LENGTH = 2000;

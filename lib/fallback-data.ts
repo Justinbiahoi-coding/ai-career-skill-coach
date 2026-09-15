@@ -5,6 +5,7 @@ import type {
   GradeExerciseResult,
   InterviewScoreResult,
   InterviewTurnResult,
+  JobListing,
   Skill,
 } from "./types";
 
@@ -51,6 +52,127 @@ Requirements:
 - Some experience with React or a similar component-based framework
 - Comfortable using Git for version control
 - Willingness to receive and act on code review feedback`,
+  },
+];
+
+// Ảnh chụp job THẬT (lấy trực tiếp từ 4 nguồn ngày 16/09/2026), dùng khi cả 4
+// nguồn đều không phản hồi. Mục đích là demo vẫn hiện được job thật của công ty
+// thật thay vì danh sách trống, kể cả khi mạng hỏng lúc pitch.
+export const FALLBACK_JOBS: JobListing[] = [
+  {
+    id: "VietnamWorks:https://www.vietnamworks.com/chuyen-gia-du-lieu-bao-cao-phong-quan-ly-kinh-doanh-khoi-khdn-2101905-jv",
+    title: "Chuyên Gia Dữ Liệu Báo Cáo - Phòng Quản Lý Kinh Doanh - Khối KHDN",
+    company: "Ngân Hàng TMCP Đại Chúng Việt Nam",
+    source: "VietnamWorks",
+    url: "https://www.vietnamworks.com/chuyen-gia-du-lieu-bao-cao-phong-quan-ly-kinh-doanh-khoi-khdn-2101905-jv",
+    jdText: `- Thiết kế, xây dựng và hoàn thiện hệ thống báo cáo quản trị đa chiều, đảm bảo tính nhất quán, chính xác và khả năng khai thác phục vụ điều hành.
+- Phân tích dữ liệu kinh doanh, theo dõi hiệu quả TOI, lãi suất cho vay và các chỉ tiêu tài chính quan...
+- Bằng cấp: Tốt nghiệp đại học trở lên (ưu tiên thạc sĩ) các ngành kinh tế, tài chính, ngân hàng, quản trị kinh doanh hoặc phân tích dữ liệu.
+- Kiến thức chuyên môn: Có kiến thức chuyên sâu về hệ thống báo cáo quản trị, phân tích dữ liệu, theo dõi hiệu quả...`,
+  },
+  {
+    id: "ITviec:https://itviec.com/it-jobs/senior-data-analyst-crm-loyalty-golden-gate-4026?lab_feature=preview_jd_page",
+    title: "Senior Data Analyst (CRM & Loyalty)",
+    company: "Golden Gate",
+    source: "ITviec",
+    url: "https://itviec.com/it-jobs/senior-data-analyst-crm-loyalty-golden-gate-4026?lab_feature=preview_jd_page",
+    jdText: `Top 3 reasons to join us
+
+- Văn phòng xịn xò, môi trường năng động
+
+- Được tham gia xây dựng nhiều sản phẩm
+
+- Công ty F&B siêu to khổng lồ ứng dụng công nghệ
+
+Job description
+
+The Growth Analytics & Business Insights Analyst supports Growth & Loyalty activities through data analysis, performance reporting, and business insights.
+The role focuses on Loyalty, Loyalty-related Trade Marketing programs, customer behavior, and related digital marketing journeys. Working under the direction of the Growth Marketing Supervisor, the Analyst will prepare reports and dashboards, analyze campaign and customer performance, and help the team identify opportunities for improvement.
+The Analyst is also encouraged to raise questions and provide alternative perspectives when supported by data.
+Key Responsibilities 
+Growth, Loyalty & Customer Analytics 
+- Analyze customer, transaction, membership, campaign, and digital interaction data to support Growth Marketing activities.
+- Monitor key customer metrics, including acquisition, activation, engagement, retention, purchase frequency, spending, churn, and customer lifecycle.
+- Evaluate Loyalty performance across membership tiers, customer segments, point earning and redemption, voucher usage, and promotional participation.
+- Analyze Trade Marketing activities and digital customer journeys by relevant dimensions such as customer segment, campaign, c…`,
+  },
+  {
+    id: "TopCV:https://www.topcv.vn/viec-lam/data-analyst-van-hanh-xanh-bike-lam-viec-tai-royal-city-ha-noi/2300763.html",
+    title: "Data Analyst - Vận Hành Xanh Bike - Làm Việc Tại Royal City Hà Nội",
+    company: "CÔNG TY CỔ PHẦN DI CHUYỂN XANH VÀ THÔNG MINH GSM",
+    source: "TopCV",
+    url: "https://www.topcv.vn/viec-lam/data-analyst-van-hanh-xanh-bike-lam-viec-tai-royal-city-ha-noi/2300763.html",
+    jdText: `Mô tả công việc
+
+1. Phân tích dữ liệu & Tối ưu Hiệu suất
+
+- Phân tích, dự báo và cung cấp insight vận hành thông qua hệ thống dữ liệu nhằm xác định vấn đề trọng yếu, tối ưu cung – cầu theo khu vực/khung giờ, đánh giá hiệu suất tài xế theo cohort và hiệu quả các chương trình, chính sách.
+
+- Xây dựng chính sách, quy chuẩn tài xế; tổ chức rà soát vận hành định kỳ và dẫn dắt các sáng kiến cải tiến liên tục nhằm nâng cao năng suất và hiệu quả hệ thống.
+
+2. Điều phối dự án (PMO)
+
+- Điều phối và kiểm soát tiến độ dự án; Phân tích và đánh giá hiệu quả tối ưu dự án vận hành
+
+- Phối hợp công nghệ triển khai các dự án tự động hóa và cải tiến sản phẩm/app nhằm tối ưu quy trình vận hành, nâng cao trải nghiệm user và tăng hiệu quả vận hành tổng thể.
+
+- Phối hợp với các phòng ban nội bộ và đối tác bên ngoài để triển khai kế hoạch phát triển.
+
+Yêu cầu ứng viên
+
+- Tốt nghiệp Đại học chuyên ngành Kinh tế, Tài chính, Kiểm toán, Công nghệ thông tin hoặc các ngành liên quan.
+
+- Ưu tiên ứng viên có kinh nghiệm PMO, data analyst, business analyst tại các sàn/nền tảng công nghệ (Grab, Shopee, Lazada hoặc tương đương).
+
+- Tư duy hệ thống, lập luận logic và khả năng lập kế hoạch tốt.
+
+- Thành thạo các công cụ phân tích dữ liệu như SQL, Power BI và PowerPoint.
+
+- Kỹ năng phân tích và báo cáo dữ liệu tốt, có khả năng xử lý tập dữ liệu lớn và rút ra insight thực tiễn.
+
+- Chủ động, tự quản lý công việc end-…`,
+  },
+  {
+    id: "RemoteOK:https://remoteOK.com/remote-jobs/remote-data-analyst-seahub-asia-1136222",
+    title: "Data Analyst",
+    company: "SEAhub Asia",
+    source: "RemoteOK",
+    url: "https://remoteOK.com/remote-jobs/remote-data-analyst-seahub-asia-1136222",
+    jdText: `Build What's Next With Us
+
+At SEAhub Asia, your career isn't just a job â it's a launchpad.
+
+We move fast, think big, and build futures together.
+
+What's waiting for you here?
+
+Remote-first roles built for freedom and flexibility
+
+Learning & Development That Sharpens Skills And Accelerates Careers
+
+Competitive salary packages for high performers
+
+Wellbeing perks that help you thrive inside and outside work
+
+A team that supports, celebrates, and wins as one
+
+and we're just getting started.
+
+We're growing across Southeast Asia â and we're searching for sharp minds, big thinkers and curious hearts ready to help us build what's next. learners, and big thinkers who want to create what's next.
+
+If you're ready to make a real impact and grow with a future-ready team, your next chapter starts here.
+
+Job Summary
+
+Support the Data Analytics team by assisting with data validation, report generation, and basic analysis to help ensure data accuracy and enable informed business decision-making. 
+
+Responsibilities:
+
+- Reporting, Analysis & Insight Communication
+- Prepare reports and perform data analysis to support data-driven decision-making
+- Monitor key business performance metrics to identify trends, patterns, and anomalies
+- Assist in building and maintaining dashboards and reports for performance tracking
+- Communicate data insights to stakeholders in a clear, concise, and actionabl…`,
   },
 ];
 

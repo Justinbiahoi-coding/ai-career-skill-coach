@@ -2,20 +2,81 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SAMPLE_JDS } from "@/lib/fallback-data";
+import { MAX_JD_LENGTH } from "@/lib/prompts";
 import { saveExtractedSkills } from "@/lib/session-store";
-import type { ExtractSkillsResult } from "@/lib/types";
-
-const MAX_JD_LENGTH = 3000;
+import type { ExtractSkillsResult, JobDescriptionResult, JobListing, JobSearchResult } from "@/lib/types";
 
 export default function Home() {
   const router = useRouter();
   const [jdText, setJdText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [jobs, setJobs] = useState<JobListing[] | null>(null);
+  const [searchNotice, setSearchNotice] = useState<string | null>(null);
+  const [pickingJobId, setPickingJobId] = useState<string | null>(null);
+  const [pickedJob, setPickedJob] = useState<JobListing | null>(null);
+
+  async function handleSearch() {
+    if (!query.trim() || searching) return;
+    setSearching(true);
+    setSearchNotice(null);
+    setJobs(null);
+
+    try {
+      const res = await fetch(`/api/jobs/search?q=${encodeURIComponent(query.trim())}`);
+      const data: JobSearchResult = await res.json();
+      setJobs(data.jobs);
+      if (data.usedFallback) {
+        setSearchNotice("Live job sources didn't respond, showing saved real listings instead.");
+      }
+    } catch {
+      setSearchNotice("Couldn't reach the job sources. You can still paste a job description below.");
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function handlePickJob(job: JobListing) {
+    setPickingJobId(job.id);
+    setSearchNotice(null);
+
+    try {
+      // VietnamWorks/RemoteOK đã trả JD ngay khi search; ITviec/TopCV phải tải
+      // thêm trang chi tiết, nên chỉ gọi khi người dùng thật sự chọn job đó.
+      let text = job.jdText;
+      if (!text) {
+        const res = await fetch(`/api/jobs/jd?url=${encodeURIComponent(job.url)}`);
+        const data: JobDescriptionResult = await res.json();
+        text = data.jdText;
+      }
+
+      if (!text) {
+        setSearchNotice(
+          "Couldn't read that job description automatically. Open the original posting and paste it below."
+        );
+        return;
+      }
+
+      setJdText(text);
+      setPickedJob(job);
+      setError(null);
+    } catch {
+      setSearchNotice(
+        "Couldn't read that job description. Open the original posting and paste it below."
+      );
+    } finally {
+      setPickingJobId(null);
+    }
+  }
 
   async function handleAnalyze() {
     if (!jdText.trim()) return;
@@ -48,16 +109,104 @@ export default function Home() {
       <div className="flex flex-col gap-2 text-center sm:text-left">
         <h1 className="text-2xl font-semibold tracking-tight">AI Career Skill Coach</h1>
         <p className="text-muted-foreground text-sm">
-          Paste a real job description. We&apos;ll find the skill gap, help you practice it, and
-          run a mock interview to see how ready you really are.
+          Search a real job that companies are hiring for right now. We&apos;ll find your skill
+          gap, help you practice it, and run a mock interview to see how ready you really are.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">1. Paste a job description</CardTitle>
+          <CardTitle className="text-base">1. Find a real job</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="e.g. data analyst, frontend developer, marketing"
+              value={query}
+              maxLength={100}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
+            />
+            <Button onClick={handleSearch} disabled={searching || !query.trim()}>
+              {searching ? "Searching..." : "Search"}
+            </Button>
+          </div>
+
+          {searchNotice && <p className="text-muted-foreground text-xs">{searchNotice}</p>}
+
+          {jobs && jobs.length === 0 && (
+            <p className="text-muted-foreground text-sm">
+              No jobs matched that search. Try a broader keyword, or paste a job description below.
+            </p>
+          )}
+
+          {jobs && jobs.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {jobs.map((job) => {
+                const isPicked = pickedJob?.id === job.id;
+                return (
+                  <button
+                    key={job.id}
+                    type="button"
+                    onClick={() => handlePickJob(job)}
+                    disabled={pickingJobId !== null}
+                    className={`flex flex-col gap-1 rounded-md border p-3 text-left transition-colors disabled:opacity-60 ${
+                      isPicked ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-medium">{job.title}</span>
+                      <Badge variant="outline" className="shrink-0 text-[10px]">
+                        {job.source}
+                      </Badge>
+                    </div>
+                    <span className="text-muted-foreground text-xs">{job.company}</span>
+                    {pickingJobId === job.id && (
+                      <span className="text-muted-foreground text-xs">
+                        Loading job description...
+                      </span>
+                    )}
+                    {isPicked && (
+                      <span className="text-primary text-xs">
+                        ✓ Loaded below — you can edit it before analyzing
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+
+              <p className="text-muted-foreground text-[11px] leading-relaxed">
+                Job listings are borrowed from public postings on VietnamWorks, ITviec, TopCV and
+                RemoteOK for this demo. All rights belong to the original sites and employers.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            2. {pickedJob ? "Review the job description" : "Or paste a job description"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {pickedJob && (
+            <p className="text-muted-foreground text-xs">
+              From{" "}
+              <a
+                href={pickedJob.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {pickedJob.company} on {pickedJob.source}
+              </a>
+            </p>
+          )}
+
           <Textarea
             placeholder="Paste a job description here..."
             value={jdText}
@@ -66,7 +215,9 @@ export default function Home() {
             className="min-h-[180px]"
           />
           <div className="text-muted-foreground flex items-center justify-between text-xs">
-            <span>{jdText.length}/{MAX_JD_LENGTH}</span>
+            <span>
+              {jdText.length}/{MAX_JD_LENGTH}
+            </span>
             <div className="flex gap-2">
               {SAMPLE_JDS.map((sample) => (
                 <Button
@@ -74,7 +225,10 @@ export default function Home() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setJdText(sample.jdText)}
+                  onClick={() => {
+                    setJdText(sample.jdText);
+                    setPickedJob(null);
+                  }}
                 >
                   Use sample: {sample.label}
                 </Button>
