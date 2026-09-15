@@ -11,3 +11,15 @@ export interface ExtractSkillsResult {
   skills: Skill[];
   usedFallback: boolean;
 }
+
+export interface GenerateLessonResult {
+  lessonText: string;
+  exercisePrompt: string;
+  usedFallback: boolean;
+}
+
+export interface GradeExerciseResult {
+  score: number;
+  feedback: string;
+  usedFallback: boolean;
+}

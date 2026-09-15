@@ -1,4 +1,4 @@
-import type { Skill } from "./types";
+import type { GenerateLessonResult, GradeExerciseResult, Skill } from "./types";
 
 export interface SampleJd {
   label: string;
@@ -56,3 +56,22 @@ export const FALLBACK_SKILLS: Skill[] = [
   { name: "Python/R for data manipulation", importance: "medium", type: "hard" },
   { name: "Attention to detail", importance: "medium", type: "soft" },
 ];
+
+export function buildFallbackLesson(skillName: string): GenerateLessonResult {
+  return {
+    lessonText: `We couldn't reach the AI coach right now, so here's a general starting point for
+"${skillName}". Break the skill into the smallest task you can practice today, do it once with a
+real example from a job description, and compare your result against what a strong answer would
+look like. Repetition on real examples beats reading theory for skills like this.`,
+    exercisePrompt: `Describe one specific situation where "${skillName}" would come up in this job,
+and write out exactly what you would do step by step.`,
+    usedFallback: true,
+  };
+}
+
+export const FALLBACK_GRADE: GradeExerciseResult = {
+  score: 6,
+  feedback:
+    "The AI grader is unavailable right now, so this is a placeholder score. Your answer was recorded — try again once the connection is back for real feedback.",
+  usedFallback: true,
+};
