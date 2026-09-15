@@ -1,27 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { SAMPLE_JDS } from "@/lib/fallback-data";
+import { saveExtractedSkills } from "@/lib/session-store";
 import type { ExtractSkillsResult } from "@/lib/types";
 
 const MAX_JD_LENGTH = 3000;
 
 export default function Home() {
+  const router = useRouter();
   const [jdText, setJdText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<ExtractSkillsResult | null>(null);
 
   async function handleAnalyze() {
     if (!jdText.trim()) return;
     setLoading(true);
     setError(null);
-    setResult(null);
 
     try {
       const res = await fetch("/api/extract-skills", {
@@ -36,10 +35,10 @@ export default function Home() {
       }
 
       const data: ExtractSkillsResult = await res.json();
-      setResult(data);
+      saveExtractedSkills({ jdText, skills: data.skills });
+      router.push("/gap");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
       setLoading(false);
     }
   }
@@ -90,37 +89,6 @@ export default function Home() {
           {error && <p className="text-sm text-red-600">{error}</p>}
         </CardContent>
       </Card>
-
-      {result && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Skills found in this job description</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {result.usedFallback && (
-              <p className="text-sm text-amber-600">
-                The AI analysis failed, so this is offline sample data instead.
-              </p>
-            )}
-            {result.skills.map((skill, i) => (
-              <div key={skill.name}>
-                {i > 0 && <Separator className="mb-3" />}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium">{skill.name}</span>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">{skill.type}</Badge>
-                    <Badge
-                      variant={skill.importance === "high" ? "default" : "outline"}
-                    >
-                      {skill.importance}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
