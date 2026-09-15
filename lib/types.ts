@@ -12,6 +12,29 @@ export interface ExtractSkillsResult {
   usedFallback: boolean;
 }
 
+export type JobSource = "VietnamWorks" | "ITviec" | "TopCV" | "RemoteOK";
+
+export interface JobListing {
+  id: string;
+  title: string;
+  company: string;
+  source: JobSource;
+  /** Link tin tuyển dụng gốc, để người dùng kiểm chứng và để ghi nguồn. */
+  url: string;
+  /** VietnamWorks/RemoteOK trả JD ngay khi search; ITviec/TopCV phải tải thêm. */
+  jdText?: string;
+}
+
+export interface JobSearchResult {
+  jobs: JobListing[];
+  usedFallback: boolean;
+}
+
+export interface JobDescriptionResult {
+  jdText: string;
+  usedFallback: boolean;
+}
+
 export interface SelectedGap {
   skill: Skill;
   // Self-rating (1-5) the user gave this skill on /gap, kept so /result can

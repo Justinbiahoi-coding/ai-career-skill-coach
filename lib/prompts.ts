@@ -17,6 +17,9 @@ Rules:
   "stakeholder communication").
 - Only extract skills that are actually implied by the text. Do not invent
   skills that are not supported by the job description.
+- Always write "name" in English, even when the job description is in another
+  language (e.g. Vietnamese), because the lessons and mock interview that follow
+  are conducted in English. Keep well-known proper nouns as-is (SQL, Power BI).
 - Respond with ONLY a JSON object, no prose before or after it, matching
   exactly this shape:
 
