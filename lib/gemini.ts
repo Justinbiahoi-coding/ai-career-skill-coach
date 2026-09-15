@@ -16,8 +16,14 @@ export function getGeminiClient(): GoogleGenerativeAI {
   return client;
 }
 
-// `gemini-2.5-flash` đã bị Google ngừng cấp cho API key mới (lỗi 404 xác
-// nhận trực tiếp từ generativelanguage.googleapis.com lúc test thật ngày
-// 2026-09-15), khuyến nghị chuyển sang `gemini-3.6-flash`. Dùng cho tất cả
-// 5 API call của sản phẩm.
-export const DEFAULT_MODEL = "gemini-3.6-flash";
+// Lịch sử chọn model (tất cả đều xác minh bằng lệnh gọi API thật 2026-09-15):
+//   1. `gemini-2.5-flash`  -> 404, Google đã ngừng cấp cho API key mới.
+//   2. `gemini-3.6-flash`  -> chạy được nhưng free tier CHỈ 20 request/NGÀY
+//      (quotaId GenerateRequestsPerDayPerProjectPerModel-FreeTier). Một lượt
+//      dùng app đầy đủ tốn ~8 lệnh gọi -> chỉ ~2 lượt/ngày, chắc chắn hết
+//      quota giữa buổi demo/user testing.
+//   3. `gemini-3.5-flash-lite` (đang dùng) -> quota free cao hơn hẳn, và test
+//      thực tế cho thấy chất lượng trích xuất skill vẫn đúng trọng tâm.
+// Đánh đổi: suy luận nông hơn bản Flash đầy đủ, chấp nhận được vì độ ổn định
+// khi demo quan trọng hơn.
+export const DEFAULT_MODEL = "gemini-3.5-flash-lite";
