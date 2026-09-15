@@ -16,10 +16,16 @@ export function getAnthropicClient(): Anthropic {
   return client;
 }
 
-// Dùng cho các call tần suất cao / không cần suy luận sâu:
-// extract-skills, generate-lesson, grade-exercise, interview-turn.
+// Đã nâng cấp (2026-09-15): dùng Sonnet 4.6 cho TẤT CẢ 5 API call, không
+// còn tách Haiku/Sonnet theo bước. Lý do: chất lượng phân tích skill-gap và
+// nội dung dạy/chấm điểm quan trọng hơn phần chênh lệch tốc độ (Sonnet vẫn
+// đủ nhanh cho demo trực tiếp, ~2-5s/call), đặc biệt vì "AI accuracy in
+// skill gap analysis" là blind spot rủi ro cao nhất theo báo cáo BlindSpot.
+export const SONNET_MODEL = "claude-sonnet-4-6";
+
+// Giữ lại để dễ hạ cấp cục bộ nếu 1 bước cụ thể cần phản hồi nhanh hơn khi
+// demo (không dùng ở đâu mặc định nữa).
 export const HAIKU_MODEL = "claude-haiku-4-5";
 
-// Dùng riêng cho bước chấm điểm mock interview cuối cùng (interview-score),
-// nơi chất lượng nhận xét quan trọng hơn tốc độ/chi phí.
-export const SONNET_MODEL = "claude-sonnet-4-6";
+// Model mặc định cho mọi route — trỏ về SONNET_MODEL theo quyết định trên.
+export const DEFAULT_MODEL = SONNET_MODEL;

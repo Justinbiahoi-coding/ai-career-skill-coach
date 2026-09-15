@@ -1,30 +1,39 @@
 # AI Career Skill Coach
 
-Prototype dự thi **Global Hackathon 2026** (FPT University HCMC Campus, 15–17/09/2026) —
+A prototype built for **Global Hackathon 2026** (FPT University HCMC Campus, 15–17 Sep 2026) —
 **Team 15**, **Track 1 — Future Skills Readiness**.
 
 > How can AI help students identify, develop, and practice the skills they need to be ready for
 > the future of learning and work in the AI era?
 
-## Ý tưởng
+## The idea
 
-Một AI đóng 2 vai trong một hành trình khép kín: **huấn luyện viên** (phân tích JD thật → chỉ ra
-skill gap → dạy/luyện đúng gap ưu tiên nhất) và **nhà tuyển dụng mô phỏng** (mock interview bám
-đúng gap đó để đo mức sẵn sàng thật của sinh viên trước khi phỏng vấn thật).
+An AI that plays two roles in one closed loop: a **coach** (analyzes a real job description →
+pinpoints the skill gap → teaches/coaches the top-priority gap) and a **simulated interviewer**
+(runs a mock interview focused on that same gap to measure how ready the student really is before
+a real interview).
 
-Chi tiết đầy đủ về bối cảnh cuộc thi, track, tiêu chí chấm điểm, quy tắc AI có trách nhiệm, và
-Problem Statement/AI Logic Flow đã chốt: xem [`CLAUDE.md`](./CLAUDE.md).
+## Tech stack
 
-## Cấu trúc repo
+- Next.js (App Router) + TypeScript + Tailwind CSS + shadcn/ui
+- Claude API (`@anthropic-ai/sdk`) for skill-gap extraction, lesson/exercise generation, grading,
+  and the mock interview
+- No database/auth — session state lives in the browser for the MVP
+- Deploy target: Vercel
+
+## Repo structure
 
 ```
-docs/           Tài liệu gốc của BTC (Student Handbook, Challenge & Build Pack, ảnh Workshop Guide)
-CLAUDE.md       Ngữ cảnh dự án đầy đủ — đọc file này trước khi code
+app/            Next.js routes (pages + API route handlers)
+components/     UI components (shadcn/ui + custom)
+lib/            Claude client, prompts, session helpers
+docs/           Official hackathon reference material (handbook, challenge brief, workshop guide)
 ```
 
-Mã nguồn ứng dụng (Next.js) sẽ được khởi tạo ở bước tiếp theo, sau khi repo Git được thiết lập.
+## Getting started
 
-## Đội
-
-Team 15: Liang Rong Xuan (Singapore), Nguyen Gia Phat, Bui Van Thien, Nguyen Minh Quang,
-Phan Tran Hoang Tran (Việt Nam).
+```bash
+npm install
+cp .env.example .env.local   # then fill in ANTHROPIC_API_KEY
+npm run dev
+```
