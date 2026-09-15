@@ -1,9 +1,11 @@
-import type { InterviewScoreResult, SelectedGap, Skill } from "./types";
+import type { FullInterviewScoreResult, InterviewScoreResult, SelectedGap, Skill } from "./types";
 
 const JD_KEY = "acsc:jdText";
 const SKILLS_KEY = "acsc:skills";
 const SELECTED_GAP_KEY = "acsc:selectedGapSkill";
 const INTERVIEW_SCORE_KEY = "acsc:interviewScore";
+const PRACTICED_SKILLS_KEY = "acsc:practicedSkills";
+const FULL_INTERVIEW_SCORE_KEY = "acsc:fullInterviewScore";
 
 export interface ExtractedSkillsSession {
   jdText: string;
@@ -43,6 +45,44 @@ export function loadSelectedGap(): SelectedGap | null {
   if (!raw) return null;
   try {
     return JSON.parse(raw) as SelectedGap;
+  } catch {
+    return null;
+  }
+}
+
+// Ghi nhận 1 skill đã luyện xong (đã hoàn thành /learn + /interview cho nó).
+// Dùng ở /gap để hiện tiến độ và mở khóa Full Interview khi luyện hết.
+export function markSkillPracticed(skillName: string): void {
+  if (typeof window === "undefined") return;
+  const current = loadPracticedSkills();
+  if (!current.includes(skillName)) {
+    sessionStorage.setItem(PRACTICED_SKILLS_KEY, JSON.stringify([...current, skillName]));
+  }
+}
+
+export function loadPracticedSkills(): string[] {
+  if (typeof window === "undefined") return [];
+  const raw = sessionStorage.getItem(PRACTICED_SKILLS_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveFullInterviewScore(score: FullInterviewScoreResult): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(FULL_INTERVIEW_SCORE_KEY, JSON.stringify(score));
+}
+
+export function loadFullInterviewScore(): FullInterviewScoreResult | null {
+  if (typeof window === "undefined") return null;
+  const raw = sessionStorage.getItem(FULL_INTERVIEW_SCORE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as FullInterviewScoreResult;
   } catch {
     return null;
   }

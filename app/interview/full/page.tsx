@@ -7,26 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "cn";
-import { MAX_INTERVIEW_QUESTIONS } from "@/lib/prompts";
+import { computeMaxFullInterviewQuestions } from "@/lib/prompts";
 import {
   loadExtractedSkills,
-  loadSelectedGap,
-  markSkillPracticed,
-  saveInterviewScore,
+  loadPracticedSkills,
+  saveFullInterviewScore,
 } from "@/lib/session-store";
 import { useSpeech } from "@/lib/use-speech";
-import type { InterviewMessage, InterviewTurnResult, Skill } from "@/lib/types";
+import type { FullInterviewTurnResult, InterviewMessage } from "@/lib/types";
 
 const MAX_ANSWER_LENGTH = 2000;
 
-interface InterviewContext {
-  skill: Skill;
+interface FullInterviewContext {
   jdText: string;
+  practicedSkills: string[];
 }
 
-export default function InterviewPage() {
+export default function FullInterviewPage() {
   const router = useRouter();
-  const [context, setContext] = useState<InterviewContext | null>(null);
+  const [context, setContext] = useState<FullInterviewContext | null>(null);
   const [checkedStorage, setCheckedStorage] = useState(false);
 
   const [transcript, setTranscript] = useState<InterviewMessage[]>([]);
@@ -38,13 +37,8 @@ export default function InterviewPage() {
   const [answer, setAnswer] = useState("");
   const [finishing, setFinishing] = useState(false);
   const [voiceMode, setVoiceMode] = useState(true);
-  // Chế độ hội thoại: AI đọc xong -> tự bật mic -> nói xong tự gửi. Tắt được
-  // để quay về thao tác tay khi phòng ồn hoặc nhận diện sai nhiều.
   const [autoConverse, setAutoConverse] = useState(true);
 
-  // Text nhận diện được đổ thẳng vào ô trả lời để người dùng đọc lại/sửa
-  // trước khi gửi — quan trọng vì phòng thi ồn và giọng Việt nói tiếng Anh
-  // dễ bị nhận sai.
   const handleTranscript = useCallback((text: string) => {
     setAnswer((prev) => (prev ? `${prev} ${text}` : text));
   }, []);
@@ -61,12 +55,13 @@ export default function InterviewPage() {
   } = useSpeech(handleTranscript);
 
   useEffect(() => {
-    const selectedGap = loadSelectedGap();
     const extracted = loadExtractedSkills();
+    const practicedSkills = loadPracticedSkills();
+    const allDone =
+      extracted && practicedSkills.length > 0 &&
+      extracted.skills.every((s) => practicedSkills.includes(s.name));
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setContext(
-      selectedGap && extracted ? { skill: selectedGap.skill, jdText: extracted.jdText } : null
-    );
+    setContext(allDone ? { jdText: extracted.jdText, practicedSkills } : null);
     setCheckedStorage(true);
   }, []);
 
@@ -76,20 +71,13 @@ export default function InterviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context]);
 
-  // Giữ bản mới nhất của hàm gửi để các effect bên dưới gọi được mà không
-  // phải đưa nó vào dependency (tránh effect chạy lại mỗi lần render).
   const submitRef = useRef<() => void>(() => {});
 
-  // Đọc to câu hỏi mới. Ở chế độ hội thoại, đọc xong thì tự bật mic luôn —
-  // mic chỉ bật khi AI đã nói xong nên không thu lại chính giọng AI.
   useEffect(() => {
     if (!voiceMode || !pendingQuestion) return;
     speak(pendingQuestion, () => {
       if (autoConverse && recognitionSupported) startListening();
     });
-    // autoConverse/recognitionSupported cố ý không nằm trong deps: chỉ cần
-    // giá trị tại thời điểm câu hỏi mới xuất hiện, không cần đọc lại câu hỏi
-    // khi người dùng bật/tắt chế độ giữa chừng.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuestion, voiceMode, speak]);
 
@@ -124,21 +112,20 @@ export default function InterviewPage() {
     };
   }, [listening, autoConverse, voiceMode, pendingQuestion, loading, finishing, answer]);
 
-  // Đồng bộ hàm gửi vào ref sau mỗi lần render (không đụng ref lúc render).
-  useEffect(() => {
-    submitRef.current = handleSubmitAnswer;
-  });
-
   async function fetchNextQuestion(history: InterviewMessage[]) {
     if (!context) return;
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/interview-turn", {
+      const res = await fetch("/api/full-interview-turn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skillName: context.skill.name, jdText: context.jdText, history }),
+        body: JSON.stringify({
+          jdText: context.jdText,
+          practicedSkills: context.practicedSkills,
+          history,
+        }),
       });
 
       if (!res.ok) {
@@ -146,7 +133,7 @@ export default function InterviewPage() {
         throw new Error(body.error ?? "Request failed");
       }
 
-      const data: InterviewTurnResult = await res.json();
+      const data: FullInterviewTurnResult = await res.json();
       setPendingQuestion(data.question);
       setIsLastQuestion(data.isLast);
       setUsedFallback(data.usedFallback);
@@ -163,12 +150,12 @@ export default function InterviewPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/interview-score", {
+      const res = await fetch("/api/full-interview-score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          skillName: context.skill.name,
           jdText: context.jdText,
+          practicedSkills: context.practicedSkills,
           history: fullHistory,
         }),
       });
@@ -179,9 +166,8 @@ export default function InterviewPage() {
       }
 
       const score = await res.json();
-      saveInterviewScore(score);
-      markSkillPracticed(context.skill.name);
-      router.push("/result");
+      saveFullInterviewScore(score);
+      router.push("/result/full");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setFinishing(false);
@@ -191,8 +177,6 @@ export default function InterviewPage() {
   async function handleSubmitAnswer() {
     if (!pendingQuestion || !answer.trim()) return;
 
-    // Dừng mic và giọng đọc trước khi chuyển lượt, tránh thu nhầm câu hỏi
-    // tiếp theo đang được đọc to vào phần trả lời.
     stopListening();
     stopSpeaking();
 
@@ -213,13 +197,17 @@ export default function InterviewPage() {
     }
   }
 
+  useEffect(() => {
+    submitRef.current = handleSubmitAnswer;
+  });
+
   if (checkedStorage && !context) {
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-4 px-4 py-16 text-center">
         <p className="text-muted-foreground text-sm">
-          No skill selected for this session. Start from the beginning.
+          You haven&apos;t practiced every skill yet — the full interview unlocks once you have.
         </p>
-        <Button onClick={() => router.push("/")}>Back to start</Button>
+        <Button onClick={() => router.push("/gap")}>Back to skills</Button>
       </div>
     );
   }
@@ -233,17 +221,24 @@ export default function InterviewPage() {
   }
 
   const questionNumber = Math.floor(transcript.length / 2) + 1;
+  const maxQuestions = computeMaxFullInterviewQuestions(context.practicedSkills.length);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
       <div className="flex flex-col gap-2 text-center sm:text-left">
         <div className="flex items-center justify-center gap-2 sm:justify-start">
-          <h1 className="text-2xl font-semibold tracking-tight">4. Mock interview</h1>
-          <Badge>{context.skill.name}</Badge>
+          <h1 className="text-2xl font-semibold tracking-tight">🎯 Full Interview</h1>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+          {context.practicedSkills.map((name) => (
+            <Badge key={name} variant="secondary">
+              {name}
+            </Badge>
+          ))}
         </div>
         <div className="flex items-center justify-center gap-3 sm:justify-start">
           <p className="text-muted-foreground text-sm">
-            Question {Math.min(questionNumber, MAX_INTERVIEW_QUESTIONS)} of {MAX_INTERVIEW_QUESTIONS}
+            Question {Math.min(questionNumber, maxQuestions)} of ~{maxQuestions}
           </p>
           <Button
             type="button"
@@ -277,12 +272,6 @@ export default function InterviewPage() {
             </Button>
           )}
         </div>
-        {voiceMode && autoConverse && recognitionSupported && (
-          <p className="text-muted-foreground text-xs">
-            Hands-free: the mic starts automatically after each question, and your answer sends
-            when you stop speaking. Switch to Manual if the room is noisy.
-          </p>
-        )}
       </div>
 
       <div className="flex flex-col gap-3">
@@ -362,8 +351,6 @@ export default function InterviewPage() {
                       stopListening();
                     } else {
                       cancelAutoSend();
-                      // Tắt giọng đọc trước khi bật mic, tránh mic thu lại
-                      // chính câu hỏi đang được đọc to.
                       stopSpeaking();
                       startListening();
                     }
@@ -393,12 +380,6 @@ export default function InterviewPage() {
               </div>
             )}
             {speechError && <p className="text-sm text-amber-600">{speechError}</p>}
-            {!recognitionSupported && (
-              <p className="text-muted-foreground text-xs">
-                Voice answering isn&apos;t supported in this browser — use Chrome or Edge for it, or
-                just type your answer.
-              </p>
-            )}
 
             <Button
               onClick={() => {

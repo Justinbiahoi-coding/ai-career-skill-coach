@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "cn";
 import {
   loadExtractedSkills,
+  loadPracticedSkills,
   saveSelectedGap,
   type ExtractedSkillsSession,
 } from "@/lib/session-store";
@@ -27,12 +28,14 @@ export default function GapPage() {
   const [checkedStorage, setCheckedStorage] = useState(false);
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [overrideSkill, setOverrideSkill] = useState<string | null>(null);
+  const [practicedSkills, setPracticedSkills] = useState<string[]>([]);
 
   useEffect(() => {
     // sessionStorage chỉ đọc được ở client; SSR không có window, nên phải
     // đọc trong effect thay vì lúc render để tránh hydration mismatch.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSession(loadExtractedSkills());
+    setPracticedSkills(loadPracticedSkills());
     setCheckedStorage(true);
   }, []);
 
@@ -115,6 +118,9 @@ export default function GapPage() {
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{skill.name}</span>
                     {isPriority && <Badge>Priority</Badge>}
+                    {practicedSkills.includes(skill.name) && (
+                      <Badge variant="secondary">✓ Practiced</Badge>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Badge variant="secondary">{skill.type}</Badge>
@@ -161,6 +167,41 @@ export default function GapPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {(() => {
+        const allSkillNames = session.skills.map((s) => s.name);
+        const practicedCount = allSkillNames.filter((n) => practicedSkills.includes(n)).length;
+        const allPracticed = practicedCount === allSkillNames.length;
+
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Full interview</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <p className="text-muted-foreground text-sm">
+                Practiced {practicedCount} of {allSkillNames.length} skills.
+              </p>
+              {allPracticed ? (
+                <>
+                  <p className="text-sm">
+                    You&apos;ve practiced every skill from this job. Ready to try a full interview,
+                    like a real one?
+                  </p>
+                  <Button onClick={() => router.push("/interview/full")}>
+                    🎯 Take the full interview
+                  </Button>
+                </>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Practice every skill above to unlock a full, realistic mock interview covering
+                  all of them.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import type {
+  FullInterviewScoreResult,
+  FullInterviewTurnResult,
   GenerateLessonResult,
   GradeExerciseResult,
   InterviewScoreResult,
@@ -104,5 +106,43 @@ export const FALLBACK_INTERVIEW_SCORE: InterviewScoreResult = {
   confidence: 6,
   overallFeedback:
     "The AI interviewer is unavailable right now, so these are placeholder scores. Try again once the connection is back for real feedback.",
+  usedFallback: true,
+};
+
+export function buildFallbackFullInterviewTurn(
+  questionNumber: number,
+  maxQuestions: number,
+  practicedSkills: string[]
+): FullInterviewTurnResult {
+  if (questionNumber === 1) {
+    return {
+      question: "To start, could you tell me a bit about yourself and why this role interests you?",
+      isLast: maxQuestions <= 1,
+      usedFallback: true,
+    };
+  }
+  const isClosing = questionNumber >= maxQuestions;
+  if (isClosing) {
+    return {
+      question: "That covers everything I wanted to ask - do you have any questions for me?",
+      isLast: true,
+      usedFallback: true,
+    };
+  }
+  const skillIndex = (questionNumber - 2) % Math.max(practicedSkills.length, 1);
+  const skill = practicedSkills[skillIndex] ?? "this role";
+  return {
+    question: `Can you walk me through how you'd apply "${skill}" in a real situation for this job?`,
+    isLast: false,
+    usedFallback: true,
+  };
+}
+
+export const FALLBACK_FULL_INTERVIEW_SCORE: FullInterviewScoreResult = {
+  overallReadiness: 6,
+  strengths: "The AI interviewer is unavailable right now, so this is placeholder feedback.",
+  gaps: "Try again once the connection is back for a real assessment.",
+  overallFeedback:
+    "The AI interviewer failed to score this session, so these are placeholder scores.",
   usedFallback: true,
 };

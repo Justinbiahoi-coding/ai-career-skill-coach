@@ -49,3 +49,17 @@ export interface InterviewScoreResult {
   overallFeedback: string;
   usedFallback: boolean;
 }
+
+export interface FullInterviewTurnResult {
+  question: string;
+  isLast: boolean;
+  usedFallback: boolean;
+}
+
+export interface FullInterviewScoreResult {
+  overallReadiness: number;
+  strengths: string;
+  gaps: string;
+  overallFeedback: string;
+  usedFallback: boolean;
+}

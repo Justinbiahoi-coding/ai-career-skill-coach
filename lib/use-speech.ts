@@ -92,7 +92,10 @@ export function useSpeech(onTranscript: (text: string) => void): UseSpeechResult
 
     const recognition = new Ctor();
     recognition.lang = "en-US";
-    recognition.continuous = false;
+    // continuous=true: một khoảng lặng ngắn (ngừng để nghỉ/suy nghĩ) không
+    // bị coi là "đã nói xong" và tự dừng — chỉ dừng khi người dùng bấm dừng
+    // hoặc trình duyệt tự timeout sau im lặng khá dài.
+    recognition.continuous = true;
     recognition.interimResults = false;
 
     recognition.onresult = (event) => {
