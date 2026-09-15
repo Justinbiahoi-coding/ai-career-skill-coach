@@ -31,10 +31,12 @@ export default function LearnPage() {
   const [gradeError, setGradeError] = useState<string | null>(null);
 
   useEffect(() => {
-    const skill = loadSelectedGap();
+    const selectedGap = loadSelectedGap();
     const extracted = loadExtractedSkills();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setContext(skill && extracted ? { skill, jdText: extracted.jdText } : null);
+    setContext(
+      selectedGap && extracted ? { skill: selectedGap.skill, jdText: extracted.jdText } : null
+    );
     setCheckedStorage(true);
   }, []);
 

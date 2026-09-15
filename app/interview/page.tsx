@@ -33,10 +33,12 @@ export default function InterviewPage() {
   const [finishing, setFinishing] = useState(false);
 
   useEffect(() => {
-    const skill = loadSelectedGap();
+    const selectedGap = loadSelectedGap();
     const extracted = loadExtractedSkills();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setContext(skill && extracted ? { skill, jdText: extracted.jdText } : null);
+    setContext(
+      selectedGap && extracted ? { skill: selectedGap.skill, jdText: extracted.jdText } : null
+    );
     setCheckedStorage(true);
   }, []);
 

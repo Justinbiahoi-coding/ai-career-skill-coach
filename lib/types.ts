@@ -12,6 +12,13 @@ export interface ExtractSkillsResult {
   usedFallback: boolean;
 }
 
+export interface SelectedGap {
+  skill: Skill;
+  // Self-rating (1-5) the user gave this skill on /gap, kept so /result can
+  // show a before/after comparison against the post-interview score.
+  confidenceRating: number;
+}
+
 export interface GenerateLessonResult {
   lessonText: string;
   exercisePrompt: string;
