@@ -56,7 +56,8 @@ export interface UseSpeechResult {
   speechError: string | null;
   startListening: () => void;
   stopListening: () => void;
-  speak: (text: string) => void;
+  /** Đọc to `text`; `onEnd` chạy khi đọc xong (hoặc ngay nếu không đọc được). */
+  speak: (text: string, onEnd?: () => void) => void;
   stopSpeaking: () => void;
 }
 
@@ -74,6 +75,8 @@ export function useSpeech(onTranscript: (text: string) => void): UseSpeechResult
   const [speechError, setSpeechError] = useState<string | null>(null);
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Giữ callback trong ref để không phải dựng lại recognition mỗi lần render.
   const onTranscriptRef = useRef(onTranscript);
 
@@ -147,21 +150,62 @@ export function useSpeech(onTranscript: (text: string) => void): UseSpeechResult
     setListening(false);
   }, []);
 
-  const speak = useCallback((text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
+  const speak = useCallback((text: string, onEnd?: () => void) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      onEnd?.();
+      return;
+    }
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    if (pollRef.current) clearInterval(pollRef.current);
+
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = null;
+      utteranceRef.current = null;
+      setSpeaking(false);
+      onEnd?.();
+    };
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
+    utterance.onend = finish;
+    utterance.onerror = finish;
+    // Chrome thu gom rác utterance trước khi onend kịp chạy nếu không còn
+    // tham chiếu nào — giữ lại ở ref để sự kiện không bị mất.
+    utteranceRef.current = utterance;
+
     setSpeaking(true);
-    window.speechSynthesis.speak(utterance);
+    synth.speak(utterance);
+
+    // onend của Chrome vẫn có thể không chạy (đã gặp thật khi test: trình
+    // duyệt báo speaking=false nhưng sự kiện im lặng). Thăm dò định kỳ làm
+    // nguồn sự thật, nếu không thì chế độ hands-free sẽ treo vĩnh viễn.
+    const startedAt = Date.now();
+    pollRef.current = setInterval(() => {
+      const idle = !synth.speaking && !synth.pending;
+      // Cho 1 giây đầu để synthesis kịp khởi động trước khi coi là đã xong.
+      if (idle && Date.now() - startedAt > 1000) finish();
+    }, 200);
   }, []);
 
   const stopSpeaking = useCallback(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = null;
+    utteranceRef.current = null;
     window.speechSynthesis.cancel();
     setSpeaking(false);
+  }, []);
+
+  // Dọn interval thăm dò khi rời trang.
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
   }, []);
 
   return {

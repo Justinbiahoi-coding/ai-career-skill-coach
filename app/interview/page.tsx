@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +33,9 @@ export default function InterviewPage() {
   const [answer, setAnswer] = useState("");
   const [finishing, setFinishing] = useState(false);
   const [voiceMode, setVoiceMode] = useState(true);
+  // Chế độ hội thoại: AI đọc xong -> tự bật mic -> nói xong tự gửi. Tắt được
+  // để quay về thao tác tay khi phòng ồn hoặc nhận diện sai nhiều.
+  const [autoConverse, setAutoConverse] = useState(true);
 
   // Text nhận diện được đổ thẳng vào ô trả lời để người dùng đọc lại/sửa
   // trước khi gửi — quan trọng vì phòng thi ồn và giọng Việt nói tiếng Anh
@@ -68,10 +71,37 @@ export default function InterviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context]);
 
-  // Đọc to câu hỏi mới khi đang ở chế độ voice.
+  // Giữ bản mới nhất của hàm gửi để các effect bên dưới gọi được mà không
+  // phải đưa nó vào dependency (tránh effect chạy lại mỗi lần render).
+  const submitRef = useRef<() => void>(() => {});
+
+  // Đọc to câu hỏi mới. Ở chế độ hội thoại, đọc xong thì tự bật mic luôn —
+  // mic chỉ bật khi AI đã nói xong nên không thu lại chính giọng AI.
   useEffect(() => {
-    if (voiceMode && pendingQuestion) speak(pendingQuestion);
+    if (!voiceMode || !pendingQuestion) return;
+    speak(pendingQuestion, () => {
+      if (autoConverse && recognitionSupported) startListening();
+    });
+    // autoConverse/recognitionSupported cố ý không nằm trong deps: chỉ cần
+    // giá trị tại thời điểm câu hỏi mới xuất hiện, không cần đọc lại câu hỏi
+    // khi người dùng bật/tắt chế độ giữa chừng.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingQuestion, voiceMode, speak]);
+
+  // Nói xong (mic tự tắt sau khoảng lặng) -> tự gửi câu trả lời.
+  const wasListeningRef = useRef(false);
+  useEffect(() => {
+    const stoppedListening = wasListeningRef.current && !listening;
+    wasListeningRef.current = listening;
+    if (!stoppedListening || !autoConverse || !voiceMode) return;
+    if (!pendingQuestion || loading || finishing || !answer.trim()) return;
+    submitRef.current();
+  }, [listening, autoConverse, voiceMode, pendingQuestion, loading, finishing, answer]);
+
+  // Đồng bộ hàm gửi vào ref sau mỗi lần render (không đụng ref lúc render).
+  useEffect(() => {
+    submitRef.current = handleSubmitAnswer;
+  });
 
   async function fetchNextQuestion(history: InterviewMessage[]) {
     if (!context) return;
@@ -205,7 +235,27 @@ export default function InterviewPage() {
           >
             {voiceMode ? "🔊 Voice on" : "🔇 Voice off"}
           </Button>
+          {voiceMode && recognitionSupported && (
+            <Button
+              type="button"
+              variant={autoConverse ? "default" : "outline"}
+              size="xs"
+              onClick={() => {
+                const next = !autoConverse;
+                setAutoConverse(next);
+                if (!next) stopListening();
+              }}
+            >
+              {autoConverse ? "💬 Hands-free" : "✋ Manual"}
+            </Button>
+          )}
         </div>
+        {voiceMode && autoConverse && recognitionSupported && (
+          <p className="text-muted-foreground text-xs">
+            Hands-free: the mic starts automatically after each question, and your answer sends
+            when you stop speaking. Switch to Manual if the room is noisy.
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-3">
