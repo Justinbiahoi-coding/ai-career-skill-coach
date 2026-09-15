@@ -1,4 +1,10 @@
-import type { GenerateLessonResult, GradeExerciseResult, Skill } from "./types";
+import type {
+  GenerateLessonResult,
+  GradeExerciseResult,
+  InterviewScoreResult,
+  InterviewTurnResult,
+  Skill,
+} from "./types";
 
 export interface SampleJd {
   label: string;
@@ -73,5 +79,30 @@ export const FALLBACK_GRADE: GradeExerciseResult = {
   score: 6,
   feedback:
     "The AI grader is unavailable right now, so this is a placeholder score. Your answer was recorded — try again once the connection is back for real feedback.",
+  usedFallback: true,
+};
+
+const FALLBACK_INTERVIEW_QUESTIONS = [
+  "Can you walk me through a time you actually used this skill on a real project?",
+  "What's the part of this skill you find hardest, and how do you usually deal with it?",
+  "How would you explain this skill to someone who has never done it before?",
+  "If you had one month to get noticeably better at this skill, what would you focus on first?",
+];
+
+export function buildFallbackInterviewTurn(
+  questionNumber: number,
+  maxQuestions: number
+): InterviewTurnResult {
+  const question =
+    FALLBACK_INTERVIEW_QUESTIONS[(questionNumber - 1) % FALLBACK_INTERVIEW_QUESTIONS.length];
+  return { question, isLast: questionNumber >= maxQuestions, usedFallback: true };
+}
+
+export const FALLBACK_INTERVIEW_SCORE: InterviewScoreResult = {
+  clarity: 6,
+  relevance: 6,
+  confidence: 6,
+  overallFeedback:
+    "The AI interviewer is unavailable right now, so these are placeholder scores. Try again once the connection is back for real feedback.",
   usedFallback: true,
 };

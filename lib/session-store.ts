@@ -1,8 +1,9 @@
-import type { Skill } from "./types";
+import type { InterviewScoreResult, Skill } from "./types";
 
 const JD_KEY = "acsc:jdText";
 const SKILLS_KEY = "acsc:skills";
 const SELECTED_GAP_KEY = "acsc:selectedGapSkill";
+const INTERVIEW_SCORE_KEY = "acsc:interviewScore";
 
 export interface ExtractedSkillsSession {
   jdText: string;
@@ -42,6 +43,22 @@ export function loadSelectedGap(): Skill | null {
   if (!raw) return null;
   try {
     return JSON.parse(raw) as Skill;
+  } catch {
+    return null;
+  }
+}
+
+export function saveInterviewScore(score: InterviewScoreResult): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(INTERVIEW_SCORE_KEY, JSON.stringify(score));
+}
+
+export function loadInterviewScore(): InterviewScoreResult | null {
+  if (typeof window === "undefined") return null;
+  const raw = sessionStorage.getItem(INTERVIEW_SCORE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as InterviewScoreResult;
   } catch {
     return null;
   }

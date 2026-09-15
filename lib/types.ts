@@ -23,3 +23,22 @@ export interface GradeExerciseResult {
   feedback: string;
   usedFallback: boolean;
 }
+
+export interface InterviewMessage {
+  role: "assistant" | "user";
+  text: string;
+}
+
+export interface InterviewTurnResult {
+  question: string;
+  isLast: boolean;
+  usedFallback: boolean;
+}
+
+export interface InterviewScoreResult {
+  clarity: number;
+  relevance: number;
+  confidence: number;
+  overallFeedback: string;
+  usedFallback: boolean;
+}
