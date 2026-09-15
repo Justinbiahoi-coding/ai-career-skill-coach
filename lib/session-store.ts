@@ -1,4 +1,4 @@
-import type { InterviewScoreResult, Skill } from "./types";
+import type { InterviewScoreResult, SelectedGap, Skill } from "./types";
 
 const JD_KEY = "acsc:jdText";
 const SKILLS_KEY = "acsc:skills";
@@ -32,17 +32,17 @@ export function loadExtractedSkills(): ExtractedSkillsSession | null {
   }
 }
 
-export function saveSelectedGap(skill: Skill): void {
+export function saveSelectedGap(selectedGap: SelectedGap): void {
   if (typeof window === "undefined") return;
-  sessionStorage.setItem(SELECTED_GAP_KEY, JSON.stringify(skill));
+  sessionStorage.setItem(SELECTED_GAP_KEY, JSON.stringify(selectedGap));
 }
 
-export function loadSelectedGap(): Skill | null {
+export function loadSelectedGap(): SelectedGap | null {
   if (typeof window === "undefined") return null;
   const raw = sessionStorage.getItem(SELECTED_GAP_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as Skill;
+    return JSON.parse(raw) as SelectedGap;
   } catch {
     return null;
   }

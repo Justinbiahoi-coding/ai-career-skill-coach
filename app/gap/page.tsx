@@ -59,7 +59,10 @@ export default function GapPage() {
 
   function handlePractice() {
     if (!prioritySkill) return;
-    saveSelectedGap(prioritySkill);
+    saveSelectedGap({
+      skill: prioritySkill,
+      confidenceRating: ratings[prioritySkill.name] ?? DEFAULT_RATING,
+    });
     router.push("/learn");
   }
 
