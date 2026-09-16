@@ -149,6 +149,7 @@ Live at the time of writing:
 |---|---|---|
 | **VietnamWorks** | Public JSON search API | Most reliable; returns the full posting inside the search result |
 | **ITviec** | Static HTML search page | Vietnamese IT roles; rate-limits under rapid searching |
+| **TopDev** | Static HTML search page | Vietnamese tech roles; its results are filtered against the query on our side, because it returns featured jobs rather than nothing when a search does not match |
 | **RemoteOK** | Public JSON API | International remote roles, for contrast |
 
 Job listings are borrowed from public postings and attributed in the interface, with every job
@@ -159,8 +160,15 @@ Its block page stated plainly that our requests had triggered its security syste
 integration rather than work around it. A site's refusal is an answer, not an obstacle — and that
 decision is part of what responsible use means here.
 
-**In progress, not yet live:** CareerLink and TopDev have been verified as reachable and parseable
-and are being integrated on a branch. They are not part of the deployed prototype yet.
+**Integrated but only usable locally:** CareerLink parses correctly when the app runs on an ordinary
+connection, but the hosted deployment receives a different, much smaller page — 25KB against the
+187KB served to a home connection — with none of the job markup, and its detail pages return
+nothing either. The integration stays in the code because it works when self-hosted; on the
+deployed prototype it simply contributes no results and says so in the logs.
+
+**Ruled out before writing any code:** Indeed disallows `/job/` in its `robots.txt`. JobsGO and
+JobStreet return 403 before any request of ours. CareerViet renders its results client-side, so
+there is nothing to read from the HTML.
 
 ## 9. Responsible AI
 
