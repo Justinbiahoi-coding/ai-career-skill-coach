@@ -1,3 +1,4 @@
+import { persistInterviewResult, persistSkillPracticed, persistXp } from "./progress-store";
 import type { FullInterviewScoreResult, InterviewScoreResult, SelectedGap, Skill } from "./types";
 
 const JD_KEY = "acsc:jdText";
@@ -58,6 +59,11 @@ export function markSkillPracticed(skillName: string): void {
   if (!current.includes(skillName)) {
     sessionStorage.setItem(PRACTICED_SKILLS_KEY, JSON.stringify([...current, skillName]));
   }
+  // Fire-and-forget: sessionStorage above is what every page actually reads
+  // from, so a failed or slow DB write here changes nothing about how this
+  // session behaves. It only affects whether the count in /home has caught
+  // up the next time this user signs in.
+  void persistSkillPracticed(skillName);
 }
 
 export function loadPracticedSkills(): string[] {
@@ -75,6 +81,7 @@ export function loadPracticedSkills(): string[] {
 export function saveFullInterviewScore(score: FullInterviewScoreResult): void {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(FULL_INTERVIEW_SCORE_KEY, JSON.stringify(score));
+  void persistInterviewResult("full", null, score);
 }
 
 export function loadFullInterviewScore(): FullInterviewScoreResult | null {
@@ -88,9 +95,12 @@ export function loadFullInterviewScore(): FullInterviewScoreResult | null {
   }
 }
 
-export function saveInterviewScore(score: InterviewScoreResult): void {
+// skillName is optional and additive: the one existing call site didn't pass
+// it before, so making it required would be a breaking change for no reason.
+export function saveInterviewScore(score: InterviewScoreResult, skillName?: string): void {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(INTERVIEW_SCORE_KEY, JSON.stringify(score));
+  if (skillName) void persistInterviewResult("single_skill", skillName, score);
 }
 
 export function loadInterviewScore(): InterviewScoreResult | null {
@@ -120,5 +130,6 @@ export function addXp(amount: number): number {
   if (typeof window === "undefined" || amount <= 0) return 0;
   const next = loadXp() + amount;
   sessionStorage.setItem(XP_KEY, String(next));
+  void persistXp(amount);
   return next;
 }

@@ -286,7 +286,7 @@ export default function InterviewPage() {
       }
 
       const score = await res.json();
-      saveInterviewScore(score);
+      saveInterviewScore(score, context.skill.name);
       markSkillPracticed(context.skill.name);
       router.push("/result");
     } catch (err) {

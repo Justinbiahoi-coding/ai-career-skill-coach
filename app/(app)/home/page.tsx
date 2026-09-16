@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BookOpen, ClipboardList, MessagesSquare, Search, Trophy } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { MascotSays } from "@/components/game/mascot-says";
+import { StatPill } from "@/components/game/stat-pill";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
@@ -33,14 +34,26 @@ export default async function HomePage() {
     redirect("/");
   }
 
+  // Best-effort read: a missing profile row (first sign-in, before any XP is
+  // earned) or an RLS/network hiccup should show "0 XP", not break the page.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("xp, streak_days")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const greetingName = user.email?.split("@")[0] ?? "there";
+  const xp = profile?.xp ?? 0;
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
       <div className="flex items-start justify-between gap-3">
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-          Welcome back, {greetingName}
-        </h1>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            Welcome back, {greetingName}
+          </h1>
+          {xp > 0 && <StatPill tone="xp" value={xp} label={`${xp} XP earned`} />}
+        </div>
         <SignOutButton />
       </div>
 
