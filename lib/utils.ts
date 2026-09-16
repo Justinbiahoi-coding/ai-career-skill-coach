@@ -12,7 +12,7 @@ export { cn } from "cn"
  * authenticated user off to their own site right after a real password or
  * OAuth exchange.
  */
-export function safeRedirectPath(path: string | null | undefined, fallback = "/home"): string {
+export function safeRedirectPath(path: string | null | undefined, fallback = "/"): string {
   if (!path) return fallback;
   if (!path.startsWith("/")) return fallback;
   if (/^\/[\\/]/.test(path)) return fallback; // "//x" or "/\x"
