@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Lightbulb, RotateCcw, Target, ThumbsUp, Trophy } from "lucide-react";
+import { motion } from "motion/react";
 import { Mascot } from "@/components/mascot";
-import { PageShell } from "@/components/game/page-shell";
-import { XpBar } from "@/components/game/xp-bar";
+import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { loadFullInterviewScore, loadXp } from "@/lib/session-store";
+import { createClient } from "@/lib/supabase/client";
+import { loadFullInterviewScore } from "@/lib/session-store";
 import { cn } from "cn";
 import type { FullInterviewScoreResult } from "@/lib/types";
 
@@ -22,41 +22,47 @@ function readinessLabel(score: number): string {
 
 export default function FullResultPage() {
   const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
   const [score, setScore] = useState<FullInterviewScoreResult | null>(null);
   const [checkedStorage, setCheckedStorage] = useState(false);
-  const [xp, setXp] = useState(0);
 
   useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null));
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setScore(loadFullInterviewScore());
-    setXp(loadXp());
     setCheckedStorage(true);
   }, []);
 
   if (checkedStorage && !score) {
     return (
-      <PageShell step="result">
-        <div className="flex flex-col items-center gap-4 py-10 text-center">
-          <p className="text-muted-foreground text-sm">
+      <div className="flex min-h-screen flex-col bg-sky-wash">
+        <LandingNavbar userEmail={userEmail} />
+        <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col items-center justify-center gap-4 px-5 py-12 text-center">
+          <p className="font-aeonik text-base font-medium text-carbon/80">
             No full interview result saved for this session.
           </p>
           <Button
             size="lg"
-            className="clay-press rounded-xl font-bold"
+            className="h-12 rounded-full border border-carbon bg-carbon font-aeonik font-bold text-paper-white hover:bg-carbon/85"
             onClick={() => router.push("/gap")}
           >
             Back to skills
           </Button>
-        </div>
-      </PageShell>
+        </main>
+      </div>
     );
   }
 
   if (!score) {
     return (
-      <PageShell step="result">
-        <div className="text-muted-foreground py-16 text-center text-sm">Loading...</div>
-      </PageShell>
+      <div className="flex min-h-screen flex-col bg-sky-wash">
+        <LandingNavbar userEmail={userEmail} />
+        <main className="mx-auto flex w-full max-w-[720px] flex-1 items-center justify-center px-5 py-16">
+          <p className="font-aeonik text-sm font-medium text-carbon/60">Loading...</p>
+        </main>
+      </div>
     );
   }
 
@@ -65,92 +71,88 @@ export default function FullResultPage() {
   const isStrong = !score.usedFallback && score.overallReadiness >= 7;
 
   const sections = [
-    { title: "Strengths", icon: ThumbsUp, body: score.strengths, tone: "success" as const },
-    { title: "Biggest gaps", icon: Target, body: score.gaps, tone: "warning" as const },
-    { title: "What to do next", icon: Lightbulb, body: score.overallFeedback, tone: "primary" as const },
+    { title: "Strengths", icon: ThumbsUp, body: score.strengths, sticker: "bg-mint-pop" },
+    { title: "Biggest gaps", icon: Target, body: score.gaps, sticker: "bg-sunburst" },
+    { title: "What to do next", icon: Lightbulb, body: score.overallFeedback, sticker: "bg-sky-wash" },
   ];
 
   return (
-    <PageShell step="result" xp={xp}>
-      <div className="flex flex-col gap-6">
+    <div className="flex min-h-screen flex-col bg-sky-wash">
+      <LandingNavbar userEmail={userEmail} />
+
+      <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col gap-6 px-5 py-12 sm:px-8">
         <div className="flex flex-col items-center gap-4 text-center">
-          <Mascot
-            mood={isStrong ? "happy" : "encourage"}
-            size="xl"
-            className="animate-pop"
-            priority
-          />
+          <Mascot mood={isStrong ? "happy" : "encourage"} size="xl" className="animate-pop" priority />
           <div className="flex flex-col gap-1.5">
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-              Full interview complete
-            </h1>
-            <p className="text-muted-foreground text-sm leading-relaxed">
+            <motion.h1
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="font-lateral text-[clamp(28px,6vw,44px)] font-extrabold uppercase leading-[0.85] text-carbon"
+            >
+              Full interview
+              <br />
+              complete
+            </motion.h1>
+            <p className="font-aeonik text-sm font-medium leading-relaxed text-carbon/70">
               Here&apos;s how ready you look for this job overall.
             </p>
           </div>
         </div>
 
-        <Card
+        <div
           className={cn(
-            "clay-press border-2",
-            isStrong ? "border-success bg-success-muted/30" : "border-border"
+            "flex flex-col items-center gap-3 rounded-[30px] border border-carbon p-6 py-8",
+            isStrong ? "bg-mint-pop/30" : "bg-paper-white"
           )}
         >
-          <CardContent className="flex flex-col items-center gap-3 py-6">
-            {score.usedFallback && (
-              <p className="rounded-xl bg-warning-muted px-3 py-2 text-xs font-semibold text-warning-foreground">
-                The AI interviewer failed to score this session, so these are placeholder numbers.
-              </p>
-            )}
+          {score.usedFallback && (
+            <p className="rounded-[16px] border border-carbon bg-sunburst px-3.5 py-2.5 font-aeonik text-xs font-bold text-carbon">
+              The AI interviewer failed to score this session, so these are placeholder numbers.
+            </p>
+          )}
 
-            <div className="flex items-center gap-2">
-              {isStrong && <Trophy className="size-6 text-success" aria-hidden="true" />}
-              <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                {readinessLabel(score.overallReadiness)}
-              </span>
-            </div>
-
-            <span className="animate-count-up text-5xl font-extrabold tabular-nums">
-              {score.overallReadiness}
-              <span className="text-2xl text-muted-foreground">/10</span>
+          <div className="flex items-center gap-2">
+            {isStrong && <Trophy className="size-6 text-carbon" aria-hidden="true" />}
+            <span className="font-aeonik text-sm font-bold tracking-[0.02em] text-carbon/60 uppercase">
+              {readinessLabel(score.overallReadiness)}
             </span>
+          </div>
 
-            <XpBar
-              value={score.overallReadiness}
-              max={10}
-              tone={isStrong ? "success" : "primary"}
-              className="w-full max-w-xs"
+          <span className="animate-count-up font-aeonik text-5xl font-extrabold tabular-nums text-carbon">
+            {score.overallReadiness}
+            <span className="text-2xl text-carbon/50">/10</span>
+          </span>
+
+          <div className="h-3 w-full max-w-xs overflow-hidden rounded-full border border-carbon bg-soft-mist">
+            <div
+              className={cn(
+                "h-full rounded-full transition-[width] duration-500 ease-out",
+                isStrong ? "bg-mint-pop" : "bg-electric-blue"
+              )}
+              style={{ width: `${(score.overallReadiness / 10) * 100}%` }}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {sections.map(({ title, icon: Icon, body, tone }) => (
-          <Card key={title} className="clay-press">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Icon
-                  className={cn(
-                    "size-4",
-                    tone === "success" && "text-success",
-                    tone === "warning" && "text-warning",
-                    tone === "primary" && "text-primary"
-                  )}
-                  aria-hidden="true"
-                />
-                {title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-relaxed">{body}</p>
-            </CardContent>
-          </Card>
+        {sections.map(({ title, icon: Icon, body, sticker }) => (
+          <div
+            key={title}
+            className={cn("flex flex-col gap-2 rounded-[20px] border border-carbon p-5", sticker)}
+          >
+            <div className="flex items-center gap-2">
+              <Icon className="size-4 text-carbon" aria-hidden="true" />
+              <span className="font-aeonik text-base font-extrabold text-carbon">{title}</span>
+            </div>
+            <p className="font-aeonik text-sm leading-relaxed text-carbon/80">{body}</p>
+          </div>
         ))}
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button
             size="lg"
             variant="outline"
-            className="h-12 flex-1 rounded-xl font-bold"
+            className="h-12 flex-1 rounded-full border border-carbon bg-paper-white font-aeonik font-bold text-carbon hover:bg-soft-mist"
             onClick={() => router.push("/gap")}
           >
             <ArrowLeft className="size-5" aria-hidden="true" />
@@ -158,14 +160,14 @@ export default function FullResultPage() {
           </Button>
           <Button
             size="lg"
-            className="clay-press h-12 flex-1 rounded-xl font-extrabold"
+            className="h-12 flex-1 rounded-full border border-carbon bg-carbon font-aeonik font-extrabold text-paper-white hover:bg-carbon/85"
             onClick={() => router.push("/job")}
           >
             <RotateCcw className="size-5" aria-hidden="true" />
             Try a new job
           </Button>
         </div>
-      </div>
-    </PageShell>
+      </main>
+    </div>
   );
 }

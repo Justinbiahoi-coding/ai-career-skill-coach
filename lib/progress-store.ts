@@ -50,36 +50,54 @@ export async function persistXp(amount: number): Promise<void> {
   }
 }
 
-/** Records a skill as practiced for the signed-in user. No-op if signed out. */
-export async function persistSkillPracticed(skillName: string): Promise<void> {
+/**
+ * Records a skill as practiced for the signed-in user. No-op if signed out.
+ *
+ * jobId is optional: passing it records progress against a specific saved
+ * job (what Mock Test's "have I practiced enough" check reads), matching
+ * migration-002's per-job skill_progress. Omitting it keeps the pre-migration
+ * behavior of an account-wide record with no job attached — used only where
+ * a caller genuinely has no job context.
+ */
+export async function persistSkillPracticed(skillName: string, jobId?: string): Promise<void> {
   try {
     const userId = await currentUserId();
     if (!userId) return;
 
     const supabase = createClient();
-    await supabase
-      .from("skill_progress")
-      .upsert({ user_id: userId, skill_name: skillName }, { onConflict: "user_id,skill_name" });
+    if (jobId) {
+      await supabase
+        .from("skill_progress")
+        .upsert(
+          { user_id: userId, job_id: jobId, skill_name: skillName },
+          { onConflict: "user_id,job_id,skill_name" }
+        );
+    } else {
+      await supabase.from("skill_progress").insert({ user_id: userId, skill_name: skillName });
+    }
   } catch {
     // Swallowed by design — see file header.
   }
 }
 
-/** Appends one row to interview_history. No-op if signed out. */
+/** Appends one row to interview_history. No-op if signed out. jobId is optional (migration-002). */
 export async function persistInterviewResult(
   kind: "single_skill",
   skillName: string,
-  score: InterviewScoreResult
+  score: InterviewScoreResult,
+  jobId?: string
 ): Promise<void>;
 export async function persistInterviewResult(
   kind: "full",
   skillName: null,
-  score: FullInterviewScoreResult
+  score: FullInterviewScoreResult,
+  jobId?: string
 ): Promise<void>;
 export async function persistInterviewResult(
   kind: "single_skill" | "full",
   skillName: string | null,
-  score: InterviewScoreResult | FullInterviewScoreResult
+  score: InterviewScoreResult | FullInterviewScoreResult,
+  jobId?: string
 ): Promise<void> {
   try {
     const userId = await currentUserId();
@@ -88,6 +106,7 @@ export async function persistInterviewResult(
     const supabase = createClient();
     await supabase.from("interview_history").insert({
       user_id: userId,
+      job_id: jobId ?? null,
       kind,
       skill_name: skillName,
       scores: score,

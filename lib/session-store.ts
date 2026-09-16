@@ -1,12 +1,18 @@
-import { persistInterviewResult, persistSkillPracticed, persistXp } from "./progress-store";
+import { markCardCompleted } from "./saved-jobs";
+import { persistInterviewResult, persistXp } from "./progress-store";
+import { GRADEABLE_CARD_KINDS } from "./types";
 import type { FullInterviewScoreResult, InterviewScoreResult, SelectedGap, Skill } from "./types";
 
 const JD_KEY = "acsc:jdText";
 const SKILLS_KEY = "acsc:skills";
+const JOB_ID_KEY = "acsc:activeJobId";
 const SELECTED_GAP_KEY = "acsc:selectedGapSkill";
 const INTERVIEW_SCORE_KEY = "acsc:interviewScore";
-const PRACTICED_SKILLS_KEY = "acsc:practicedSkills";
 const FULL_INTERVIEW_SCORE_KEY = "acsc:fullInterviewScore";
+// Prefix, not a single key: one entry per skill name, since several skills
+// in the same job can each be mid-practice at once (e.g. "SQL:2" and
+// "Communication:1" both exist in sessionStorage at the same time).
+const CARD_PROGRESS_PREFIX = "acsc:cardProgress:";
 
 export interface ExtractedSkillsSession {
   jdText: string;
@@ -14,12 +20,23 @@ export interface ExtractedSkillsSession {
 }
 
 // Next.js chuyển trang bằng cách tải lại route mới, nên state React (JD +
-// skills đã trích xuất ở "/") không sống sót qua điều hướng. sessionStorage
+// skills đã trích xuất ở "/gap") không sống sót qua điều hướng. sessionStorage
 // "mang" dữ liệu đó sang trang tiếp theo trong cùng 1 phiên tab.
-export function saveExtractedSkills(session: ExtractedSkillsSession): void {
+//
+// jobId là optional: một job đã lưu (từ Find Job) mang theo jobId để
+// markSkillPracticed/saveInterviewScore ghi đúng saved_jobs.id; một JD dán
+// trực tiếp trong Practice (không qua danh sách đã lưu) thì không có jobId,
+// tiến trình của nó vẫn được ghi nhưng không gắn với job cụ thể nào — đúng ý
+// "AI cũng analyze chứ không cần analyze mỗi job".
+export function saveExtractedSkills(session: ExtractedSkillsSession, jobId?: string | null): void {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(JD_KEY, session.jdText);
   sessionStorage.setItem(SKILLS_KEY, JSON.stringify(session.skills));
+  if (jobId) {
+    sessionStorage.setItem(JOB_ID_KEY, jobId);
+  } else {
+    sessionStorage.removeItem(JOB_ID_KEY);
+  }
 }
 
 export function loadExtractedSkills(): ExtractedSkillsSession | null {
@@ -33,6 +50,12 @@ export function loadExtractedSkills(): ExtractedSkillsSession | null {
   } catch {
     return null;
   }
+}
+
+/** The saved job (if any) the current practice/interview session is tied to. */
+export function loadActiveJobId(): string | null {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem(JOB_ID_KEY);
 }
 
 export function saveSelectedGap(selectedGap: SelectedGap): void {
@@ -51,28 +74,54 @@ export function loadSelectedGap(): SelectedGap | null {
   }
 }
 
-// Ghi nhận 1 skill đã luyện xong (đã hoàn thành /learn + /interview cho nó).
-// Dùng ở /gap để hiện tiến độ và mở khóa Full Interview khi luyện hết.
-export function markSkillPracticed(skillName: string): void {
+/**
+ * Marks one Practice Room card (a DrillStepType or "mixed" — never
+ * "knowledge", which isn't graded) as completed for one skill.
+ *
+ * Two destinations depending on whether this session has a saved job:
+ * - With a jobId (a job picked from Find Job), the DB is the source of
+ *   truth via markCardCompleted — it needs to survive closing the tab, and
+ *   /gap's overview screen reads it back with listSkillCardProgressForJob.
+ * - Without one (a JD pasted directly, never saved), there's no job row to
+ *   attach progress to, so it lives in sessionStorage only and disappears
+ *   with the tab — matching the "pasted JD is a quick look, not a saved
+ *   thing" decision that shaped Find Job/Practice's split in the first
+ *   place.
+ *
+ * Callers don't need to know which path is active — /learn and its 7 card
+ * routes call this and loadCompletedCardsForSkill the same way either way.
+ */
+export function markCardCompletedForSkill(skillName: string, cardKind: string): void {
   if (typeof window === "undefined") return;
-  const current = loadPracticedSkills();
-  if (!current.includes(skillName)) {
-    sessionStorage.setItem(PRACTICED_SKILLS_KEY, JSON.stringify([...current, skillName]));
+  const jobId = loadActiveJobId();
+
+  if (jobId) {
+    // Fire-and-forget-ish: awaited internally so a failure can be logged,
+    // but callers don't block on it — the UI already shows the card as
+    // done optimistically via its own local "just finished" state.
+    void markCardCompleted(jobId, skillName, cardKind).catch(() => {});
+    return;
   }
-  // Fire-and-forget: sessionStorage above is what every page actually reads
-  // from, so a failed or slow DB write here changes nothing about how this
-  // session behaves. It only affects whether the count in /home has caught
-  // up the next time this user signs in.
-  void persistSkillPracticed(skillName);
+
+  const key = CARD_PROGRESS_PREFIX + skillName;
+  const current = loadCompletedCardsForSkill(skillName);
+  if (!current.includes(cardKind)) {
+    sessionStorage.setItem(key, JSON.stringify([...current, cardKind]));
+  }
 }
 
-export function loadPracticedSkills(): string[] {
+/**
+ * Session-local fallback read for the no-jobId path above. Pages that have a
+ * jobId should prefer listSkillCardProgressForJob (the DB) instead — this
+ * only ever reflects a pasted JD's progress within the current tab.
+ */
+export function loadCompletedCardsForSkill(skillName: string): string[] {
   if (typeof window === "undefined") return [];
-  const raw = sessionStorage.getItem(PRACTICED_SKILLS_KEY);
+  const raw = sessionStorage.getItem(CARD_PROGRESS_PREFIX + skillName);
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.filter((k) => GRADEABLE_CARD_KINDS.includes(k)) : [];
   } catch {
     return [];
   }
@@ -81,7 +130,7 @@ export function loadPracticedSkills(): string[] {
 export function saveFullInterviewScore(score: FullInterviewScoreResult): void {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(FULL_INTERVIEW_SCORE_KEY, JSON.stringify(score));
-  void persistInterviewResult("full", null, score);
+  void persistInterviewResult("full", null, score, loadActiveJobId() ?? undefined);
 }
 
 export function loadFullInterviewScore(): FullInterviewScoreResult | null {
@@ -100,7 +149,9 @@ export function loadFullInterviewScore(): FullInterviewScoreResult | null {
 export function saveInterviewScore(score: InterviewScoreResult, skillName?: string): void {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(INTERVIEW_SCORE_KEY, JSON.stringify(score));
-  if (skillName) void persistInterviewResult("single_skill", skillName, score);
+  if (skillName) {
+    void persistInterviewResult("single_skill", skillName, score, loadActiveJobId() ?? undefined);
+  }
 }
 
 export function loadInterviewScore(): InterviewScoreResult | null {

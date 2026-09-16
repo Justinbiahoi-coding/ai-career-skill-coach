@@ -10,9 +10,8 @@ export interface StepProgressProps {
 }
 
 /**
- * The dot rail above a practice session — same idea as JourneyBar but scoped
- * to steps within one skill instead of screens across the whole app, so the
- * two never have to agree on a step count.
+ * The dot rail above a practice session — same idea as the app nav but
+ * scoped to steps within one card instead of screens across the whole app.
  */
 export function StepProgress({ total, current, completed, className }: StepProgressProps) {
   return (
@@ -31,13 +30,13 @@ export function StepProgress({ total, current, completed, className }: StepProgr
           <div
             key={i}
             className={cn(
-              "flex h-2.5 flex-1 items-center justify-center rounded-full transition-colors",
-              isDone && "bg-success",
-              isCurrent && !isDone && "bg-primary",
-              !isDone && !isCurrent && "bg-muted"
+              "flex h-2.5 flex-1 items-center justify-center rounded-full border border-carbon transition-colors",
+              isDone && "bg-mint-pop",
+              isCurrent && !isDone && "bg-electric-blue",
+              !isDone && !isCurrent && "bg-soft-mist"
             )}
           >
-            {isDone && <Check className="size-2 text-success-foreground" aria-hidden="true" />}
+            {isDone && <Check className="size-2 text-carbon" aria-hidden="true" />}
           </div>
         );
       })}

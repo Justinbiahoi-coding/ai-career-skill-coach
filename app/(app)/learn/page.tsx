@@ -2,289 +2,312 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpen, Loader2, Sparkles, Star } from "lucide-react";
-import { FillBlankStepView } from "@/components/practice/fill-blank-step";
-import { FreeTextStepView } from "@/components/practice/free-text-step";
-import { MiniDialogueStepView } from "@/components/practice/mini-dialogue-step";
-import { MultipleChoiceStepView } from "@/components/practice/multiple-choice-step";
-import { ReorderStepView } from "@/components/practice/reorder-step";
-import { StepProgress } from "@/components/practice/step-progress";
-import { MascotSays } from "@/components/game/mascot-says";
-import { PageShell } from "@/components/game/page-shell";
+import type { Route } from "next";
+import {
+  ArrowRight,
+  BookOpen,
+  Check,
+  ListChecks,
+  ListOrdered,
+  Loader2,
+  MessageCircle,
+  MessagesSquare,
+  PenLine,
+  Sparkles,
+} from "lucide-react";
+import { motion } from "motion/react";
+import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { addXp, loadExtractedSkills, loadSelectedGap, loadXp } from "@/lib/session-store";
-import type { GeneratePracticeResult, PracticeStep, Skill } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
+import { cn } from "cn";
+import { listSkillCardProgressForJob } from "@/lib/saved-jobs";
+import {
+  loadActiveJobId,
+  loadCompletedCardsForSkill,
+  loadExtractedSkills,
+  loadSelectedGap,
+} from "@/lib/session-store";
+import { GRADEABLE_CARD_KINDS } from "@/lib/types";
+import type { PracticeCardKind } from "@/lib/types";
 
-interface LearnContext {
-  skill: Skill;
+interface RoomContext {
+  skillName: string;
   jdText: string;
+  jobId: string | null;
 }
 
-// XP per step, ramping with difficulty — the first three are graded locally
-// (fixed correct answer), the last two need the model to judge an open
-// answer, so they're worth more. Sums to 60, replacing the old flat 20 for
-// one free-text exercise, since there's now 5x the work per skill.
-const XP_BY_STEP_INDEX = [10, 10, 10, 15, 15] as const;
+interface CardDef {
+  kind: PracticeCardKind;
+  title: string;
+  description: string;
+  icon: typeof BookOpen;
+  itemCount: number | null;
+  href: Route;
+  sticker: string;
+}
 
-export default function LearnPage() {
+const CARD_DEFS: CardDef[] = [
+  {
+    kind: "knowledge",
+    title: "Knowledge",
+    description: "Read the background before you drill — skip it if you already know this skill.",
+    icon: BookOpen,
+    itemCount: null,
+    href: "/learn/knowledge",
+    sticker: "bg-soft-mist",
+  },
+  {
+    kind: "multiple_choice",
+    title: "Multiple Choice",
+    description: "Quick concept checks, 4 options each.",
+    icon: ListChecks,
+    itemCount: 5,
+    href: "/learn/multiple-choice",
+    sticker: "bg-sky-wash",
+  },
+  {
+    kind: "fill_blank",
+    title: "Fill in the Blank",
+    description: "Complete the sentence with the right term.",
+    icon: PenLine,
+    itemCount: 5,
+    href: "/learn/fill-blank",
+    sticker: "bg-lavender",
+  },
+  {
+    kind: "reorder",
+    title: "Reorder Steps",
+    description: "Put a real process back in the correct order.",
+    icon: ListOrdered,
+    itemCount: 4,
+    href: "/learn/reorder",
+    sticker: "bg-sunburst",
+  },
+  {
+    kind: "free_text",
+    title: "Free Response",
+    description: "Answer realistic scenarios in your own words, graded by AI.",
+    icon: PenLine,
+    itemCount: 4,
+    href: "/learn/free-text",
+    sticker: "bg-mint-pop",
+  },
+  {
+    kind: "mini_dialogue",
+    title: "Mini Dialogue",
+    description: "Short back-and-forth exchanges, like a slice of a real interview.",
+    icon: MessageCircle,
+    itemCount: 4,
+    href: "/learn/mini-dialogue",
+    sticker: "bg-voltage-violet text-paper-white",
+  },
+  {
+    kind: "mixed",
+    title: "Mixed Drill",
+    description: "A longer, comprehensive set spanning every question style.",
+    icon: MessagesSquare,
+    itemCount: 15,
+    href: "/learn/mixed",
+    sticker: "bg-ember text-paper-white",
+  },
+];
+
+export default function PracticeRoomPage() {
   const router = useRouter();
-  const [context, setContext] = useState<LearnContext | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
+  const [context, setContext] = useState<RoomContext | null>(null);
   const [checkedStorage, setCheckedStorage] = useState(false);
-  const [xp, setXp] = useState(0);
-
-  const [practice, setPractice] = useState<GeneratePracticeResult | null>(null);
-  const [practiceLoading, setPracticeLoading] = useState(false);
-  const [practiceError, setPracticeError] = useState<string | null>(null);
-
-  const [currentStep, setCurrentStep] = useState(0);
-  const [completed, setCompleted] = useState<boolean[]>([]);
+  const [completedCards, setCompletedCards] = useState<string[]>([]);
+  const [loadingProgress, setLoadingProgress] = useState(false);
 
   useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null));
+
     const selectedGap = loadSelectedGap();
     const extracted = loadExtractedSkills();
+    const jobId = loadActiveJobId();
+
+    const nextContext =
+      selectedGap && extracted
+        ? { skillName: selectedGap.skill.name, jdText: extracted.jdText, jobId }
+        : null;
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setContext(
-      selectedGap && extracted ? { skill: selectedGap.skill, jdText: extracted.jdText } : null
-    );
-    setXp(loadXp());
+    setContext(nextContext);
     setCheckedStorage(true);
-  }, []);
 
-  useEffect(() => {
-    if (!context) return;
+    if (!nextContext) return;
 
-    let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPracticeLoading(true);
-    setPracticeError(null);
-
-    fetch("/api/generate-practice", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ skillName: context.skill.name, jdText: context.jdText }),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error ?? "Request failed");
-        }
-        return res.json();
-      })
-      .then((data: GeneratePracticeResult) => {
-        if (cancelled) return;
-        setPractice(data);
-        setCompleted(new Array(data.steps.length).fill(false));
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setPracticeError(err instanceof Error ? err.message : "Something went wrong");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setPracticeLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [context]);
-
-  function handleStepDone(index: number) {
-    // A retried step (wrong MCQ answer, re-submitted free-text) can call this
-    // more than once; only the first success for a given step should pay out.
-    setCompleted((prev) => {
-      if (prev[index]) return prev;
-      const next = [...prev];
-      next[index] = true;
-      return next;
-    });
-    setXp(addXp(XP_BY_STEP_INDEX[index] ?? 0));
-  }
-
-  function handleAdvance() {
-    if (!practice) return;
-    if (currentStep < practice.steps.length - 1) {
-      setCurrentStep((i) => i + 1);
+    if (nextContext.jobId) {
+      setLoadingProgress(true);
+      listSkillCardProgressForJob(nextContext.jobId)
+        .then((rows) => {
+          const row = rows.find((r) => r.skillName === nextContext.skillName);
+          setCompletedCards(row?.completedCards ?? []);
+        })
+        .catch(() => setCompletedCards([]))
+        .finally(() => setLoadingProgress(false));
+    } else {
+      setCompletedCards(loadCompletedCardsForSkill(nextContext.skillName));
     }
-  }
-
-  function handleGoToInterview() {
-    router.push("/interview");
-  }
+  }, []);
 
   if (checkedStorage && !context) {
     return (
-      <PageShell step="practice">
-        <div className="flex flex-col items-center gap-4 py-10 text-center">
-          <MascotSays mood="thinking">
+      <div className="flex min-h-screen flex-col bg-sky-wash">
+        <LandingNavbar userEmail={userEmail} />
+        <main className="mx-auto flex w-full max-w-[860px] flex-1 flex-col items-center justify-center gap-4 px-5 py-12 text-center">
+          <p className="font-aeonik text-base font-medium text-carbon/80">
             No skill picked for this session yet. Let&apos;s go back and choose one.
-          </MascotSays>
-          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/job")}>
-            Back to start
+          </p>
+          <Button
+            size="lg"
+            className="h-12 rounded-full border border-carbon bg-carbon font-aeonik font-bold text-paper-white hover:bg-carbon/85"
+            onClick={() => router.push("/gap")}
+          >
+            Back to skill breakdown
           </Button>
-        </div>
-      </PageShell>
+        </main>
+      </div>
     );
   }
 
   if (!context) {
     return (
-      <PageShell step="practice">
-        <div className="text-muted-foreground py-16 text-center text-sm">Loading...</div>
-      </PageShell>
+      <div className="flex min-h-screen flex-col bg-sky-wash">
+        <LandingNavbar userEmail={userEmail} />
+        <main className="mx-auto flex w-full max-w-[860px] flex-1 items-center justify-center px-5 py-16">
+          <p className="font-aeonik text-sm font-medium text-carbon/60">Loading...</p>
+        </main>
+      </div>
     );
   }
 
-  const allDone = practice ? completed.every(Boolean) && completed.length > 0 : false;
-  const step: PracticeStep | undefined = practice?.steps[currentStep];
-  const isCurrentStepDone = completed[currentStep] ?? false;
+  const gradeableDone = CARD_DEFS.filter(
+    (c) => c.kind !== "knowledge" && completedCards.includes(c.kind)
+  ).length;
+  const allGradeableDone = gradeableDone >= GRADEABLE_CARD_KINDS.length;
 
   return (
-    <PageShell step="practice" xp={xp}>
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-3">
+    <div className="flex min-h-screen flex-col bg-sky-wash">
+      <LandingNavbar userEmail={userEmail} />
+
+      <main className="mx-auto flex w-full max-w-[900px] flex-1 flex-col gap-8 px-5 py-12 sm:px-8">
+        <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Practice</h1>
-            <Badge className="text-xs">{context.skill.name}</Badge>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-flex w-fit items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-1.5 text-xs font-bold tracking-[0.032em] text-carbon"
+            >
+              <Sparkles className="size-3.5" aria-hidden="true" />
+              PRACTICE ROOM
+            </motion.div>
+            <span className="rounded-full border border-carbon bg-electric-blue px-3 py-1 font-aeonik text-xs font-bold text-paper-white">
+              {context.skillName}
+            </span>
           </div>
-          <MascotSays mood={allDone ? "happy" : "default"}>
-            {allDone
-              ? "All 5 steps done — nice work. Ready to put it to the test in a mock interview?"
-              : "A short lesson, then 5 steps that get progressively harder — right through a short back-and-forth with me."}
-          </MascotSays>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            className="font-lateral text-[clamp(28px,5vw,44px)] font-extrabold uppercase leading-[0.85] tracking-normal text-carbon"
+          >
+            Pick a card
+          </motion.h1>
+
+          <p className="max-w-lg font-aeonik text-[15px] font-medium leading-relaxed text-carbon/80">
+            {allGradeableDone
+              ? "You've finished every card for this skill — nice work. Head back to see your other skills, or take on the mixed drill again for review."
+              : "Knowledge is optional reading; the other six count toward this skill's progress."}
+          </p>
         </div>
 
-        <Card className="clay-press">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BookOpen className="size-4 text-primary" aria-hidden="true" />
-              Lesson
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {practiceLoading && (
-              <div className="flex flex-col gap-2" aria-live="polite">
-                <span className="text-muted-foreground flex items-center gap-2 text-sm">
-                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                  Building your practice session...
-                </span>
-                <div className="flex flex-col gap-2" aria-hidden="true">
-                  {[100, 92, 96, 70].map((w, i) => (
-                    <div
-                      key={i}
-                      className="h-3 animate-pulse rounded-full bg-muted"
-                      style={{ width: `${w}%` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            {practiceError && (
-              <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
-                {practiceError}
-              </p>
-            )}
-            {practice && (
-              <div className="flex flex-col gap-3">
-                {practice.usedFallback && (
-                  <p className="rounded-xl bg-warning-muted px-3 py-2 text-xs font-semibold text-warning-foreground">
-                    The AI coach didn&apos;t respond, so this is offline sample content.
-                  </p>
-                )}
-                <p className="text-sm leading-relaxed whitespace-pre-line">{practice.lessonText}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {practice && step && (
-          <Card className="clay-press">
-            <CardHeader className="gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <CardTitle className="text-base">
-                  Step {currentStep + 1} of {practice.steps.length}
-                </CardTitle>
-                {isCurrentStepDone && (
-                  <span className="text-xp flex items-center gap-1 text-xs font-bold">
-                    <Star className="size-3.5" aria-hidden="true" />+
-                    {XP_BY_STEP_INDEX[currentStep]} XP
-                  </span>
-                )}
-              </div>
-              <StepProgress
-                total={practice.steps.length}
-                current={currentStep}
-                completed={completed}
+        {loadingProgress ? (
+          <div className="flex items-center gap-2 py-2 font-aeonik text-sm font-medium text-carbon/60">
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            Loading your progress...
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5 rounded-[20px] border border-carbon bg-paper-white p-4">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-aeonik text-sm font-bold text-carbon">Cards completed</span>
+              <span className="font-aeonik text-xs font-extrabold tabular-nums text-carbon/60">
+                {gradeableDone} of {GRADEABLE_CARD_KINDS.length}
+              </span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full border border-carbon bg-soft-mist">
+              <div
+                className="h-full rounded-full bg-mint-pop transition-[width] duration-500 ease-out"
+                style={{ width: `${(gradeableDone / GRADEABLE_CARD_KINDS.length) * 100}%` }}
               />
-            </CardHeader>
-            <CardContent>
-              {step.type === "multiple_choice" && (
-                <MultipleChoiceStepView
-                  key={currentStep}
-                  step={step}
-                  onCorrect={() => handleStepDone(currentStep)}
-                />
-              )}
-              {step.type === "fill_blank" && (
-                <FillBlankStepView
-                  key={currentStep}
-                  step={step}
-                  onCorrect={() => handleStepDone(currentStep)}
-                />
-              )}
-              {step.type === "reorder" && (
-                <ReorderStepView
-                  key={currentStep}
-                  step={step}
-                  onCorrect={() => handleStepDone(currentStep)}
-                />
-              )}
-              {step.type === "free_text" && (
-                <FreeTextStepView
-                  key={currentStep}
-                  step={step}
-                  skillName={context.skill.name}
-                  onCorrect={() => handleStepDone(currentStep)}
-                />
-              )}
-              {step.type === "mini_dialogue" && (
-                <MiniDialogueStepView
-                  key={currentStep}
-                  openingQuestion={step.openingQuestion}
-                  skillName={context.skill.name}
-                  jdText={context.jdText}
-                  onComplete={() => handleStepDone(currentStep)}
-                />
-              )}
-
-              {isCurrentStepDone && currentStep < practice.steps.length - 1 && (
-                <Button
-                  size="lg"
-                  className="clay-press mt-4 h-12 w-full rounded-xl text-base font-extrabold"
-                  onClick={handleAdvance}
-                >
-                  Continue
-                  <ArrowRight className="size-5" aria-hidden="true" />
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
-        {allDone && (
-          <Button
-            size="lg"
-            className="clay-press h-12 rounded-xl text-base font-extrabold"
-            onClick={handleGoToInterview}
-          >
-            <Sparkles className="size-5" aria-hidden="true" />
-            Try a mock interview
-            <ArrowRight className="size-5" aria-hidden="true" />
-          </Button>
-        )}
-      </div>
-    </PageShell>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {CARD_DEFS.map((card, i) => {
+            const isDone = completedCards.includes(card.kind);
+            const Icon = card.icon;
+            return (
+              <motion.button
+                key={card.kind}
+                type="button"
+                onClick={() => router.push(card.href)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -4, scale: 1.015 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.35, delay: Math.min(i * 0.05, 0.3), ease: [0.16, 1, 0.3, 1] }}
+                className={cn(
+                  "flex cursor-pointer flex-col gap-2.5 rounded-[30px] border border-carbon p-6 text-left",
+                  isDone ? "bg-mint-pop/30" : card.sticker
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className={cn(
+                      "flex size-10 items-center justify-center rounded-full border border-carbon",
+                      isDone ? "bg-mint-pop text-carbon" : "bg-paper-white text-carbon"
+                    )}
+                  >
+                    {isDone ? (
+                      <Check className="size-5" aria-hidden="true" />
+                    ) : (
+                      <Icon className="size-5" aria-hidden="true" />
+                    )}
+                  </span>
+                  {card.itemCount && (
+                    <span className="rounded-full border border-carbon bg-paper-white px-2.5 py-0.5 font-aeonik text-[10px] font-bold text-carbon">
+                      {card.itemCount} items
+                    </span>
+                  )}
+                  {card.kind === "knowledge" && (
+                    <span className="rounded-full border border-carbon bg-paper-white px-2.5 py-0.5 font-aeonik text-[10px] font-bold text-carbon">
+                      Optional
+                    </span>
+                  )}
+                </div>
+                <span className="font-aeonik text-lg font-extrabold text-carbon">{card.title}</span>
+                <p className="font-aeonik text-xs leading-relaxed text-carbon/70">{card.description}</p>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        <Button
+          size="lg"
+          variant="outline"
+          className="h-12 rounded-full border border-carbon bg-paper-white font-aeonik font-bold text-carbon hover:bg-soft-mist"
+          onClick={() => router.push("/gap")}
+        >
+          <ArrowRight className="size-5 rotate-180" aria-hidden="true" />
+          Back to skill breakdown
+        </Button>
+      </main>
+    </div>
   );
 }
