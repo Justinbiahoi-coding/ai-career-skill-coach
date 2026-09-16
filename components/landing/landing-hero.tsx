@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, PlayCircle, Sparkles, Mic, CheckCircle2, ShieldCheck } from "lucide-react";
-import { Mascot3D } from "./mascot-3d";
+import { MascotIntroChat } from "./mascot-intro-chat";
 import { motion } from "motion/react";
 
 export interface LandingHeroProps {
@@ -285,7 +286,9 @@ export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
           </motion.div>
         </motion.div>
 
-        {/* Interactive Physical Sticker Preview Card with 3D Rotating Mascot */}
+        {/* Mascot Introduction Card: static mascot art + a speech bubble that
+            types itself out on a loop, introducing the product like the
+            mascot is talking the visitor through it. */}
         <motion.div
           initial={{ opacity: 0, y: 36 }}
           animate={{ opacity: 1, y: 0 }}
@@ -293,42 +296,25 @@ export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
           transition={{ duration: 0.55, delay: 0.52, ease: [0.16, 1, 0.3, 1] }}
           className="mt-14 w-full max-w-xl rounded-[30px] border border-carbon bg-paper-white p-6 sm:p-8 text-left text-carbon"
         >
-          {/* 3D Rotating Model Container (Loaded directly via Three.js from remote URL) */}
-          <div className="relative mb-6 flex justify-center items-center bg-sky-wash/40 rounded-[20px] border border-carbon overflow-visible">
-            <Mascot3D className="w-full h-[270px] sm:h-[310px]" />
-
-            {/* Overlapping Sticker Badges with Contextual Info & Continuous Float */}
+          <div className="relative mb-6 flex items-end justify-center gap-3 rounded-[20px] border border-carbon bg-sky-wash/40 px-4 pt-6 pb-0 overflow-hidden sm:gap-4">
             <motion.div
-              animate={{
-                y: [-4, 4, -4],
-                rotate: [-8, -4, -8],
-              }}
-              whileHover={{ scale: 1.12, rotate: 0 }}
-              transition={{
-                duration: 3.2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="absolute -top-3.5 -left-3 rounded-[14px] border border-carbon bg-lavender px-3.5 py-1.5 text-xs font-bold tracking-[0.02em] cursor-pointer select-none"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="relative h-[220px] w-[160px] shrink-0 sm:h-[260px] sm:w-[190px]"
             >
-              ⚡ Target Skill: Distributed System Design
+              <Image
+                src="/brand/joblingo-mascot.webp"
+                alt="Joblingo mascot"
+                fill
+                sizes="190px"
+                className="object-contain object-bottom"
+                priority
+              />
             </motion.div>
 
-            <motion.div
-              animate={{
-                y: [4, -4, 4],
-                rotate: [4, 8, 4],
-              }}
-              whileHover={{ scale: 1.12, rotate: 0 }}
-              transition={{
-                duration: 3.6,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="absolute -bottom-3 -right-3 rounded-[14px] border border-carbon bg-mint-pop px-3.5 py-1.5 text-xs font-bold tracking-[0.02em] cursor-pointer select-none"
-            >
-              ✓ Spoken Fluency: 94% · Offer Ready
-            </motion.div>
+            <div className="mb-8 max-w-[220px] sm:max-w-[260px]">
+              <MascotIntroChat />
+            </div>
           </div>
 
           {/* Audio Wave Simulation with Meaningful Context */}

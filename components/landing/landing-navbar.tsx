@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ClipboardList, LogOut, Menu, Trophy, Search, X } from "lucide-react";
@@ -74,9 +75,16 @@ export function LandingNavbar({ userEmail }: LandingNavbarProps) {
               whileHover={{ rotate: 10, scale: 1.08 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="flex size-11 sm:size-12 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon font-extrabold text-xl font-lateral"
+              className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-carbon bg-paper-white sm:size-12"
             >
-              J
+              <Image
+                src="/brand/joblingo-logo.webp"
+                alt="Joblingo"
+                fill
+                sizes="48px"
+                className="object-cover"
+                priority
+              />
             </motion.div>
             <div className="flex items-center gap-2">
               <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-carbon">
