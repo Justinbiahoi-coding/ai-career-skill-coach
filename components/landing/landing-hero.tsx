@@ -5,7 +5,12 @@ import { ArrowRight, PlayCircle, Sparkles, Mic, CheckCircle2, ShieldCheck } from
 import { Mascot3D } from "./mascot-3d";
 import { motion } from "motion/react";
 
-export function LandingHero() {
+export interface LandingHeroProps {
+  /** Signed-in visitors skip sign-up and go straight into the tool. */
+  isSignedIn?: boolean;
+}
+
+export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
   return (
     <section
       id="hero"
@@ -230,10 +235,10 @@ export function LandingHero() {
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
           >
             <Link
-              href="/register"
+              href={isSignedIn ? "/job" : "/register"}
               className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-carbon px-8 py-4 text-sm font-bold tracking-[0.032em] text-paper-white"
             >
-              <span>Start Practicing Free</span>
+              <span>{isSignedIn ? "Find a Job to Practice" : "Start Practicing Free"}</span>
               <ArrowRight className="size-4.5" />
             </Link>
           </motion.div>

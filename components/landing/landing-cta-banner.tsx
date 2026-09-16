@@ -4,7 +4,12 @@ import Link from "next/link";
 import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 
-export function LandingCtaBanner() {
+export interface LandingCtaBannerProps {
+  /** Signed-in visitors skip sign-up and go straight into the tool. */
+  isSignedIn?: boolean;
+}
+
+export function LandingCtaBanner({ isSignedIn = false }: LandingCtaBannerProps) {
   return (
     <section className="w-full bg-concrete-gray py-20 md:py-28 px-6 sm:px-8 lg:px-12 select-none">
       <div className="mx-auto max-w-[1440px]">
@@ -102,10 +107,10 @@ export function LandingCtaBanner() {
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
                 <Link
-                  href="/register"
+                  href={isSignedIn ? "/job" : "/register"}
                   className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-carbon px-8 py-4 text-base font-bold tracking-[0.032em] text-paper-white"
                 >
-                  <span>Start Practicing Free</span>
+                  <span>{isSignedIn ? "Find a Job to Practice" : "Start Practicing Free"}</span>
                   <ArrowRight className="size-5" />
                 </Link>
               </motion.div>
@@ -115,8 +120,11 @@ export function LandingCtaBanner() {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
+                {/* /job, not /gap: the gap screen has nothing to show until a
+                    job has actually been analyzed, so sending someone
+                    straight there lands them on an empty state. */}
                 <Link
-                  href="/gap"
+                  href="/job"
                   className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-paper-white px-8 py-4 text-base font-bold tracking-[0.032em] text-carbon hover:bg-soft-mist transition-colors"
                 >
                   <span>Scan Job Postings</span>
