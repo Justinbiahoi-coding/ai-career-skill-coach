@@ -28,7 +28,9 @@ export default async function WelcomePage({ searchParams }: PageProps<"/">) {
           <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <GraduationCap className="size-5" aria-hidden="true" />
           </span>
-          <span className="text-lg font-extrabold tracking-tight">Skill Coach</span>
+          <span className="text-lg font-extrabold tracking-tight">
+            Skill Coach
+          </span>
         </div>
 
         <h1 className="text-2xl font-extrabold tracking-tight text-balance sm:text-3xl">
@@ -36,9 +38,9 @@ export default async function WelcomePage({ searchParams }: PageProps<"/">) {
         </h1>
 
         <p className="text-muted-foreground text-sm leading-relaxed text-pretty">
-          Pick a real job companies are hiring for. We&apos;ll find the skill holding you back,
-          coach you through it, and interview you on it — so you know where you stand before it
-          counts.
+          Pick a real job companies are hiring for. We&apos;ll find the skill
+          holding you back, coach you through it, and interview you on it — so
+          you know where you stand before it counts.
         </p>
       </div>
 
