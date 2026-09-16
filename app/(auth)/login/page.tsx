@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -95,9 +96,9 @@ function LoginContent() {
             <motion.div
               whileHover={{ rotate: 10, scale: 1.08 }}
               whileTap={{ scale: 0.95 }}
-              className="flex size-11 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon font-extrabold text-xl font-lateral"
+              className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-carbon bg-paper-white"
             >
-              J
+              <Image src="/brand/joblingo-logo.webp" alt="Joblingo" fill sizes="44px" className="object-cover" />
             </motion.div>
             <div className="flex items-center gap-2">
               <span className="text-xl font-extrabold tracking-tight text-carbon">
