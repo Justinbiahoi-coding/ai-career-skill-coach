@@ -133,7 +133,7 @@ export default function LearnPage() {
           <MascotSays mood="thinking">
             No skill picked for this session yet. Let&apos;s go back and choose one.
           </MascotSays>
-          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/")}>
+          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/job")}>
             Back to start
           </Button>
         </div>

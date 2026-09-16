@@ -85,7 +85,7 @@ export default function GapPage() {
           <MascotSays mood="thinking">
             I can&apos;t find a job description for this session. Let&apos;s start from the top.
           </MascotSays>
-          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/")}>
+          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/job")}>
             Back to start
           </Button>
         </div>
