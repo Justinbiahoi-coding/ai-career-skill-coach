@@ -39,24 +39,6 @@
   --radius-buttons: 1600px;
   --radius-wallet-icon: 16px;
 
-  /* Slush Spacing Scale */
-  --spacing-4: 4px;
-  --spacing-8: 8px;
-  --spacing-12: 12px;
-  --spacing-16: 16px;
-  --spacing-20: 20px;
-  --spacing-24: 24px;
-  --spacing-28: 28px;
-  --spacing-32: 32px;
-  --spacing-40: 40px;
-  --spacing-44: 44px;
-  --spacing-48: 48px;
-  --spacing-60: 60px;
-  --spacing-80: 80px;
-  --spacing-128: 128px;
-  --spacing-180: 180px;
-  --spacing-224: 224px;
-
   /* Animations */
   --animate-marquee: marquee 25s linear infinite;
   --animate-pop: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
