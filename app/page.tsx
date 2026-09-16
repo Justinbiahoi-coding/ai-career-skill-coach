@@ -191,7 +191,7 @@ export default function Home() {
                     type="button"
                     onClick={() => handleSearch(s)}
                     disabled={searching}
-                    className="min-h-9 cursor-pointer rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold transition-colors hover:border-primary hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
+                    className="min-h-11 cursor-pointer rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold transition-colors hover:border-primary hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-60"
                   >
                     {s}
                   </button>
@@ -303,7 +303,7 @@ export default function Home() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="rounded-full font-semibold"
+                    className="h-11 rounded-full font-semibold"
                     onClick={() => {
                       setJdText(sample.jdText);
                       setPickedJob(null);

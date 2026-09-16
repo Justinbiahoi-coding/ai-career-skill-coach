@@ -367,7 +367,7 @@ export default function InterviewPage() {
               type="button"
               variant={voiceMode ? "default" : "outline"}
               size="sm"
-              className="rounded-full font-bold"
+              className="h-11 rounded-full font-bold"
               onClick={() => {
                 const next = !voiceMode;
                 setVoiceMode(next);
@@ -392,7 +392,7 @@ export default function InterviewPage() {
                 type="button"
                 variant={autoConverse ? "default" : "outline"}
                 size="sm"
-                className="rounded-full font-bold"
+                className="h-11 rounded-full font-bold"
                 onClick={() => {
                   const next = !autoConverse;
                   setAutoConverse(next);
@@ -441,7 +441,7 @@ export default function InterviewPage() {
                 <button
                   type="button"
                   onClick={() => (speaking ? stopSpeaking() : speak(pendingQuestion))}
-                  className="text-muted-foreground hover:text-foreground ml-1 inline-flex min-h-9 w-fit cursor-pointer items-center gap-1.5 text-xs font-semibold underline underline-offset-2"
+                  className="text-muted-foreground hover:text-foreground ml-1 inline-flex min-h-11 w-fit cursor-pointer items-center gap-1.5 text-xs font-semibold underline underline-offset-2"
                 >
                   <Volume2 className="size-3.5" aria-hidden="true" />
                   {speaking ? "Speaking — tap to stop" : "Replay question"}
@@ -535,7 +535,7 @@ export default function InterviewPage() {
                   <button
                     type="button"
                     onClick={cancelAutoSend}
-                    className="text-primary min-h-9 cursor-pointer font-bold underline underline-offset-2"
+                    className="text-primary min-h-11 cursor-pointer font-bold underline underline-offset-2"
                   >
                     Cancel
                   </button>
