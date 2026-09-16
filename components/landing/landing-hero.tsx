@@ -296,23 +296,30 @@ export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
           transition={{ duration: 0.55, delay: 0.52, ease: [0.16, 1, 0.3, 1] }}
           className="mt-14 w-full max-w-xl rounded-[30px] border border-carbon bg-paper-white p-6 sm:p-8 text-left text-carbon"
         >
-          <div className="relative mb-6 flex items-end justify-center gap-3 rounded-[20px] border border-carbon bg-sky-wash/40 px-4 pt-6 pb-0 overflow-hidden sm:gap-4">
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="relative h-[220px] w-[160px] shrink-0 sm:h-[260px] sm:w-[190px]"
-            >
-              <Image
-                src="/brand/joblingo-mascot.webp"
-                alt="Joblingo mascot"
-                fill
-                sizes="190px"
-                className="object-contain object-bottom"
-                priority
-              />
-            </motion.div>
+          <div className="relative mb-6 flex items-end justify-center rounded-[20px] border border-carbon bg-sky-wash/40 px-4 pt-6 pb-0 overflow-hidden">
+            {/* Mascot: fixed size and position, never affected by the chat
+                bubble's width — it only ever bobs up and down in place. */}
+            <div className="relative h-[220px] w-[160px] shrink-0 sm:h-[260px] sm:w-[190px]">
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-0"
+              >
+                <Image
+                  src="/brand/joblingo-mascot.webp"
+                  alt="Joblingo mascot"
+                  fill
+                  sizes="190px"
+                  className="object-contain object-bottom"
+                  priority
+                />
+              </motion.div>
+            </div>
 
-            <div className="mb-8 max-w-[220px] sm:max-w-[260px]">
+            {/* Chat bubble: fixed width (not max-width), so the typewriter
+                text growing and shrinking never resizes this box or shifts
+                the mascot next to it. */}
+            <div className="mb-8 ml-3 w-[220px] shrink-0 sm:ml-4 sm:w-[260px]">
               <MascotIntroChat />
             </div>
           </div>
