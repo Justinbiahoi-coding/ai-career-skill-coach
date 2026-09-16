@@ -103,3 +103,22 @@ export function loadInterviewScore(): InterviewScoreResult | null {
     return null;
   }
 }
+
+const XP_KEY = "acsc:xp";
+
+// XP tổng của phiên. Hiện được cộng ở các mốc lớn (chấm bài, xong phỏng vấn);
+// khi phần practice tương tác được làm chi tiết, mỗi bước đúng sẽ cộng tiếp
+// vào đây mà không phải đổi chỗ nào khác.
+export function loadXp(): number {
+  if (typeof window === "undefined") return 0;
+  const raw = sessionStorage.getItem(XP_KEY);
+  const parsed = raw ? Number.parseInt(raw, 10) : 0;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+export function addXp(amount: number): number {
+  if (typeof window === "undefined" || amount <= 0) return 0;
+  const next = loadXp() + amount;
+  sessionStorage.setItem(XP_KEY, String(next));
+  return next;
+}

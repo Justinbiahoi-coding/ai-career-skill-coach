@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,6 +39,21 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Gamification palette. Semantic names, so a screen asks for "xp" or
+     "streak" rather than hardcoding a hex that later drifts out of sync. */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+  --color-xp: var(--xp);
+  --color-xp-muted: var(--xp-muted);
+  --color-streak: var(--streak);
+  --color-streak-muted: var(--streak-muted);
+  --color-locked: var(--locked);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -46,75 +61,131 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Claymorphism depth. Two stacked shadows — a coloured ambient glow plus a
+     hard bottom edge — are what make a surface read as a pressable solid
+     rather than a flat rectangle. */
+  --shadow-clay: 0 4px 0 0 var(--clay-edge), 0 8px 20px -6px var(--clay-ambient);
+  --shadow-clay-sm: 0 2px 0 0 var(--clay-edge), 0 4px 12px -4px var(--clay-ambient);
+  --shadow-clay-lg: 0 6px 0 0 var(--clay-edge), 0 14px 30px -8px var(--clay-ambient);
+
+  --animate-pop: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-count-up: count-up 0.4s ease-out;
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Teal carried over from the Job Buddy mascot, so the character and the
+     interface read as one brand rather than two. */
+  --background: oklch(0.985 0.006 195);
+  --foreground: oklch(0.24 0.03 220);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.24 0.03 220);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.24 0.03 220);
+
+  --primary: oklch(0.52 0.12 185);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.02 195);
+  --secondary-foreground: oklch(0.36 0.07 200);
+  --muted: oklch(0.96 0.01 200);
+  --muted-foreground: oklch(0.52 0.03 215);
+  --accent: oklch(0.93 0.04 195);
+  --accent-foreground: oklch(0.32 0.07 200);
+  --destructive: oklch(0.6 0.2 22);
+
+  --success: oklch(0.68 0.16 150);
+  --success-foreground: oklch(1 0 0);
+  --success-muted: oklch(0.94 0.05 150);
+  --warning: oklch(0.75 0.15 70);
+  --warning-foreground: oklch(0.26 0.05 70);
+  --warning-muted: oklch(0.96 0.05 80);
+  --xp: oklch(0.76 0.16 85);
+  --xp-muted: oklch(0.96 0.06 85);
+  --streak: oklch(0.68 0.19 40);
+  --streak-muted: oklch(0.95 0.06 45);
+  --locked: oklch(0.86 0.01 210);
+
+  --border: oklch(0.9 0.015 200);
+  --input: oklch(0.9 0.015 200);
+  --ring: oklch(0.52 0.12 185);
+
+  --chart-1: oklch(0.52 0.12 185);
+  --chart-2: oklch(0.68 0.16 150);
+  --chart-3: oklch(0.76 0.16 85);
+  --chart-4: oklch(0.68 0.19 40);
+  --chart-5: oklch(0.58 0.12 260);
+
+  --clay-edge: oklch(0.88 0.02 200);
+  --clay-ambient: oklch(0.6 0.08 200 / 0.28);
+
+  /* Rounder than stock shadcn: the soft-UI language depends on it. */
+  --radius: 1rem;
+
+  --sidebar: oklch(0.99 0.006 195);
+  --sidebar-foreground: oklch(0.24 0.03 220);
+  --sidebar-primary: oklch(0.52 0.12 185);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0.02 195);
+  --sidebar-accent-foreground: oklch(0.32 0.07 200);
+  --sidebar-border: oklch(0.9 0.015 200);
+  --sidebar-ring: oklch(0.52 0.12 185);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Dark mode is re-toned, not inverted: hues stay, lightness and chroma are
+     rebalanced so contrast holds up on a dark ground. */
+  --background: oklch(0.19 0.02 225);
+  --foreground: oklch(0.96 0.008 200);
+  --card: oklch(0.24 0.025 222);
+  --card-foreground: oklch(0.96 0.008 200);
+  --popover: oklch(0.24 0.025 222);
+  --popover-foreground: oklch(0.96 0.008 200);
+
+  --primary: oklch(0.72 0.13 183);
+  --primary-foreground: oklch(0.17 0.03 220);
+  --secondary: oklch(0.3 0.03 220);
+  --secondary-foreground: oklch(0.94 0.01 200);
+  --muted: oklch(0.29 0.025 222);
+  --muted-foreground: oklch(0.72 0.02 210);
+  --accent: oklch(0.33 0.04 200);
+  --accent-foreground: oklch(0.95 0.01 200);
+  --destructive: oklch(0.68 0.19 24);
+
+  --success: oklch(0.74 0.15 152);
+  --success-foreground: oklch(0.17 0.03 150);
+  --success-muted: oklch(0.3 0.06 152);
+  --warning: oklch(0.8 0.14 72);
+  --warning-foreground: oklch(0.2 0.04 70);
+  --warning-muted: oklch(0.32 0.06 75);
+  --xp: oklch(0.82 0.15 86);
+  --xp-muted: oklch(0.32 0.07 85);
+  --streak: oklch(0.74 0.17 44);
+  --streak-muted: oklch(0.32 0.08 45);
+  --locked: oklch(0.38 0.015 215);
+
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.72 0.13 183);
+
+  --chart-1: oklch(0.72 0.13 183);
+  --chart-2: oklch(0.74 0.15 152);
+  --chart-3: oklch(0.82 0.15 86);
+  --chart-4: oklch(0.74 0.17 44);
+  --chart-5: oklch(0.68 0.12 265);
+
+  --clay-edge: oklch(0.16 0.02 225);
+  --clay-ambient: oklch(0 0 0 / 0.5);
+
+  --sidebar: oklch(0.22 0.025 224);
+  --sidebar-foreground: oklch(0.96 0.008 200);
+  --sidebar-primary: oklch(0.72 0.13 183);
+  --sidebar-primary-foreground: oklch(0.17 0.03 220);
+  --sidebar-accent: oklch(0.3 0.03 220);
+  --sidebar-accent-foreground: oklch(0.95 0.01 200);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.72 0.13 183);
 }
 
 @layer base {
@@ -126,5 +197,81 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  /* A pressable clay surface: it sinks into its own shadow on press, which is
+     what sells the "physical button" feel that a colour change alone can't. */
+  .clay-press {
+    box-shadow: var(--shadow-clay);
+    transition:
+      transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 120ms ease-out;
+  }
+  .clay-press:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: var(--shadow-clay-sm);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes count-up {
+  0% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Every animation above is decoration on top of a state that is already
+   readable without it, so switching them off costs no information. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .clay-press:active:not(:disabled) {
+    transform: none;
   }
 }
