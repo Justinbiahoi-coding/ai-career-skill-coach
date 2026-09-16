@@ -211,8 +211,9 @@ export default function Home() {
               })}
 
               <p className="text-muted-foreground text-[11px] leading-relaxed">
-                Job listings are borrowed from public postings on VietnamWorks, ITviec and RemoteOK
-                for this demo. All rights belong to the original sites and employers.
+                Job listings are borrowed from public postings on VietnamWorks, ITviec, CareerLink,
+                TopDev and RemoteOK for this demo. All rights belong to the original sites and
+                employers.
               </p>
             </div>
           )}
