@@ -16,28 +16,64 @@ export function LandingCtaBanner() {
           transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
           className="relative rounded-[40px] border border-carbon bg-electric-blue p-10 sm:p-16 md:p-20 text-center text-carbon overflow-hidden"
         >
-          {/* Floating Sticker Confetti with Hover Pop */}
+          {/* Floating Sticker Confetti with Continuous Float & Hover Pop */}
           <motion.div
-            whileHover={{ scale: 1.12, rotate: 0 }}
-            className="hidden sm:flex absolute top-8 left-8 -rotate-12 rounded-[18px] border border-carbon bg-ember px-3.5 py-1.5 text-xs font-bold text-paper-white cursor-default"
+            animate={{
+              y: [-6, 6, -6],
+              rotate: [-14, -10, -14],
+            }}
+            whileHover={{ scale: 1.15, rotate: 0 }}
+            transition={{
+              duration: 4.2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="hidden sm:flex absolute top-8 left-8 rounded-[18px] border border-carbon bg-ember px-3.5 py-1.5 text-xs font-bold text-paper-white cursor-pointer select-none"
           >
             🚀 Ready for Offer
           </motion.div>
           <motion.div
-            whileHover={{ scale: 1.12, rotate: 0 }}
-            className="hidden sm:flex absolute top-8 right-8 rotate-12 rounded-[18px] border border-carbon bg-sunburst px-3.5 py-1.5 text-xs font-bold text-carbon cursor-default"
+            animate={{
+              y: [6, -6, 6],
+              rotate: [10, 15, 10],
+            }}
+            whileHover={{ scale: 1.15, rotate: 0 }}
+            transition={{
+              duration: 4.6,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="hidden sm:flex absolute top-8 right-8 rounded-[18px] border border-carbon bg-sunburst px-3.5 py-1.5 text-xs font-bold text-carbon cursor-pointer select-none"
           >
             🪙 100% Free
           </motion.div>
           <motion.div
-            whileHover={{ scale: 1.12, rotate: 0 }}
-            className="hidden sm:flex absolute bottom-8 left-12 rotate-6 rounded-[18px] border border-carbon bg-mint-pop px-3.5 py-1.5 text-xs font-bold text-carbon cursor-default"
+            animate={{
+              y: [-5, 5, -5],
+              rotate: [4, 8, 4],
+            }}
+            whileHover={{ scale: 1.15, rotate: 0 }}
+            transition={{
+              duration: 3.8,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="hidden sm:flex absolute bottom-8 left-12 rounded-[18px] border border-carbon bg-mint-pop px-3.5 py-1.5 text-xs font-bold text-carbon cursor-pointer select-none"
           >
             ✓ Real Mock Turns
           </motion.div>
           <motion.div
-            whileHover={{ scale: 1.12, rotate: 0 }}
-            className="hidden sm:flex absolute bottom-8 right-12 -rotate-6 rounded-[18px] border border-carbon bg-lavender px-3.5 py-1.5 text-xs font-bold text-carbon cursor-default"
+            animate={{
+              y: [5, -5, 5],
+              rotate: [-8, -4, -8],
+            }}
+            whileHover={{ scale: 1.15, rotate: 0 }}
+            transition={{
+              duration: 4.0,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="hidden sm:flex absolute bottom-8 right-12 rounded-[18px] border border-carbon bg-lavender px-3.5 py-1.5 text-xs font-bold text-carbon cursor-pointer select-none"
           >
             ⚡ Zero Delay
           </motion.div>

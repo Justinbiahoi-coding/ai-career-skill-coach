@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, PlayCircle, Sparkles, Mic, CheckCircle2, ShieldCheck } from "lucide-react";
-import { Mascot } from "@/components/mascot";
+import { Mascot3D } from "./mascot-3d";
 import { motion } from "motion/react";
 
 export function LandingHero() {
@@ -11,68 +11,132 @@ export function LandingHero() {
       id="hero"
       className="relative min-h-[92vh] w-full bg-sky-wash px-6 pt-12 pb-24 md:pt-20 md:pb-32 overflow-hidden flex flex-col items-center text-center select-none"
     >
-      {/* Floating 2D Multi-Colored Stickers with Entry Animation & Gentle Hover */}
+      {/* 1. Floating 2D Multi-Colored Stickers with Continuous Floating Motion */}
+
+      {/* Top Left: AI Gap Scanner (Ember #fb4903) */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8, rotate: -24 }}
-        animate={{ opacity: 1, scale: 1, rotate: -12 }}
-        whileHover={{ scale: 1.08, rotate: -6 }}
-        transition={{ duration: 0.5, delay: 0.2, type: "spring", stiffness: 300 }}
-        className="hidden sm:flex absolute top-16 left-[5%] lg:left-[10%] items-center gap-2 rounded-[20px] border border-carbon bg-ember px-4 py-2.5 text-paper-white text-sm font-bold tracking-[0.032em] z-20 cursor-default"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: [-10, 10, -10],
+          rotate: [-14, -9, -14],
+        }}
+        whileHover={{ scale: 1.12, rotate: -4 }}
+        transition={{
+          opacity: { duration: 0.5, delay: 0.15 },
+          scale: { duration: 0.5, delay: 0.15 },
+          y: { duration: 4.2, repeat: Infinity, ease: "easeInOut" },
+          rotate: { duration: 5.0, repeat: Infinity, ease: "easeInOut" },
+        }}
+        className="hidden sm:flex absolute top-16 left-[5%] lg:left-[10%] items-center gap-2 rounded-[20px] border border-carbon bg-ember px-4 py-2.5 text-paper-white text-sm font-bold tracking-[0.032em] z-20 cursor-pointer"
       >
         <span className="text-xl">🚀</span>
         <span>AI Gap Scanner</span>
       </motion.div>
 
+      {/* Top Right: Streak & XP 100% (Sunburst #ffd731) */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8, rotate: 24 }}
-        animate={{ opacity: 1, scale: 1, rotate: 12 }}
-        whileHover={{ scale: 1.08, rotate: 6 }}
-        transition={{ duration: 0.5, delay: 0.25, type: "spring", stiffness: 300 }}
-        className="hidden sm:flex absolute top-24 right-[6%] lg:right-[12%] items-center gap-2 rounded-[20px] border border-carbon bg-sunburst px-4 py-2.5 text-carbon text-sm font-bold tracking-[0.032em] z-20 cursor-default"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: [8, -10, 8],
+          rotate: [10, 15, 10],
+        }}
+        whileHover={{ scale: 1.12, rotate: 6 }}
+        transition={{
+          opacity: { duration: 0.5, delay: 0.2 },
+          scale: { duration: 0.5, delay: 0.2 },
+          y: { duration: 4.8, repeat: Infinity, ease: "easeInOut" },
+          rotate: { duration: 5.4, repeat: Infinity, ease: "easeInOut" },
+        }}
+        className="hidden sm:flex absolute top-24 right-[6%] lg:right-[12%] items-center gap-2 rounded-[20px] border border-carbon bg-sunburst px-4 py-2.5 text-carbon text-sm font-bold tracking-[0.032em] z-20 cursor-pointer"
       >
         <span className="text-xl">🪙</span>
         <span>Streak &amp; XP 100%</span>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
-        animate={{ opacity: 1, scale: 1, rotate: 6 }}
-        whileHover={{ scale: 1.08, rotate: 0 }}
-        transition={{ duration: 0.5, delay: 0.35, type: "spring", stiffness: 300 }}
-        className="hidden md:flex absolute bottom-36 left-[4%] lg:left-[8%] items-center gap-2 rounded-[16px] border border-carbon bg-voltage-violet px-4 py-2 text-paper-white text-xs font-bold tracking-[0.032em] z-20 cursor-default"
-      >
-        <span className="text-lg">👛</span>
-        <span>Voice Mock Turn</span>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8, rotate: 16 }}
-        animate={{ opacity: 1, scale: 1, rotate: -6 }}
-        whileHover={{ scale: 1.08, rotate: 0 }}
-        transition={{ duration: 0.5, delay: 0.4, type: "spring", stiffness: 300 }}
-        className="hidden md:flex absolute bottom-44 right-[5%] lg:right-[10%] items-center gap-2 rounded-[20px] border border-carbon bg-mint-pop px-4 py-2 text-carbon text-xs font-bold tracking-[0.032em] z-20 cursor-default"
-      >
-        <span className="text-lg">✓</span>
-        <span>Real JD Verified</span>
-      </motion.div>
-
+      {/* Middle Left: Team 15 · Track 1 (Lavender #e9ccff) */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1, rotate: -3 }}
-        whileHover={{ scale: 1.08, rotate: 0 }}
-        transition={{ duration: 0.5, delay: 0.45, type: "spring", stiffness: 300 }}
-        className="hidden lg:flex absolute top-80 left-[18%] items-center gap-1.5 rounded-[16px] border border-carbon bg-lavender px-3 py-1.5 text-carbon text-xs font-bold tracking-[0.032em] z-20 cursor-default"
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: [-7, 7, -7],
+          rotate: [-4, 2, -4],
+        }}
+        whileHover={{ scale: 1.12, rotate: 0 }}
+        transition={{
+          opacity: { duration: 0.5, delay: 0.25 },
+          scale: { duration: 0.5, delay: 0.25 },
+          y: { duration: 3.8, repeat: Infinity, ease: "easeInOut" },
+          rotate: { duration: 4.4, repeat: Infinity, ease: "easeInOut" },
+        }}
+        className="hidden lg:flex absolute top-80 left-[18%] items-center gap-1.5 rounded-[16px] border border-carbon bg-lavender px-3 py-1.5 text-carbon text-xs font-bold tracking-[0.032em] z-20 cursor-pointer"
       >
         <span>✨</span>
         <span>Team 15 · Track 1</span>
       </motion.div>
 
-      {/* Background 3D Inflatable Ribbon Sculpture (Electric Blue Graphic) */}
+      {/* Lower Left: Voice Mock Turn (Voltage Violet #5c4ade) */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: [8, -8, 8],
+          rotate: [4, 9, 4],
+        }}
+        whileHover={{ scale: 1.12, rotate: 0 }}
+        transition={{
+          opacity: { duration: 0.5, delay: 0.3 },
+          scale: { duration: 0.5, delay: 0.3 },
+          y: { duration: 5.2, repeat: Infinity, ease: "easeInOut" },
+          rotate: { duration: 5.8, repeat: Infinity, ease: "easeInOut" },
+        }}
+        className="hidden md:flex absolute bottom-36 left-[4%] lg:left-[8%] items-center gap-2 rounded-[16px] border border-carbon bg-voltage-violet px-4 py-2 text-paper-white text-xs font-bold tracking-[0.032em] z-20 cursor-pointer"
+      >
+        <span className="text-lg">👛</span>
+        <span>Voice Mock Turn</span>
+      </motion.div>
+
+      {/* Lower Right: Real JD Verified (Mint Pop #55db9c) */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: [-8, 8, -8],
+          rotate: [-8, -3, -8],
+        }}
+        whileHover={{ scale: 1.12, rotate: 0 }}
+        transition={{
+          opacity: { duration: 0.5, delay: 0.35 },
+          scale: { duration: 0.5, delay: 0.35 },
+          y: { duration: 4.5, repeat: Infinity, ease: "easeInOut" },
+          rotate: { duration: 5.1, repeat: Infinity, ease: "easeInOut" },
+        }}
+        className="hidden md:flex absolute bottom-44 right-[5%] lg:right-[10%] items-center gap-2 rounded-[20px] border border-carbon bg-mint-pop px-4 py-2 text-carbon text-xs font-bold tracking-[0.032em] z-20 cursor-pointer"
+      >
+        <span className="text-lg">✓</span>
+        <span>Real JD Verified</span>
+      </motion.div>
+
+      {/* Background 3D Inflatable Ribbon Sculpture (Electric Blue Graphic) with subtle inflatable drift */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 0.9, scale: 1 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-[1200px] h-64 pointer-events-none -z-0 overflow-hidden"
+        animate={{
+          opacity: 0.85,
+          scale: [1, 1.02, 1],
+          y: [-6, 6, -6],
+        }}
+        transition={{
+          opacity: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+          scale: { duration: 7, repeat: Infinity, ease: "easeInOut" },
+          y: { duration: 6, repeat: Infinity, ease: "easeInOut" },
+        }}
+        className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-[1200px] h-64 pointer-events-none -z-0 overflow-hidden"
       >
         <svg
           viewBox="0 0 1000 320"
@@ -103,12 +167,19 @@ export function LandingHero() {
       </motion.div>
 
       <div className="relative z-10 mx-auto max-w-[1440px] px-4 flex flex-col items-center">
-        {/* Hackathon Badge Pill with Smooth Fade-in */}
+        {/* Hackathon Badge Pill with Smooth Fade-in & Subtle Float */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-1.5 text-xs font-bold tracking-[0.032em] text-carbon mb-6"
+          animate={{
+            opacity: 1,
+            y: [-3, 3, -3],
+          }}
+          whileHover={{ scale: 1.05 }}
+          transition={{
+            opacity: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+            y: { duration: 3.6, repeat: Infinity, ease: "easeInOut" },
+          }}
+          className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-1.5 text-xs font-bold tracking-[0.032em] text-carbon mb-6 cursor-pointer"
         >
           <Sparkles className="size-3.5 text-carbon" />
           <span>Global Hackathon 2026 · Team 15</span>
@@ -209,7 +280,7 @@ export function LandingHero() {
           </motion.div>
         </motion.div>
 
-        {/* Interactive Physical Sticker Preview Card with Hover Lift */}
+        {/* Interactive Physical Sticker Preview Card with 3D Rotating Mascot */}
         <motion.div
           initial={{ opacity: 0, y: 36 }}
           animate={{ opacity: 1, y: 0 }}
@@ -217,45 +288,51 @@ export function LandingHero() {
           transition={{ duration: 0.55, delay: 0.52, ease: [0.16, 1, 0.3, 1] }}
           className="mt-14 w-full max-w-xl rounded-[30px] border border-carbon bg-paper-white p-6 sm:p-8 text-left text-carbon"
         >
-          {/* Card Header Pill Strip */}
-          <div className="flex items-center justify-between pb-4 border-b border-carbon">
-            <div className="flex items-center gap-2.5">
-              <span className="size-3 rounded-full border border-carbon bg-mint-pop animate-pulse" />
-              <span className="text-xs sm:text-sm font-bold tracking-[0.032em]">AI Live Simulation</span>
-            </div>
-            <motion.span
-              whileHover={{ scale: 1.08 }}
-              className="rounded-full border border-carbon bg-sunburst px-3 py-1 text-xs font-bold text-carbon"
-            >
-              Streak: 5 Days 🔥
-            </motion.span>
-          </div>
+          {/* 3D Rotating Model Container (Loaded directly via Three.js from remote URL) */}
+          <div className="relative mb-6 flex justify-center items-center bg-sky-wash/40 rounded-[20px] border border-carbon overflow-visible">
+            <Mascot3D className="w-full h-[270px] sm:h-[310px]" />
 
-          {/* Card Mascot Visual */}
-          <div className="relative my-6 flex justify-center items-center py-4 bg-sky-wash/40 rounded-[20px] border border-carbon">
-            <Mascot mood="happy" size="lg" priority decorative />
-
-            {/* Overlapping Sticker Badges with Hover Micro-interactivity */}
+            {/* Overlapping Sticker Badges with Contextual Info & Continuous Float */}
             <motion.div
-              whileHover={{ scale: 1.1, rotate: 0 }}
-              className="absolute -top-3 -left-3 -rotate-6 rounded-[14px] border border-carbon bg-lavender px-3 py-1 text-xs font-bold cursor-default"
+              animate={{
+                y: [-4, 4, -4],
+                rotate: [-8, -4, -8],
+              }}
+              whileHover={{ scale: 1.12, rotate: 0 }}
+              transition={{
+                duration: 3.2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute -top-3.5 -left-3 rounded-[14px] border border-carbon bg-lavender px-3.5 py-1.5 text-xs font-bold tracking-[0.02em] cursor-pointer select-none"
             >
-              ⚡ Gap: System Design
+              ⚡ Target Skill: Distributed System Design
             </motion.div>
 
             <motion.div
-              whileHover={{ scale: 1.1, rotate: 0 }}
-              className="absolute -bottom-2 -right-3 rotate-6 rounded-[14px] border border-carbon bg-mint-pop px-3 py-1 text-xs font-bold cursor-default"
+              animate={{
+                y: [4, -4, 4],
+                rotate: [4, 8, 4],
+              }}
+              whileHover={{ scale: 1.12, rotate: 0 }}
+              transition={{
+                duration: 3.6,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute -bottom-3 -right-3 rounded-[14px] border border-carbon bg-mint-pop px-3.5 py-1.5 text-xs font-bold tracking-[0.02em] cursor-pointer select-none"
             >
-              ✓ Score: 9.2/10
+              ✓ Spoken Fluency: 94% · Offer Ready
             </motion.div>
           </div>
 
-          {/* Audio Wave Simulation */}
+          {/* Audio Wave Simulation with Meaningful Context */}
           <div className="rounded-[18px] border border-carbon bg-soft-mist p-4">
             <div className="flex items-center justify-between text-xs font-bold mb-2">
-              <span className="text-carbon/70">AI Voice Mock Simulation</span>
-              <span className="text-carbon uppercase font-extrabold tracking-wider">Active</span>
+              <span className="text-carbon/80">Spoken English Mock Interview Turn</span>
+              <span className="text-carbon uppercase font-extrabold tracking-wider text-[11px]">
+                HANDS-FREE · STREAM ACTIVE
+              </span>
             </div>
             <div className="flex items-center gap-1.5 h-7 justify-center">
               {[35, 70, 50, 90, 60, 80, 45, 95, 75, 50, 85, 40, 65, 80, 55, 30].map((h, i) => (
