@@ -15,7 +15,7 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 
 /** Routes a signed-out visitor may see. Everything else requires a session. */
-const PUBLIC_PATHS = ["/", "/auth/callback"];
+const PUBLIC_PATHS = ["/", "/auth/callback", "/login", "/register"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -78,13 +78,13 @@ export async function proxy(request: NextRequest) {
 
   if (!user && !isPublic && !isApi) {
     const signInUrl = request.nextUrl.clone();
-    signInUrl.pathname = "/";
+    signInUrl.pathname = "/login";
     // Remember where they were headed so sign-in can return them there.
     signInUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(signInUrl);
   }
 
-  if (user && pathname === "/") {
+  if (user && (pathname === "/" || pathname === "/login" || pathname === "/register")) {
     const homeUrl = request.nextUrl.clone();
     homeUrl.pathname = "/home";
     homeUrl.search = "";

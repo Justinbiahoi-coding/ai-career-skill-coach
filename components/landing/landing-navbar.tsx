@@ -74,16 +74,18 @@ export function LandingNavbar() {
 
           {/* Desktop Action Buttons: Outlined White + Carbon Filled */}
           <div className="hidden sm:flex items-center gap-3">
-            <motion.button
-              type="button"
+            <motion.div
               whileHover={{ scale: 1.04, y: -1 }}
               whileTap={{ scale: 0.96 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="cursor-pointer rounded-full border border-carbon bg-paper-white px-5 py-2.5 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
-              onClick={() => alert("Sign In functionality coming soon...")}
             >
-              Sign In
-            </motion.button>
+              <Link
+                href="/login"
+                className="inline-flex cursor-pointer rounded-full border border-carbon bg-paper-white px-5 py-2.5 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
+              >
+                Sign In
+              </Link>
+            </motion.div>
 
             <motion.div
               whileHover={{ scale: 1.05, y: -1 }}
@@ -91,7 +93,7 @@ export function LandingNavbar() {
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
               <Link
-                href="/home"
+                href="/register"
                 className="inline-flex items-center gap-2 rounded-full border border-carbon bg-carbon px-6 py-2.5 text-[13px] font-bold tracking-[0.032em] text-paper-white"
               >
                 <span>Get Started</span>
@@ -136,20 +138,17 @@ export function LandingNavbar() {
                   </a>
                 ))}
                 <div className="mt-4 flex flex-col gap-3 border-t border-carbon pt-4">
-                  <button
-                    type="button"
-                    className="w-full rounded-full border border-carbon bg-paper-white py-3 text-center text-sm font-bold tracking-[0.032em] text-carbon hover:bg-soft-mist"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      alert("Sign In functionality coming soon...");
-                    }}
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full rounded-full border border-carbon bg-paper-white py-3 text-center text-sm font-bold tracking-[0.032em] text-carbon hover:bg-soft-mist inline-block"
                   >
                     Sign In
-                  </button>
+                  </Link>
                   <Link
-                    href="/home"
+                    href="/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full rounded-full border border-carbon bg-carbon py-3 text-center text-sm font-bold tracking-[0.032em] text-paper-white"
+                    className="w-full rounded-full border border-carbon bg-carbon py-3 text-center text-sm font-bold tracking-[0.032em] text-paper-white inline-block"
                   >
                     Get Started
                   </Link>

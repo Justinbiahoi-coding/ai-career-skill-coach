@@ -102,7 +102,7 @@ export function LandingCtaBanner() {
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
                 <Link
-                  href="/home"
+                  href="/register"
                   className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-carbon px-8 py-4 text-base font-bold tracking-[0.032em] text-paper-white"
                 >
                   <span>Start Practicing Free</span>
