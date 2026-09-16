@@ -45,6 +45,51 @@ export interface JobDescriptionResult {
   usedFallback: boolean;
 }
 
+/**
+ * A job the user has saved from Find Job, the entry point Practice and Mock
+ * Test both pick from. `skills` is null until Practice analyzes it — saving
+ * is a plain database write, analyzing calls Gemini, and those happen at
+ * different times so the user isn't paying an AI call for every job they
+ * merely like the look of.
+ */
+export interface SavedJob {
+  id: string;
+  title: string;
+  company: string;
+  source: JobSource;
+  url: string;
+  jdText: string;
+  skills: Skill[] | null;
+  createdAt: string;
+}
+
+/** How much of a saved job's skills have been practiced — drives the Mock Test warning. */
+export interface JobProgress {
+  jobId: string;
+  totalSkills: number;
+  practicedSkills: number;
+}
+
+/** The 6 gradeable Practice Room cards counted toward a skill's % complete — "knowledge" excluded. */
+export const GRADEABLE_CARD_KINDS = [
+  "multiple_choice",
+  "fill_blank",
+  "reorder",
+  "free_text",
+  "mini_dialogue",
+  "mixed",
+] as const;
+
+/**
+ * Per-skill, per-job progress through the Practice Room's 6 gradeable cards.
+ * completedCards is a subset of GRADEABLE_CARD_KINDS; a skill is "fully
+ * practiced" (counts toward Mock Test readiness) once it has all 6.
+ */
+export interface SkillCardProgress {
+  skillName: string;
+  completedCards: string[];
+}
+
 export interface SelectedGap {
   skill: Skill;
   // Self-rating (1-5) the user gave this skill on /gap, kept so /result can
@@ -118,6 +163,37 @@ export type PracticeStep =
 export interface GeneratePracticeResult {
   lessonText: string;
   steps: PracticeStep[];
+  usedFallback: boolean;
+}
+
+// --- Practice Room: 7 selectable drill cards per skill, built on top of the
+// single-lesson-plus-5-steps shape above rather than replacing it. ---
+//
+// Each of the 5 drill-type cards (multiple_choice, fill_blank, reorder,
+// free_text, mini_dialogue) holds 4-5 items of ONE PracticeStep type; the
+// "mixed" card holds ~15 items spanning all 5 types shuffled together. Both
+// are fetched lazily, one Gemini call per card the student actually opens —
+// generating all 7 up front would burn most of a day's ~20-request quota on
+// cards nobody visits. "knowledge" is not a PracticeStep at all: it's prose
+// to read, never graded, and never counted toward a skill's completion.
+export type DrillStepType = PracticeStep["type"];
+export type PracticeCardKind = "knowledge" | DrillStepType | "mixed";
+
+export interface KnowledgeCardResult {
+  /** Longer-form theory than lessonText — this IS the reading material, not a teaser for it. */
+  articleText: string;
+  usedFallback: boolean;
+}
+
+/** Response for a single-type drill card (mode = one of DrillStepType). 4-5 items of that one type. */
+export interface DrillCardResult {
+  items: PracticeStep[];
+  usedFallback: boolean;
+}
+
+/** Response for the "mixed" card: ~15 items spanning all 5 drill types, already shuffled server-side. */
+export interface MixedCardResult {
+  items: PracticeStep[];
   usedFallback: boolean;
 }
 

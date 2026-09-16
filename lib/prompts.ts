@@ -64,50 +64,127 @@ export function buildGenerateLessonPrompt(skillName: string, jdText: string): st
   return `Skill to teach: "${skillName}"\n\nJob description this skill came from:\n"""\n${jdText}\n"""`;
 }
 
-// Multi-step practice: one lesson plus 5 graded steps, all generated in a
-// single call rather than one call per step. Two reasons: the free tier's
-// daily quota is tight (see lib/gemini.ts), and generating everything at
-// once keeps all 5 steps grounded in the same lesson and job description
-// instead of drifting apart across separate calls.
-export const GENERATE_PRACTICE_SYSTEM_PROMPT = `You are a coach building a short, Duolingo-style
-practice session for one specific skill a student needs for a job they're applying to.
+// --- Practice Room: 7 selectable cards per skill (see lib/types.ts) ---
+//
+// Each card is its own Gemini call, fetched only when the student opens that
+// card — never all 7 up front. The free tier's daily quota is tight (see
+// lib/gemini.ts, ~20 requests/day), and generating a mixed card's 15 items
+// or 5 single-type items nobody looks at would burn most of that budget on
+// content that's never seen. This replaces the old "1 lesson + 5 fixed
+// steps in one call" design, which didn't scale to 4-5 items per type.
 
-Produce a lesson and exactly 5 steps, in this fixed order, each harder than the last:
+/** Item counts per card — single-type cards get a short set, mixed gets a longer mock-drill-length set. */
+export const DRILL_ITEM_COUNTS: Record<string, number> = {
+  multiple_choice: 5,
+  fill_blank: 5,
+  reorder: 4,
+  free_text: 4,
+  mini_dialogue: 4,
+};
+export const MIXED_ITEM_COUNT = 15;
 
-1. multiple_choice - a concept-check question with exactly 4 options, one clearly correct.
-2. fill_blank - one sentence about applying this skill, with ONE key term replaced by "___".
-   correctAnswer is that exact term (a single word or short phrase, not a full sentence).
-3. reorder - 3 to 5 short steps of a real process for this skill, given in their CORRECT order
-   in correctOrder (the app shuffles them for display - you must not shuffle them yourself).
-4. free_text - one realistic scenario question the student answers in a few sentences, grounded
-   in this job. Do not ask for code execution or file uploads.
-5. mini_dialogue - openingQuestion is the first thing an interviewer would ask about this skill.
-   This step is a short 1-2 turn back-and-forth conducted separately after this response, so you
-   only need to write the opening question here.
+export const KNOWLEDGE_CARD_SYSTEM_PROMPT = `You are a coach writing the reading material for one
+specific skill a student needs for a job they're applying to. This is the "Knowledge" card in a
+practice room — students who already know the skill can skip it entirely, so it must stand
+completely on its own and not be required reading for the drill cards.
 
-Rules that apply to every step:
-- Stay strictly on the given skill. Every step must be answerable from the lesson you wrote.
-- Ground steps 3, 4 and 5 in a scenario realistic for the job description given, not generic
-  trivia about the skill.
-- "explanation" fields (steps 1-3) are shown after the student answers, right or wrong - write
-  them to teach the underlying concept in 1-2 sentences, not just restate the correct answer.
+Write 3-5 short paragraphs (not bullet-only) covering: what this skill actually means in the
+context of the given job, the 2-3 things employers most often check for, and one common mistake
+or misconception to avoid. Ground it in the job description, not generic trivia about the skill.
+
+Write in English, even if the job description is in another language.
+
+Respond with ONLY a JSON object, no prose before or after it, matching exactly this shape:
+
+{"articleText": string}`;
+
+export function buildKnowledgeCardPrompt(skillName: string, jdText: string): string {
+  return `Skill: "${skillName}"\n\nJob description this skill came from:\n"""\n${jdText}\n"""`;
+}
+
+const DRILL_TYPE_INSTRUCTIONS: Record<string, string> = {
+  multiple_choice: `Each item is a concept-check question with exactly 4 options, one clearly
+correct. "correctIndex" is the 0-based index of the correct option.`,
+  fill_blank: `Each item is one sentence about applying this skill, with ONE key term replaced by
+"___". "correctAnswer" is that exact term (a single word or short phrase, not a full sentence).`,
+  reorder: `Each item is 3 to 5 short steps of a real process for this skill, given in their
+CORRECT order in "correctOrder" (the app shuffles them for display - you must not shuffle them
+yourself).`,
+  free_text: `Each item is one realistic scenario question the student answers in a few sentences,
+grounded in the job description. Do not ask for code execution or file uploads.`,
+  mini_dialogue: `Each item's "openingQuestion" is the first thing an interviewer would ask about
+this skill. Each item is a separate short exchange conducted later - you only write the opening
+question here, not a follow-up.`,
+};
+
+const DRILL_TYPE_SHAPE: Record<string, string> = {
+  multiple_choice: `{"type": "multiple_choice", "question": string, "options": [string, string, string, string], "correctIndex": number, "explanation": string}`,
+  fill_blank: `{"type": "fill_blank", "sentence": string, "correctAnswer": string, "explanation": string}`,
+  reorder: `{"type": "reorder", "instruction": string, "correctOrder": [string, ...], "explanation": string}`,
+  free_text: `{"type": "free_text", "prompt": string}`,
+  mini_dialogue: `{"type": "mini_dialogue", "openingQuestion": string}`,
+};
+
+/** System prompt for one of the 5 single-type drill cards. `type` must be a key of DRILL_ITEM_COUNTS. */
+export function buildDrillCardSystemPrompt(type: string): string {
+  const count = DRILL_ITEM_COUNTS[type] ?? 4;
+  const instructions = DRILL_TYPE_INSTRUCTIONS[type];
+  const shape = DRILL_TYPE_SHAPE[type];
+
+  return `You are a coach building ${count} practice items of ONE type for a student drilling one
+specific skill they need for a job they're applying to.
+
+${instructions}
+
+Rules that apply to every item:
+- Stay strictly on the given skill - every item must be answerable without outside research.
+- Ground each item in a scenario realistic for the job description given, not generic trivia.
+- Vary the ${count} items - do not repeat the same scenario or wording twice.
+- "explanation" fields (where present) are shown after the student answers, right or wrong -
+  write them to teach the underlying concept in 1-2 sentences, not just restate the answer.
+- Write everything in English, even if the job description is in another language.
+
+Respond with ONLY a JSON object, no prose before or after it, matching exactly this shape:
+
+{"items": [${shape}, ... exactly ${count} items total]}`;
+}
+
+/** Mixed card: ~15 items spanning all 5 drill types in one call, shuffled server-side after parsing. */
+export const MIXED_CARD_SYSTEM_PROMPT = `You are a coach building a longer mixed practice drill for
+a student on one specific skill they need for a job they're applying to. This is the hardest,
+most comprehensive card in the practice room - a final check across every question style.
+
+Produce exactly ${MIXED_ITEM_COUNT} items total, spanning all 5 types below in roughly even
+proportion (2-4 of each) and in ANY order - do not group them by type:
+
+- multiple_choice: a concept-check question, exactly 4 options, one clearly correct.
+- fill_blank: one sentence with ONE key term replaced by "___"; correctAnswer is that term.
+- reorder: 3-5 steps of a real process, given in correctOrder (the app shuffles for display).
+- free_text: one realistic scenario answered in a few sentences. No code execution or uploads.
+- mini_dialogue: openingQuestion is an interviewer's opening line on this skill.
+
+Rules that apply to every item:
+- Stay strictly on the given skill and ground items in the job description, not generic trivia.
+- Vary scenarios and wording across all ${MIXED_ITEM_COUNT} items - no repeats.
+- "explanation" fields are shown after answering, right or wrong - teach the concept in 1-2
+  sentences, don't just restate the answer.
 - Write everything in English, even if the job description is in another language.
 
 Respond with ONLY a JSON object, no prose before or after it, matching exactly this shape:
 
 {
-  "lessonText": string,
-  "steps": [
+  "items": [
     {"type": "multiple_choice", "question": string, "options": [string, string, string, string], "correctIndex": number, "explanation": string},
     {"type": "fill_blank", "sentence": string, "correctAnswer": string, "explanation": string},
     {"type": "reorder", "instruction": string, "correctOrder": [string, ...], "explanation": string},
     {"type": "free_text", "prompt": string},
-    {"type": "mini_dialogue", "openingQuestion": string}
+    {"type": "mini_dialogue", "openingQuestion": string},
+    ... exactly ${MIXED_ITEM_COUNT} items total, mixed order
   ]
 }`;
 
-export function buildGeneratePracticePrompt(skillName: string, jdText: string): string {
-  return `Skill to teach: "${skillName}"\n\nJob description this skill came from:\n"""\n${jdText}\n"""`;
+export function buildDrillCardPrompt(skillName: string, jdText: string): string {
+  return `Skill to drill: "${skillName}"\n\nJob description this skill came from:\n"""\n${jdText}\n"""`;
 }
 
 // The mini_dialogue step's follow-up turn: one short exchange, not a full

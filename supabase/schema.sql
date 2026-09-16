@@ -91,6 +91,40 @@ create policy "interview_history_insert_own" on interview_history
 create index if not exists interview_history_user_id_created_at_idx
   on interview_history (user_id, created_at desc);
 
+-- Every job description a user has analyzed, kept (not overwritten) so the
+-- general Mock Interview can offer a pick-a-job screen instead of only ever
+-- working off "whatever JD happens to be in sessionStorage right now" — the
+-- old single-job assumption interview/full/page.tsx made. skills is the
+-- already-extracted Skill[] from lib/types.ts, stored as jsonb rather than
+-- normalized into rows: it's read back as one unit per job, never queried by
+-- individual skill, so a join buys nothing here.
+create table if not exists saved_jobs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text,
+  company text,
+  jd_text text not null,
+  skills jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+alter table saved_jobs enable row level security;
+
+drop policy if exists "saved_jobs_select_own" on saved_jobs;
+create policy "saved_jobs_select_own" on saved_jobs
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "saved_jobs_insert_own" on saved_jobs;
+create policy "saved_jobs_insert_own" on saved_jobs
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "saved_jobs_delete_own" on saved_jobs;
+create policy "saved_jobs_delete_own" on saved_jobs
+  for delete using (auth.uid() = user_id);
+
+create index if not exists saved_jobs_user_id_created_at_idx
+  on saved_jobs (user_id, created_at desc);
+
 -- =============================================================================
 -- TIER 2 — reserved for planned features, unused by app code today
 -- =============================================================================

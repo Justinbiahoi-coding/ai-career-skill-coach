@@ -1,16 +1,20 @@
 import type {
   DialogueReplyResult,
+  DrillCardResult,
   FullInterviewScoreResult,
   FullInterviewTurnResult,
   GenerateLessonResult,
-  GeneratePracticeResult,
   GradeExerciseResult,
   GradeStepResult,
   InterviewScoreResult,
   InterviewTurnResult,
   JobListing,
+  KnowledgeCardResult,
+  MixedCardResult,
+  PracticeStep,
   Skill,
 } from "./types";
+import { DRILL_ITEM_COUNTS, MIXED_ITEM_COUNT } from "./prompts";
 
 export interface SampleJd {
   label: string;
@@ -254,16 +258,30 @@ export const FALLBACK_GRADE: GradeExerciseResult = {
   usedFallback: true,
 };
 
-export function buildFallbackPractice(skillName: string): GeneratePracticeResult {
+export function buildFallbackKnowledgeCard(skillName: string): KnowledgeCardResult {
   return {
-    lessonText: `We couldn't reach the AI coach right now, so here's a general starting point for
+    articleText: `We couldn't reach the AI coach right now, so here's a general starting point for
 "${skillName}". Break the skill into the smallest task you can practice today, do it once with a
 real example from a job description, and compare your result against what a strong answer would
-look like. Repetition on real examples beats reading theory for skills like this.`,
-    steps: [
-      {
+look like. Repetition on real examples beats reading theory for skills like this.
+
+Employers checking for this skill usually look for three things: whether you can name a concrete
+example of using it, whether you can explain your reasoning (not just the outcome), and whether
+you know when NOT to use it. The most common mistake is describing the skill in the abstract
+instead of walking through one real situation from start to finish.`,
+    usedFallback: true,
+  };
+}
+
+// One fallback item per drill type, reused (with light variation) to fill
+// out DRILL_ITEM_COUNTS[type] items — a placeholder set still needs to be
+// the right length, or the card would look broken rather than degraded.
+function fallbackItemForType(type: string, skillName: string, index: number): PracticeStep {
+  switch (type) {
+    case "multiple_choice":
+      return {
         type: "multiple_choice",
-        question: `Which approach best describes how to improve at "${skillName}"?`,
+        question: `Which approach best describes how to improve at "${skillName}"? (${index + 1})`,
         options: [
           "Practice on a real example, then compare against a strong answer",
           "Read about it until it feels familiar",
@@ -273,14 +291,16 @@ look like. Repetition on real examples beats reading theory for skills like this
         correctIndex: 0,
         explanation:
           "Deliberate practice on real examples, checked against a strong answer, builds the skill faster than reading alone.",
-      },
-      {
+      };
+    case "fill_blank":
+      return {
         type: "fill_blank",
         sentence: `The fastest way to get better at "${skillName}" is deliberate ___ on real examples.`,
         correctAnswer: "practice",
         explanation: "Deliberate practice — repeating a task with feedback — is what turns knowledge into skill.",
-      },
-      {
+      };
+    case "reorder":
+      return {
         type: "reorder",
         instruction: `Put these steps for practicing "${skillName}" in the right order.`,
         correctOrder: [
@@ -290,18 +310,36 @@ look like. Repetition on real examples beats reading theory for skills like this
           "Note the one biggest gap to fix next time",
         ],
         explanation: "Starting from a real example keeps practice grounded instead of abstract.",
-      },
-      {
+      };
+    case "free_text":
+      return {
         type: "free_text",
         prompt: `Describe one specific situation where "${skillName}" would come up in this job, and write out exactly what you would do step by step.`,
-      },
-      {
+      };
+    case "mini_dialogue":
+    default:
+      return {
         type: "mini_dialogue",
         openingQuestion: `Can you walk me through a time you actually used "${skillName}" on something real?`,
-      },
-    ],
+      };
+  }
+}
+
+export function buildFallbackDrillCard(type: string, skillName: string): DrillCardResult {
+  const count = DRILL_ITEM_COUNTS[type] ?? 4;
+  return {
+    items: Array.from({ length: count }, (_, i) => fallbackItemForType(type, skillName, i)),
     usedFallback: true,
   };
+}
+
+export function buildFallbackMixedCard(skillName: string): MixedCardResult {
+  const types = ["multiple_choice", "fill_blank", "reorder", "free_text", "mini_dialogue"];
+  const items: PracticeStep[] = [];
+  for (let i = 0; i < MIXED_ITEM_COUNT; i++) {
+    items.push(fallbackItemForType(types[i % types.length], skillName, i));
+  }
+  return { items, usedFallback: true };
 }
 
 export const FALLBACK_STEP_GRADE: GradeStepResult = {
