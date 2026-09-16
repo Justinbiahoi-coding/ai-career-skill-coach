@@ -318,8 +318,10 @@ export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
 
             {/* Chat bubble: fixed width (not max-width), so the typewriter
                 text growing and shrinking never resizes this box or shifts
-                the mascot next to it. */}
-            <div className="mb-8 ml-3 w-[260px] shrink-0 sm:ml-4 sm:w-[320px]">
+                the mascot next to it. Narrower than the mascot's own box and
+                nudged up (mb-16) so it sits higher and never crowds the
+                card's right edge. */}
+            <div className="mb-16 ml-3 w-[220px] shrink-0 sm:ml-4 sm:w-[280px]">
               <MascotIntroChat />
             </div>
           </div>
