@@ -1,11 +1,20 @@
+"use client";
+
 import { Sparkles, Mic, FileSearch, CheckCircle2, Flame, Award, QrCode } from "lucide-react";
+import { motion } from "motion/react";
 
 export function LandingFeatures() {
   return (
     <section id="features" className="w-full bg-paper-white border-b border-carbon py-24 md:py-32 select-none">
       <div className="mx-auto max-w-[1440px] px-6 sm:px-8 lg:px-12">
-        {/* Section Header with Crushed Lateral Display Headline */}
-        <div className="mx-auto max-w-4xl text-center">
+        {/* Section Header with Scroll-Triggered Reveal */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto max-w-4xl text-center"
+        >
           <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-lavender px-4 py-1 text-xs font-bold tracking-[0.032em] text-carbon mb-6">
             FEATURE ECOSYSTEM
           </div>
@@ -15,12 +24,19 @@ export function LandingFeatures() {
           <p className="mt-6 max-w-2xl mx-auto font-aeonik text-base sm:text-xl font-medium leading-[1.3] text-carbon/80">
             Rigorous interview preparation mechanics wrapped in a vibrant, physical sticker-book aesthetic.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Bento Grid with 1px Hand-cut Black Borders */}
+        {/* Bento Grid with Scroll-Triggered Reveal and Hover Elevation */}
         <div className="mt-16 sm:mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Bento Card 1: Job Match Engine (Sky Wash) */}
-          <div className="flex flex-col justify-between rounded-[30px] border border-carbon bg-sky-wash p-8 text-carbon">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            whileHover={{ y: -6, scale: 1.015 }}
+            transition={{ duration: 0.45, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col justify-between rounded-[30px] border border-carbon bg-sky-wash p-8 text-carbon cursor-default"
+          >
             <div>
               <div className="flex items-center justify-between">
                 <span className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
@@ -38,18 +54,26 @@ export function LandingFeatures() {
 
             <div className="mt-8 flex flex-wrap gap-2">
               {["VietnamWorks", "ITviec", "TopDev", "Regex Parser"].map((tag) => (
-                <span
+                <motion.span
                   key={tag}
-                  className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold text-carbon"
+                  whileHover={{ scale: 1.06 }}
+                  className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold text-carbon inline-block"
                 >
                   {tag}
-                </span>
+                </motion.span>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Bento Card 2: AI Voice Interviewer (Lavender) */}
-          <div className="flex flex-col justify-between rounded-[30px] border border-carbon bg-lavender p-8 text-carbon">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            whileHover={{ y: -6, scale: 1.015 }}
+            transition={{ duration: 0.45, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col justify-between rounded-[30px] border border-carbon bg-lavender p-8 text-carbon cursor-default"
+          >
             <div>
               <div className="flex items-center justify-between">
                 <span className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
@@ -72,10 +96,17 @@ export function LandingFeatures() {
               </div>
               <span className="text-xs font-extrabold text-carbon">&lt; 800ms</span>
             </div>
-          </div>
+          </motion.div>
 
           {/* Bento Card 3: Split QR Card & Mobile Access (Slush Signature Blueprint) */}
-          <div className="flex flex-col justify-between rounded-[30px] border border-carbon bg-soft-mist p-8 text-carbon">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            whileHover={{ y: -6, scale: 1.015 }}
+            transition={{ duration: 0.45, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col justify-between rounded-[30px] border border-carbon bg-soft-mist p-8 text-carbon cursor-default"
+          >
             <div>
               <div className="flex items-center justify-between">
                 <span className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
@@ -91,8 +122,12 @@ export function LandingFeatures() {
               </p>
             </div>
 
-            {/* Slush Signature Blueprint 3.4: Split QR Download Card */}
-            <div className="mt-8 flex w-full items-stretch rounded-[20px] border border-carbon bg-voltage-violet overflow-hidden">
+            {/* Slush Signature Blueprint 3.4: Split QR Download Card with Hover Zoom */}
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="mt-8 flex w-full items-stretch rounded-[20px] border border-carbon bg-voltage-violet overflow-hidden cursor-pointer"
+            >
               <div className="flex items-center justify-center bg-paper-white p-3.5 border-r border-carbon">
                 <QrCode className="size-12 text-carbon" />
               </div>
@@ -104,11 +139,18 @@ export function LandingFeatures() {
                   JOBLINGO APP
                 </span>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Bento Card 4: Micro-Lesson Engine (Paper White with Mint Pop border) */}
-          <div className="flex flex-col justify-between rounded-[30px] border border-carbon bg-paper-white p-8 text-carbon">
+          {/* Bento Card 4: Micro-Lesson Engine */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            whileHover={{ y: -6, scale: 1.015 }}
+            transition={{ duration: 0.45, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col justify-between rounded-[30px] border border-carbon bg-paper-white p-8 text-carbon cursor-default"
+          >
             <div>
               <div className="flex items-center justify-between">
                 <span className="rounded-full border border-carbon bg-mint-pop px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
@@ -127,10 +169,17 @@ export function LandingFeatures() {
             <div className="mt-8 rounded-[20px] border border-carbon bg-sky-wash p-4 text-xs font-bold text-carbon">
               ✓ Master critical interview skills in just 5–7 minutes a day
             </div>
-          </div>
+          </motion.div>
 
           {/* Bento Card 5: Gamification & Streak (Sunburst) */}
-          <div className="md:col-span-2 flex flex-col justify-between rounded-[30px] border border-carbon bg-sunburst p-8 text-carbon">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            whileHover={{ y: -6, scale: 1.015 }}
+            transition={{ duration: 0.45, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="md:col-span-2 flex flex-col justify-between rounded-[30px] border border-carbon bg-sunburst p-8 text-carbon cursor-default"
+          >
             <div>
               <div className="flex items-center justify-between">
                 <span className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
@@ -147,17 +196,26 @@ export function LandingFeatures() {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-4 items-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-2 text-sm font-bold text-carbon">
+              <motion.div
+                whileHover={{ scale: 1.06 }}
+                className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-2 text-sm font-bold text-carbon cursor-default"
+              >
                 <span>🔥 7-Day Streak</span>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-2 text-sm font-bold text-carbon">
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.06 }}
+                className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-2 text-sm font-bold text-carbon cursor-default"
+              >
                 <span>⭐ +500 XP</span>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-2 text-sm font-bold text-carbon">
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.06 }}
+                className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-2 text-sm font-bold text-carbon cursor-default"
+              >
                 <span>🏆 92% Readiness</span>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

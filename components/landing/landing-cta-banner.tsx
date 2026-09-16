@@ -1,25 +1,46 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { motion } from "motion/react";
 
 export function LandingCtaBanner() {
   return (
     <section className="w-full bg-concrete-gray py-20 md:py-28 px-6 sm:px-8 lg:px-12 select-none">
       <div className="mx-auto max-w-[1440px]">
-        {/* Giant Electric Blue Slush Card with Hand-cut 1px Black Border & 40px Radius */}
-        <div className="relative rounded-[40px] border border-carbon bg-electric-blue p-10 sm:p-16 md:p-20 text-center text-carbon overflow-hidden">
-          {/* Floating Sticker Confetti */}
-          <div className="hidden sm:flex absolute top-8 left-8 -rotate-12 rounded-[18px] border border-carbon bg-ember px-3.5 py-1.5 text-xs font-bold text-paper-white">
+        {/* Giant Electric Blue Slush Card with Scroll Reveal */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 32 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          className="relative rounded-[40px] border border-carbon bg-electric-blue p-10 sm:p-16 md:p-20 text-center text-carbon overflow-hidden"
+        >
+          {/* Floating Sticker Confetti with Hover Pop */}
+          <motion.div
+            whileHover={{ scale: 1.12, rotate: 0 }}
+            className="hidden sm:flex absolute top-8 left-8 -rotate-12 rounded-[18px] border border-carbon bg-ember px-3.5 py-1.5 text-xs font-bold text-paper-white cursor-default"
+          >
             🚀 Ready for Offer
-          </div>
-          <div className="hidden sm:flex absolute top-8 right-8 rotate-12 rounded-[18px] border border-carbon bg-sunburst px-3.5 py-1.5 text-xs font-bold text-carbon">
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.12, rotate: 0 }}
+            className="hidden sm:flex absolute top-8 right-8 rotate-12 rounded-[18px] border border-carbon bg-sunburst px-3.5 py-1.5 text-xs font-bold text-carbon cursor-default"
+          >
             🪙 100% Free
-          </div>
-          <div className="hidden sm:flex absolute bottom-8 left-12 rotate-6 rounded-[18px] border border-carbon bg-mint-pop px-3.5 py-1.5 text-xs font-bold text-carbon">
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.12, rotate: 0 }}
+            className="hidden sm:flex absolute bottom-8 left-12 rotate-6 rounded-[18px] border border-carbon bg-mint-pop px-3.5 py-1.5 text-xs font-bold text-carbon cursor-default"
+          >
             ✓ Real Mock Turns
-          </div>
-          <div className="hidden sm:flex absolute bottom-8 right-12 -rotate-6 rounded-[18px] border border-carbon bg-lavender px-3.5 py-1.5 text-xs font-bold text-carbon">
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.12, rotate: 0 }}
+            className="hidden sm:flex absolute bottom-8 right-12 -rotate-6 rounded-[18px] border border-carbon bg-lavender px-3.5 py-1.5 text-xs font-bold text-carbon cursor-default"
+          >
             ⚡ Zero Delay
-          </div>
+          </motion.div>
 
           <div className="relative z-10 mx-auto max-w-3xl flex flex-col items-center">
             {/* Hackathon Badge */}
@@ -37,22 +58,34 @@ export function LandingCtaBanner() {
               Don&apos;t let knowledge gaps hold back your career. Discover what recruiters expect and master live voice interview reflexes today.
             </p>
 
-            {/* Action Buttons: Carbon Filled CTA + Paper White Outlined Ghost Button */}
+            {/* Action Buttons: Carbon Filled CTA + Paper White Outlined Ghost Button with Spring Hovers */}
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                href="/home"
-                className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-carbon px-8 py-4 text-base font-bold tracking-[0.032em] text-paper-white transition-transform hover:scale-105 active:scale-95"
+              <motion.div
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
-                <span>Start Practicing Free</span>
-                <ArrowRight className="size-5" />
-              </Link>
+                <Link
+                  href="/home"
+                  className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-carbon px-8 py-4 text-base font-bold tracking-[0.032em] text-paper-white"
+                >
+                  <span>Start Practicing Free</span>
+                  <ArrowRight className="size-5" />
+                </Link>
+              </motion.div>
 
-              <Link
-                href="/gap"
-                className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-paper-white px-8 py-4 text-base font-bold tracking-[0.032em] text-carbon transition-transform hover:bg-soft-mist active:scale-95"
+              <motion.div
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
-                <span>Scan Job Postings</span>
-              </Link>
+                <Link
+                  href="/gap"
+                  className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-paper-white px-8 py-4 text-base font-bold tracking-[0.032em] text-carbon hover:bg-soft-mist transition-colors"
+                >
+                  <span>Scan Job Postings</span>
+                </Link>
+              </motion.div>
             </div>
 
             {/* Trust Points */}
@@ -71,7 +104,7 @@ export function LandingCtaBanner() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

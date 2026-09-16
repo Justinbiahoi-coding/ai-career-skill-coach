@@ -1,4 +1,7 @@
+"use client";
+
 import { ShieldCheck, Cpu, Database, EyeOff, Lock } from "lucide-react";
+import { motion } from "motion/react";
 
 export function LandingAiSpec() {
   const specs = [
@@ -47,8 +50,14 @@ export function LandingAiSpec() {
   return (
     <section id="ai-spec" className="w-full bg-sky-wash border-b border-carbon py-24 md:py-32 select-none">
       <div className="mx-auto max-w-[1440px] px-6 sm:px-8 lg:px-12">
-        {/* Section Header */}
-        <div className="mx-auto max-w-4xl text-center">
+        {/* Section Header with Scroll Reveal */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto max-w-4xl text-center"
+        >
           <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-1 text-xs font-bold tracking-[0.032em] text-carbon mb-6">
             RESPONSIBLE AI &amp; ARCHITECTURE
           </div>
@@ -58,16 +67,25 @@ export function LandingAiSpec() {
           <p className="mt-6 max-w-2xl mx-auto font-aeonik text-base sm:text-xl font-medium leading-[1.3] text-carbon/80">
             A 5-tier engineering pipeline built to eliminate hallucinations, enforce rigorous rubrics, and protect student privacy.
           </p>
-        </div>
+        </motion.div>
 
-        {/* 5-Layer Pipeline Grid with 1px Hand-cut Black Outlines */}
+        {/* 5-Layer Pipeline Grid with Staggered Scroll-Triggered Entrance */}
         <div className="mt-16 sm:mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {specs.map((item, idx) => {
             const Icon = item.icon;
             return (
-              <div
+              <motion.div
                 key={idx}
-                className={`flex flex-col justify-between rounded-[24px] border border-carbon ${item.cardBg} p-6 sm:p-7 text-carbon transition-transform hover:-translate-y-1.5`}
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                transition={{
+                  duration: 0.45,
+                  delay: idx * 0.08,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className={`flex flex-col justify-between rounded-[24px] border border-carbon ${item.cardBg} p-6 sm:p-7 text-carbon cursor-default`}
               >
                 <div>
                   <span
@@ -76,9 +94,13 @@ export function LandingAiSpec() {
                     {item.step}
                   </span>
 
-                  <div className="mt-6 flex size-11 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon">
+                  <motion.div
+                    whileHover={{ rotate: 12, scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    className="mt-6 flex size-11 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon"
+                  >
                     <Icon className="size-5 text-carbon" />
-                  </div>
+                  </motion.div>
 
                   <h3 className="mt-5 text-lg font-extrabold tracking-tight text-carbon">
                     {item.title}
@@ -91,7 +113,7 @@ export function LandingAiSpec() {
                 <div className="mt-6 pt-3 border-t border-carbon/20 text-[10px] font-bold uppercase tracking-[0.032em] text-carbon/60">
                   Pipeline Verified ✓
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

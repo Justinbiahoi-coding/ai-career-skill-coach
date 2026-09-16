@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 export function LandingNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -34,100 +35,129 @@ export function LandingNavbar() {
         <div className="mx-auto flex min-h-[88px] sm:min-h-[96px] w-full max-w-[1440px] items-center justify-between px-6 sm:px-8 lg:px-12 py-3">
           {/* Circular Hand-cut Logo Mark */}
           <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="flex size-11 sm:size-12 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon font-extrabold text-xl font-lateral transition-transform group-hover:rotate-6 group-hover:scale-105">
+            <motion.div
+              whileHover={{ rotate: 10, scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="flex size-11 sm:size-12 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon font-extrabold text-xl font-lateral"
+            >
               J
-            </div>
+            </motion.div>
             <div className="flex items-center gap-2">
               <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-carbon">
                 Joblingo
               </span>
-              <span className="rounded-full border border-carbon bg-sunburst px-2.5 py-0.5 text-[11px] font-bold text-carbon">
+              <motion.span
+                whileHover={{ scale: 1.1, rotate: -4 }}
+                className="rounded-full border border-carbon bg-sunburst px-2.5 py-0.5 text-[11px] font-bold text-carbon inline-block"
+              >
                 AI
-              </span>
+              </motion.span>
             </div>
           </Link>
 
           {/* Desktop Pill Navigation */}
           <nav className="hidden lg:flex items-center gap-1 rounded-full border border-carbon bg-paper-white p-1.5">
             {navLinks.map((link) => (
-              <a
+              <motion.a
                 key={link.href}
                 href={link.href}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className="rounded-full px-4 py-2 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
               >
                 {link.label}
-              </a>
+              </motion.a>
             ))}
           </nav>
 
           {/* Desktop Action Buttons: Outlined White + Carbon Filled */}
           <div className="hidden sm:flex items-center gap-3">
-            <button
+            <motion.button
               type="button"
-              className="cursor-pointer rounded-full border border-carbon bg-paper-white px-5 py-2.5 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist active:scale-95"
+              whileHover={{ scale: 1.04, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="cursor-pointer rounded-full border border-carbon bg-paper-white px-5 py-2.5 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
               onClick={() => alert("Sign In functionality coming soon...")}
             >
               Sign In
-            </button>
+            </motion.button>
 
-            <Link
-              href="/home"
-              className="inline-flex items-center gap-2 rounded-full border border-carbon bg-carbon px-6 py-2.5 text-[13px] font-bold tracking-[0.032em] text-paper-white transition-transform hover:scale-105 active:scale-95"
+            <motion.div
+              whileHover={{ scale: 1.05, y: -1 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
-              <span>Get Started</span>
-              <ArrowRight className="size-4" />
-            </Link>
+              <Link
+                href="/home"
+                className="inline-flex items-center gap-2 rounded-full border border-carbon bg-carbon px-6 py-2.5 text-[13px] font-bold tracking-[0.032em] text-paper-white"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="size-4" />
+              </Link>
+            </motion.div>
           </div>
 
           {/* Mobile Menu Toggle */}
           <div className="flex lg:hidden">
-            <button
+            <motion.button
               type="button"
+              whileTap={{ scale: 0.92 }}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="flex size-11 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon hover:bg-soft-mist"
               aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
-            </button>
+            </motion.button>
           </div>
         </div>
 
         {/* Mobile Menu Drawer */}
-        {mobileMenuOpen && (
-          <div className="border-t border-carbon bg-paper-white p-6 lg:hidden">
-            <nav className="flex flex-col gap-2.5">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-full border border-carbon bg-soft-mist px-5 py-3 text-sm font-bold tracking-[0.032em] text-carbon hover:bg-sky-wash"
-                >
-                  {link.label}
-                </a>
-              ))}
-              <div className="mt-4 flex flex-col gap-3 border-t border-carbon pt-4">
-                <button
-                  type="button"
-                  className="w-full rounded-full border border-carbon bg-paper-white py-3 text-center text-sm font-bold tracking-[0.032em] text-carbon hover:bg-soft-mist"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    alert("Sign In functionality coming soon...");
-                  }}
-                >
-                  Sign In
-                </button>
-                <Link
-                  href="/home"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full rounded-full border border-carbon bg-carbon py-3 text-center text-sm font-bold tracking-[0.032em] text-paper-white"
-                >
-                  Get Started
-                </Link>
-              </div>
-            </nav>
-          </div>
-        )}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="border-t border-carbon bg-paper-white p-6 lg:hidden overflow-hidden"
+            >
+              <nav className="flex flex-col gap-2.5">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-full border border-carbon bg-soft-mist px-5 py-3 text-sm font-bold tracking-[0.032em] text-carbon hover:bg-sky-wash transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+                <div className="mt-4 flex flex-col gap-3 border-t border-carbon pt-4">
+                  <button
+                    type="button"
+                    className="w-full rounded-full border border-carbon bg-paper-white py-3 text-center text-sm font-bold tracking-[0.032em] text-carbon hover:bg-soft-mist"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      alert("Sign In functionality coming soon...");
+                    }}
+                  >
+                    Sign In
+                  </button>
+                  <Link
+                    href="/home"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full rounded-full border border-carbon bg-carbon py-3 text-center text-sm font-bold tracking-[0.032em] text-paper-white"
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
     </div>
   );

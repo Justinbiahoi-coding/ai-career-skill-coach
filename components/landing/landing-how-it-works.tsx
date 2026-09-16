@@ -1,4 +1,7 @@
+"use client";
+
 import { Search, BrainCircuit, BookOpen, Mic, Trophy } from "lucide-react";
+import { motion } from "motion/react";
 
 export function LandingHowItWorks() {
   const steps = [
@@ -52,8 +55,14 @@ export function LandingHowItWorks() {
   return (
     <section id="how-it-works" className="w-full bg-concrete-gray border-b border-carbon py-24 md:py-32 select-none">
       <div className="mx-auto max-w-[1440px] px-6 sm:px-8 lg:px-12">
-        {/* Section Header */}
-        <div className="mx-auto max-w-4xl text-center">
+        {/* Section Header with Scroll-Triggered Reveal */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto max-w-4xl text-center"
+        >
           <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-1 text-xs font-bold tracking-[0.032em] text-carbon mb-6">
             5-STEP CLOSED LOOP
           </div>
@@ -63,16 +72,25 @@ export function LandingHowItWorks() {
           <p className="mt-6 max-w-2xl mx-auto font-aeonik text-base sm:text-xl font-medium leading-[1.3] text-carbon/80">
             From live job description parsing to real-time conversational mastery in five smooth steps.
           </p>
-        </div>
+        </motion.div>
 
-        {/* 5-Step Card Grid with 1px Hand-cut Black Borders */}
+        {/* 5-Step Card Grid with Staggered Scroll-Triggered Entrance & Interactive Hover */}
         <div className="mt-16 sm:mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {steps.map((step, idx) => {
             const Icon = step.icon;
             return (
-              <div
+              <motion.div
                 key={idx}
-                className={`flex flex-col justify-between rounded-[24px] border border-carbon ${step.cardBg} p-6 sm:p-7 text-carbon transition-transform hover:-translate-y-1.5`}
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                transition={{
+                  duration: 0.45,
+                  delay: idx * 0.08,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className={`flex flex-col justify-between rounded-[24px] border border-carbon ${step.cardBg} p-6 sm:p-7 text-carbon cursor-default`}
               >
                 <div>
                   {/* Step Badge & Number */}
@@ -87,10 +105,14 @@ export function LandingHowItWorks() {
                     </span>
                   </div>
 
-                  {/* Icon Circle */}
-                  <div className="mt-6 flex size-12 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon">
+                  {/* Icon Circle with Spring Hover */}
+                  <motion.div
+                    whileHover={{ rotate: 12, scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    className="mt-6 flex size-12 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon"
+                  >
                     <Icon className="size-6 text-carbon" />
-                  </div>
+                  </motion.div>
 
                   {/* Title & Description */}
                   <h3 className="mt-5 text-xl font-extrabold tracking-tight text-carbon">
@@ -104,7 +126,7 @@ export function LandingHowItWorks() {
                 <div className="mt-6 pt-4 border-t border-carbon/20 text-[11px] font-bold tracking-[0.032em] text-carbon/60 uppercase">
                   Step {idx + 1} of 5
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
