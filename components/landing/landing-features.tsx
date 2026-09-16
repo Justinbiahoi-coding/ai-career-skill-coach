@@ -1,7 +1,27 @@
 "use client";
 
-import { Sparkles, Mic, FileSearch, CheckCircle2, Flame, QrCode } from "lucide-react";
+import Link from "next/link";
+import {
+  Sparkles,
+  Mic,
+  FileSearch,
+  CheckCircle2,
+  Flame,
+  QrCode,
+  BookOpen,
+  ClipboardList,
+  MessagesSquare,
+  Search,
+} from "lucide-react";
 import { motion } from "motion/react";
+
+/** Where each described feature actually lives, for the row below the cards. */
+const FEATURE_DESTINATIONS = [
+  { label: "Find Job", href: "/job", icon: Search },
+  { label: "Spot Your Gap", href: "/gap", icon: ClipboardList },
+  { label: "Practice Lessons", href: "/learn", icon: BookOpen },
+  { label: "Mock Interview", href: "/interview", icon: MessagesSquare },
+] as const;
 
 export function LandingFeatures() {
   return (
@@ -216,6 +236,33 @@ export function LandingFeatures() {
               </motion.div>
             </div>
           </motion.div>
+        </div>
+
+        {/* Jump straight into any of the tools the cards above describe.
+            Signed-out visitors hit the auth gate on the way, which sends them
+            back here after signing in. */}
+        <div className="mt-14 flex flex-col items-center gap-4">
+          <span className="text-xs font-bold uppercase tracking-[0.032em] text-carbon/70">
+            Try it yourself
+          </span>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {FEATURE_DESTINATIONS.map((destination) => (
+              <motion.div
+                key={destination.href}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              >
+                <Link
+                  href={destination.href}
+                  className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-5 py-3 text-sm font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
+                >
+                  <destination.icon className="size-4" aria-hidden="true" />
+                  {destination.label}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
