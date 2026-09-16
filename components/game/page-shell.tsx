@@ -33,7 +33,7 @@ export function PageShell({ step, children, xp, streak, className }: PageShellPr
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <Link
-              href="/"
+              href="/home"
               className="flex min-h-11 items-center gap-2 rounded-lg font-extrabold tracking-tight outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">

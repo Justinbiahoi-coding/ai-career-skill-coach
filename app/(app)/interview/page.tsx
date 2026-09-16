@@ -327,7 +327,7 @@ export default function InterviewPage() {
           <MascotSays mood="thinking">
             No skill picked for this session yet. Let&apos;s start from the top.
           </MascotSays>
-          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/")}>
+          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/job")}>
             Back to start
           </Button>
         </div>

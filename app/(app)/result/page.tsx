@@ -49,7 +49,7 @@ export default function ResultPage() {
           <MascotSays mood="thinking">
             No interview result saved for this session yet.
           </MascotSays>
-          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/")}>
+          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/job")}>
             Back to start
           </Button>
         </div>
@@ -171,7 +171,7 @@ export default function ResultPage() {
           <Button
             size="lg"
             className="clay-press h-12 flex-1 rounded-xl font-extrabold"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/job")}
           >
             <RotateCcw className="size-5" aria-hidden="true" />
             Try a new job

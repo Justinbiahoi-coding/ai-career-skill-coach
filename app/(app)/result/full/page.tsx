@@ -159,7 +159,7 @@ export default function FullResultPage() {
           <Button
             size="lg"
             className="clay-press h-12 flex-1 rounded-xl font-extrabold"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/job")}
           >
             <RotateCcw className="size-5" aria-hidden="true" />
             Try a new job
