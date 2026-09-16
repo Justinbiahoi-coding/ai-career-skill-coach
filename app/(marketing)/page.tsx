@@ -1,56 +1,50 @@
-import { GraduationCap } from "lucide-react";
-import { SignInForm } from "@/components/auth/sign-in-form";
-import { Mascot } from "@/components/mascot";
-import { Card, CardContent } from "@/components/ui/card";
+import type { Metadata } from "next";
+import { LandingNavbar } from "@/components/landing/landing-navbar";
+import { LandingHero } from "@/components/landing/landing-hero";
+import { LandingOverview } from "@/components/landing/landing-overview";
+import { LandingHowItWorks } from "@/components/landing/landing-how-it-works";
+import { LandingFeatures } from "@/components/landing/landing-features";
+import { LandingAiSpec } from "@/components/landing/landing-ai-spec";
+import { LandingTeam } from "@/components/landing/landing-team";
+import { LandingCtaBanner } from "@/components/landing/landing-cta-banner";
 
-export const metadata = {
-  title: "Sign in — AI Career Skill Coach",
+export const metadata: Metadata = {
+  title: "Joblingo — AI Career Skill Coach | Skill Gap Discovery & Voice Mock Interviews",
+  description:
+    "Scan live job descriptions from VietnamWorks, ITviec, TopDev; discover your skill gaps, practice bite-sized 5-minute micro-lessons, and conduct voice mock interviews with AI. Built by Team 15 for Global Hackathon 2026.",
 };
 
-/**
- * The opening screen.
- *
- * Signed-in visitors never reach it — proxy.ts redirects them to /home — so
- * this only has to do one job well: say what the product is, then let someone
- * in. PageShell is deliberately not used here; its journey bar would be
- * claiming progress through a flow the visitor hasn't started.
- */
-export default async function WelcomePage({ searchParams }: PageProps<"/">) {
-  const params = await searchParams;
-  const next = typeof params.next === "string" ? params.next : undefined;
-
+export default function LandingPage() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
-      <div className="flex flex-col items-center gap-4 text-center">
-        <Mascot mood="happy" size="lg" priority decorative />
+    <div className="min-h-screen bg-background text-foreground scroll-smooth flex flex-col">
+      {/* 1. Independent Landing Page Navbar */}
+      <LandingNavbar />
 
-        <div className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <GraduationCap className="size-5" aria-hidden="true" />
-          </span>
-          <span className="text-lg font-extrabold tracking-tight">Skill Coach</span>
-        </div>
+      {/* 2. Main Landing Page Sections */}
+      <main className="flex-1">
+        {/* Hero Section */}
+        <LandingHero />
 
-        <h1 className="text-2xl font-extrabold tracking-tight text-balance sm:text-3xl">
-          Find the gap between you and the job you want.
-        </h1>
+        {/* Section 1: Overview & Problem vs Solution (Z-pattern) */}
+        <LandingOverview />
 
-        <p className="text-muted-foreground text-sm leading-relaxed text-pretty">
-          Pick a real job companies are hiring for. We&apos;ll find the skill holding you back,
-          coach you through it, and interview you on it — so you know where you stand before it
-          counts.
-        </p>
-      </div>
+        {/* Section 2: 5-Step Closed Loop Stepper */}
+        <LandingHowItWorks />
 
-      <Card className="clay-press">
-        <CardContent className="py-6">
-          <SignInForm next={next} />
-        </CardContent>
-      </Card>
+        {/* Section 3: Core Features Bento Grid */}
+        <LandingFeatures />
 
-      <p className="text-muted-foreground text-center text-xs leading-relaxed">
-        Signing in keeps your progress and XP across sessions.
-      </p>
-    </main>
+        {/* Section 4: Responsible AI Architecture Spec */}
+        <LandingAiSpec />
+
+        {/* Section 5: Team 15 & Mentors Showcase */}
+        <LandingTeam />
+
+        {/* Section 6: High-impact Closing CTA (STRICTLY NO FOOTER) */}
+        <LandingCtaBanner />
+      </main>
+
+      {/* NOTE: Strictly NO <footer> tag here as per explicit requirement */}
+    </div>
   );
 }
