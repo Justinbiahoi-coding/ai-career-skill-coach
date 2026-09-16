@@ -7,6 +7,7 @@ import {
   Building2,
   ClipboardPaste,
   Dumbbell,
+  GraduationCap,
   Heart,
   Loader2,
   Lock,
@@ -629,15 +630,26 @@ export default function GapPage() {
                   </div>
                 </div>
 
-                <Button
-                  size="lg"
-                  className="h-11 rounded-full border border-carbon bg-carbon font-aeonik font-extrabold text-paper-white hover:bg-carbon/85"
-                  onClick={() => handleEnterRoom(skill)}
-                >
-                  <Dumbbell className="size-4.5" aria-hidden="true" />
-                  {percent > 0 ? "Back to practice room" : "Enter practice room"}
-                  <ArrowRight className="size-4.5" aria-hidden="true" />
-                </Button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    size="lg"
+                    className="h-11 flex-1 rounded-full border border-carbon bg-carbon font-aeonik font-extrabold text-paper-white hover:bg-carbon/85"
+                    onClick={() => handleEnterRoom(skill)}
+                  >
+                    <Dumbbell className="size-4.5" aria-hidden="true" />
+                    {percent > 0 ? "Back to practice room" : "Enter practice room"}
+                    <ArrowRight className="size-4.5" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-11 rounded-full border border-carbon bg-paper-white font-aeonik font-bold text-carbon hover:bg-soft-mist"
+                    onClick={() => router.push(`/courses?skill=${encodeURIComponent(skill.name)}`)}
+                  >
+                    <GraduationCap className="size-4.5" aria-hidden="true" />
+                    Find courses
+                  </Button>
+                </div>
               </motion.div>
             );
           })}
