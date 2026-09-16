@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Mic, FileSearch, CheckCircle2, Flame, Award, QrCode } from "lucide-react";
+import { Sparkles, Mic, FileSearch, CheckCircle2, Flame, QrCode } from "lucide-react";
 import { motion } from "motion/react";
 
 export function LandingFeatures() {

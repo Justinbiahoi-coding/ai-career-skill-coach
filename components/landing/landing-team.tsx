@@ -1,6 +1,5 @@
 "use client";
 
-import { Users, Code, Award, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 
 export function LandingTeam() {

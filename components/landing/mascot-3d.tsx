@@ -121,7 +121,7 @@ export function Mascot3D({
     );
 
     // 7. Animation Loop (Continuous 360-degree rotation + gentle breathing float at lower Y)
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
