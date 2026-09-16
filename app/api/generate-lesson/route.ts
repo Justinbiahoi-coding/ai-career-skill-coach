@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
+import { generateWithFailover } from "@/lib/gemini";
 import { GENERATE_LESSON_SYSTEM_PROMPT, MAX_JD_LENGTH, buildGenerateLessonPrompt } from "@/lib/prompts";
 import { buildFallbackLesson } from "@/lib/fallback-data";
 import { extractJsonBlock } from "@/lib/json-utils";
@@ -43,14 +43,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const model = getGeminiClient().getGenerativeModel({
-      model: DEFAULT_MODEL,
-      systemInstruction: GENERATE_LESSON_SYSTEM_PROMPT,
-      generationConfig: { responseMimeType: "application/json" },
-    });
-
-    const generation = await model.generateContent(buildGenerateLessonPrompt(skillName, jdText));
-    const rawText = generation.response.text();
+    const rawText = await generateWithFailover(
+      buildGenerateLessonPrompt(skillName, jdText),
+      { systemInstruction: GENERATE_LESSON_SYSTEM_PROMPT, generationConfig: { responseMimeType: "application/json" } }
+    );
 
     const parsed: unknown = JSON.parse(extractJsonBlock(rawText));
 

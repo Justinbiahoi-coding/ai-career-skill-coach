@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
+import { generateWithFailover } from "@/lib/gemini";
 import { INTERVIEW_TURN_SYSTEM_PROMPT, MAX_INTERVIEW_QUESTIONS, MAX_JD_LENGTH, buildInterviewTurnPrompt } from "@/lib/prompts";
 import { buildFallbackInterviewTurn } from "@/lib/fallback-data";
 import { extractJsonBlock } from "@/lib/json-utils";
@@ -63,16 +63,10 @@ export async function POST(request: Request) {
   const questionNumber = Math.floor(history.length / 2) + 1;
 
   try {
-    const model = getGeminiClient().getGenerativeModel({
-      model: DEFAULT_MODEL,
-      systemInstruction: INTERVIEW_TURN_SYSTEM_PROMPT,
-      generationConfig: { responseMimeType: "application/json" },
-    });
-
-    const generation = await model.generateContent(
-      buildInterviewTurnPrompt(skillName, jdText, history, questionNumber, MAX_INTERVIEW_QUESTIONS)
+    const rawText = await generateWithFailover(
+      buildInterviewTurnPrompt(skillName, jdText, history, questionNumber, MAX_INTERVIEW_QUESTIONS),
+      { systemInstruction: INTERVIEW_TURN_SYSTEM_PROMPT, generationConfig: { responseMimeType: "application/json" } }
     );
-    const rawText = generation.response.text();
 
     const parsed: unknown = JSON.parse(extractJsonBlock(rawText));
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
+import { generateWithFailover } from "@/lib/gemini";
 import {
   DIALOGUE_REPLY_SYSTEM_PROMPT,
   MAX_DIALOGUE_TURNS,
@@ -70,16 +70,10 @@ export async function POST(request: Request) {
   const turnNumber = history.filter((m) => m.role === "user").length;
 
   try {
-    const model = getGeminiClient().getGenerativeModel({
-      model: DEFAULT_MODEL,
-      systemInstruction: DIALOGUE_REPLY_SYSTEM_PROMPT,
-      generationConfig: { responseMimeType: "application/json" },
-    });
-
-    const generation = await model.generateContent(
-      buildDialogueReplyPrompt(skillName, jdText, history, turnNumber)
+    const rawText = await generateWithFailover(
+      buildDialogueReplyPrompt(skillName, jdText, history, turnNumber),
+      { systemInstruction: DIALOGUE_REPLY_SYSTEM_PROMPT, generationConfig: { responseMimeType: "application/json" } }
     );
-    const rawText = generation.response.text();
 
     const parsed: unknown = JSON.parse(extractJsonBlock(rawText));
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
+import { generateWithFailover } from "@/lib/gemini";
 import { GRADE_EXERCISE_SYSTEM_PROMPT, buildGradeExercisePrompt } from "@/lib/prompts";
 import { FALLBACK_GRADE } from "@/lib/fallback-data";
 import { extractJsonBlock } from "@/lib/json-utils";
@@ -50,16 +50,10 @@ export async function POST(request: Request) {
   if (userAnswerError) return userAnswerError;
 
   try {
-    const model = getGeminiClient().getGenerativeModel({
-      model: DEFAULT_MODEL,
-      systemInstruction: GRADE_EXERCISE_SYSTEM_PROMPT,
-      generationConfig: { responseMimeType: "application/json" },
-    });
-
-    const generation = await model.generateContent(
-      buildGradeExercisePrompt(skillName as string, exercisePrompt as string, userAnswer as string)
+    const rawText = await generateWithFailover(
+      buildGradeExercisePrompt(skillName as string, exercisePrompt as string, userAnswer as string),
+      { systemInstruction: GRADE_EXERCISE_SYSTEM_PROMPT, generationConfig: { responseMimeType: "application/json" } }
     );
-    const rawText = generation.response.text();
 
     const parsed: unknown = JSON.parse(extractJsonBlock(rawText));
 
