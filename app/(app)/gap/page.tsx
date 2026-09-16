@@ -699,6 +699,36 @@ export default function GapPage() {
             </p>
           )}
         </div>
+
+        {/* Bottom-of-page nudge toward Courses — same "you just did the
+            thing, here's the natural next step" pattern as the saved-job
+            banner on /job, just pointed at real YouTube videos instead of
+            Practice itself. */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col items-center gap-4 rounded-[30px] border border-carbon bg-lavender p-8 text-center"
+        >
+          <GraduationCap className="size-8 text-carbon" aria-hidden="true" />
+          <div className="flex flex-col gap-1.5">
+            <h2 className="font-aeonik text-lg font-extrabold text-carbon">
+              Want to go deeper on any of these?
+            </h2>
+            <p className="max-w-sm font-aeonik text-sm font-medium leading-relaxed text-carbon/70">
+              Courses has real YouTube videos for any skill — pick one from this job, or search
+              for something else entirely.
+            </p>
+          </div>
+          <Button
+            size="lg"
+            className="h-12 rounded-full border border-carbon bg-carbon px-7 font-aeonik text-sm font-bold tracking-[0.02em] text-paper-white hover:bg-carbon/85"
+            onClick={() => router.push("/courses")}
+          >
+            Browse Courses
+            <ArrowRight className="size-4.5" aria-hidden="true" />
+          </Button>
+        </motion.div>
       </main>
     </div>
   );
