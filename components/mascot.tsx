@@ -3,11 +3,14 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
 /**
- * Job Buddy — the app's mascot.
+ * The Joblingo mascot.
  *
- * Rendered in Blender as a 3D model, then shipped as flat WebP frames (the same
- * approach Duolingo uses for Duo): no 3D runtime in the browser, ~16KB a frame.
- * Source model lives in design/mascot/jobbuddy.blend.
+ * A single static brand illustration (see public/brand/joblingo-mascot.webp),
+ * used everywhere the app previously rendered one of 8 mood/angle frames of
+ * the old "Job Buddy" 3D-render mascot. `mood` and `angle` are kept as props
+ * so every existing call site (<Mascot mood="happy" angle="tq" />, etc.)
+ * keeps compiling unchanged — they're accepted but no longer change which
+ * image renders, since there's just the one now.
  */
 
 const mascotVariants = cva("select-none", {
@@ -24,24 +27,16 @@ const mascotVariants = cva("select-none", {
   },
 })
 
-/** Which feeling the mascot shows. Each maps to a rendered frame. */
+/** Kept for call-site compatibility; no longer changes which image renders. */
 export type MascotMood = "default" | "happy" | "thinking" | "encourage"
 
-/** Front reads as talking to the user; three-quarter reads as idle presence. */
+/** Kept for call-site compatibility; no longer changes which image renders. */
 export type MascotAngle = "front" | "tq"
 
-/** Intrinsic pixel sizes of the rendered frames, needed by next/image. */
-const FRAME_SIZE: Record<MascotAngle, { width: number; height: number }> = {
-  front: { width: 440, height: 460 },
-  tq: { width: 440, height: 537 },
-}
-
-const ALT_TEXT: Record<MascotMood, string> = {
-  default: "Job Buddy waving hello",
-  happy: "Job Buddy cheering",
-  thinking: "Job Buddy thinking it over",
-  encourage: "Job Buddy giving a thumbs up",
-}
+/** Intrinsic pixel size of the mascot artwork, needed by next/image. */
+const MASCOT_SRC = "/brand/joblingo-mascot.webp"
+const MASCOT_WIDTH = 600
+const MASCOT_HEIGHT = 600
 
 export interface MascotProps
   extends VariantProps<typeof mascotVariants> {
@@ -54,22 +49,18 @@ export interface MascotProps
 }
 
 export function Mascot({
-  mood = "default",
-  angle = "front",
   size,
   className,
   decorative = false,
   priority = false,
 }: MascotProps) {
-  const { width, height } = FRAME_SIZE[angle]
-
   return (
     <Image
-      src={`/mascot/mascot-${mood}-${angle}.webp`}
-      alt={decorative ? "" : ALT_TEXT[mood]}
+      src={MASCOT_SRC}
+      alt={decorative ? "" : "Joblingo mascot"}
       aria-hidden={decorative || undefined}
-      width={width}
-      height={height}
+      width={MASCOT_WIDTH}
+      height={MASCOT_HEIGHT}
       priority={priority}
       className={cn(mascotVariants({ size }), "h-auto", className)}
     />
