@@ -79,7 +79,7 @@ export function MascotIntroChat() {
 
   return (
     <div
-      className="relative rounded-[20px] border border-carbon bg-paper-white px-4 py-3"
+      className="relative flex min-h-[92px] w-full flex-col justify-center rounded-[20px] border border-carbon bg-paper-white px-4 py-3"
       role="status"
       aria-live="polite"
     >
