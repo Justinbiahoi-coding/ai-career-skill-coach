@@ -12,11 +12,11 @@ const MAX_PER_SOURCE = 6;
 const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
 
-// Chỉ 2 trang này cần tải thêm trang chi tiết để lấy JD, nên cũng chỉ 2 tên
-// miền này được phép. Route /api/jobs/jd nhận URL từ client rồi tự đi fetch,
-// nếu không khoá danh sách thì thành lỗ hổng SSRF (client ép server gọi vào
-// địa chỉ nội bộ). So khớp hostname chính xác, không dùng includes().
-const JD_FETCH_ALLOWED_HOSTS = new Set(["itviec.com", "www.topcv.vn"]);
+// Chỉ ITviec cần tải thêm trang chi tiết để lấy JD, nên cũng chỉ đúng tên miền
+// đó được phép. Route /api/jobs/jd nhận URL từ client rồi tự đi fetch, nếu
+// không khoá danh sách thì thành lỗ hổng SSRF (client ép server gọi vào địa chỉ
+// nội bộ). So khớp hostname chính xác, không dùng includes().
+const JD_FETCH_ALLOWED_HOSTS = new Set(["itviec.com"]);
 
 /**
  * URL này có được phép cho server đi tải hộ không. Dùng ở cả route (để trả mã
@@ -151,29 +151,6 @@ async function searchItviec(query: string): Promise<JobListing[]> {
   return listings;
 }
 
-// --- TopCV ------------------------------------------------------------------
-// Mỗi thẻ job bắt đầu bằng data-job-id; tên công ty nằm ở thuộc tính alt của
-// logo, tiêu đề nằm ở aria-label của link.
-async function searchTopCv(query: string): Promise<JobListing[]> {
-  const html = await fetchText(`https://www.topcv.vn/tim-viec-lam-${encodeURIComponent(query)}`);
-  const cards = html.split('data-job-id="').slice(1);
-  const listings: JobListing[] = [];
-  const seen = new Set<string>();
-
-  for (const card of cards) {
-    if (listings.length >= MAX_PER_SOURCE) break;
-    const url = /href="(https:\/\/www\.topcv\.vn\/viec-lam\/[^"?]+)/.exec(card)?.[1];
-    const title = /aria-label="([^"]+)"/.exec(card)?.[1];
-    const company = /<img[^>]*alt="([^"]+)"/.exec(card)?.[1];
-    if (!url || !title || !company || seen.has(url)) continue;
-    seen.add(url);
-    listings.push(
-      makeListing("TopCV", decodeEntities(title).trim(), decodeEntities(company).trim(), url)
-    );
-  }
-  return listings;
-}
-
 // --- RemoteOK ---------------------------------------------------------------
 // API JSON công khai, không cần key. Phần tử đầu tiên là thông báo điều khoản
 // của họ chứ không phải job, nên phải bỏ qua.
@@ -220,7 +197,6 @@ export async function searchAllSources(query: string): Promise<JobListing[]> {
   const sources: [JobSource, Promise<JobListing[]>][] = [
     ["VietnamWorks", searchVietnamWorks(query)],
     ["ITviec", searchItviec(query)],
-    ["TopCV", searchTopCv(query)],
     ["RemoteOK", searchRemoteOk(query)],
   ];
   const settled = await Promise.allSettled(sources.map(([, promise]) => promise));
@@ -249,8 +225,8 @@ export async function searchAllSources(query: string): Promise<JobListing[]> {
 }
 
 /**
- * Tải trang chi tiết của ITviec/TopCV để lấy JD. Chỉ gọi khi người dùng đã
- * chọn một job cụ thể — tải sẵn hết ~40 trang chi tiết lúc search sẽ rất chậm.
+ * Tải trang chi tiết của ITviec để lấy JD. Chỉ gọi khi người dùng đã chọn một
+ * job cụ thể — tải sẵn hết ~40 trang chi tiết lúc search sẽ rất chậm.
  *
  * @throws nếu hostname không nằm trong danh sách cho phép (chống SSRF).
  */
@@ -258,21 +234,14 @@ export async function fetchJobDescription(rawUrl: string): Promise<string> {
   if (!isAllowedJobUrl(rawUrl)) {
     throw new Error("Refusing to fetch job description from a non-allowlisted URL");
   }
-  const url = new URL(rawUrl);
-  const html = await fetchText(url.toString());
+  const html = await fetchText(new URL(rawUrl).toString());
 
-  if (url.hostname === "itviec.com") {
-    const marker = html.indexOf("data-jobs--jd-scroll-target='jobContent'");
-    if (marker === -1) throw new Error("ITviec job content block not found");
-    // Nhảy qua phần còn lại của thẻ mở, nếu không tên thuộc tính sẽ lọt vào JD.
-    const start = html.indexOf(">", marker) + 1;
-    // Cắt trước khối "job liên quan" ở cuối trang để không lẫn JD của job khác.
-    const rest = html.slice(start);
-    const end = rest.indexOf("relative-jobs");
-    return stripHtml(end === -1 ? rest : rest.slice(0, end));
-  }
-
-  const start = html.indexOf("Mô tả công việc");
-  if (start === -1) throw new Error("TopCV job description block not found");
-  return stripHtml(html.slice(start));
+  const marker = html.indexOf("data-jobs--jd-scroll-target='jobContent'");
+  if (marker === -1) throw new Error("ITviec job content block not found");
+  // Nhảy qua phần còn lại của thẻ mở, nếu không tên thuộc tính sẽ lọt vào JD.
+  const start = html.indexOf(">", marker) + 1;
+  // Cắt trước khối "job liên quan" ở cuối trang để không lẫn JD của job khác.
+  const rest = html.slice(start);
+  const end = rest.indexOf("relative-jobs");
+  return stripHtml(end === -1 ? rest : rest.slice(0, end));
 }
