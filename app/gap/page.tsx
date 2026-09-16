@@ -2,13 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRight, Check, Lock, Sparkles, Target, Trophy } from "lucide-react";
+import { MascotSays } from "@/components/game/mascot-says";
+import { PageShell } from "@/components/game/page-shell";
+import { XpBar } from "@/components/game/xp-bar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "cn";
 import {
   loadExtractedSkills,
   loadPracticedSkills,
+  loadXp,
   saveSelectedGap,
   type ExtractedSkillsSession,
 } from "@/lib/session-store";
@@ -22,6 +27,8 @@ function gapScore(skill: Skill, rating: number): number {
   return IMPORTANCE_WEIGHT[skill.importance] * (6 - rating);
 }
 
+const RATING_LABELS = ["No idea", "Shaky", "Okay", "Solid", "Strong"] as const;
+
 export default function GapPage() {
   const router = useRouter();
   const [session, setSession] = useState<ExtractedSkillsSession | null>(null);
@@ -29,6 +36,7 @@ export default function GapPage() {
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [overrideSkill, setOverrideSkill] = useState<string | null>(null);
   const [practicedSkills, setPracticedSkills] = useState<string[]>([]);
+  const [xp, setXp] = useState(0);
 
   useEffect(() => {
     // sessionStorage chỉ đọc được ở client; SSR không có window, nên phải
@@ -36,6 +44,7 @@ export default function GapPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSession(loadExtractedSkills());
     setPracticedSkills(loadPracticedSkills());
+    setXp(loadXp());
     setCheckedStorage(true);
   }, []);
 
@@ -71,137 +80,206 @@ export default function GapPage() {
 
   if (checkedStorage && !session) {
     return (
-      <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-4 px-4 py-16 text-center">
-        <p className="text-muted-foreground text-sm">
-          No job description found for this session. Start by pasting one.
-        </p>
-        <Button onClick={() => router.push("/")}>Back to start</Button>
-      </div>
+      <PageShell step="gap">
+        <div className="flex flex-col items-center gap-4 py-10 text-center">
+          <MascotSays mood="thinking">
+            I can&apos;t find a job description for this session. Let&apos;s start from the top.
+          </MascotSays>
+          <Button size="lg" className="clay-press rounded-xl font-bold" onClick={() => router.push("/")}>
+            Back to start
+          </Button>
+        </div>
+      </PageShell>
     );
   }
 
   if (!session) {
     return (
-      <div className="mx-auto flex w-full max-w-2xl px-4 py-16 text-center text-sm text-muted-foreground">
-        Loading...
-      </div>
+      <PageShell step="gap">
+        <div className="text-muted-foreground py-16 text-center text-sm">Loading...</div>
+      </PageShell>
     );
   }
 
+  const allSkillNames = session.skills.map((s) => s.name);
+  const practicedCount = allSkillNames.filter((n) => practicedSkills.includes(n)).length;
+  const allPracticed = practicedCount === allSkillNames.length;
+
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10">
-      <div className="flex flex-col gap-2 text-center sm:text-left">
-        <h1 className="text-2xl font-semibold tracking-tight">2. Rate your confidence</h1>
-        <p className="text-muted-foreground text-sm">
-          For each skill this job needs, rate how confident you feel right now (1 = not at all,
-          5 = very confident). We&apos;ll highlight the one gap worth practicing first — you can
-          pick a different one if you disagree.
-        </p>
-      </div>
+    <PageShell step="gap" xp={xp}>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+            How confident are you?
+          </h1>
+          <MascotSays mood="thinking">
+            Rate each skill this job asks for. I&apos;ll spot the one that&apos;s costing you the
+            most — high importance, low confidence — and we&apos;ll start there.
+          </MascotSays>
+        </div>
 
-      <div className="flex flex-col gap-3">
-        {session.skills.map((skill) => {
-          const isPriority = skill.name === priorityName;
-          const rating = ratings[skill.name] ?? DEFAULT_RATING;
+        <XpBar
+          value={practicedCount}
+          max={allSkillNames.length}
+          label="Skills practiced"
+          caption={`${practicedCount} of ${allSkillNames.length}`}
+          tone="success"
+        />
 
-          return (
-            <Card
-              key={skill.name}
-              onClick={() => setOverrideSkill(skill.name)}
-              className={cn(
-                "cursor-pointer transition-colors",
-                isPriority && "border-primary ring-1 ring-primary"
-              )}
-            >
-              <CardContent className="flex flex-col gap-3 py-4">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{skill.name}</span>
-                    {isPriority && <Badge>Priority</Badge>}
-                    {practicedSkills.includes(skill.name) && (
-                      <Badge variant="secondary">✓ Practiced</Badge>
-                    )}
+        <div className="flex flex-col gap-3">
+          {session.skills.map((skill) => {
+            const isPriority = skill.name === priorityName;
+            const isPracticed = practicedSkills.includes(skill.name);
+            const rating = ratings[skill.name] ?? DEFAULT_RATING;
+
+            return (
+              <Card
+                key={skill.name}
+                onClick={() => setOverrideSkill(skill.name)}
+                className={cn(
+                  "cursor-pointer border-2 transition-all",
+                  isPriority
+                    ? "border-primary bg-accent/40 shadow-clay"
+                    : "border-border hover:border-primary/40"
+                )}
+              >
+                <CardContent className="flex flex-col gap-3 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold">{skill.name}</span>
+                      {isPriority && (
+                        <Badge className="animate-pop gap-1">
+                          <Target className="size-3" aria-hidden="true" />
+                          Priority
+                        </Badge>
+                      )}
+                      {isPracticed && (
+                        <Badge className="gap-1 bg-success text-success-foreground">
+                          <Check className="size-3" aria-hidden="true" />
+                          Practiced
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-1.5">
+                      <Badge variant="secondary" className="text-[10px]">
+                        {skill.type}
+                      </Badge>
+                      <Badge
+                        variant={skill.importance === "high" ? "default" : "outline"}
+                        className="text-[10px]"
+                      >
+                        {skill.importance}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">{skill.type}</Badge>
-                    <Badge variant={skill.importance === "high" ? "default" : "outline"}>
-                      {skill.importance}
-                    </Badge>
-                  </div>
-                </div>
 
-                <div
-                  className="flex items-center gap-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <span className="text-muted-foreground text-xs">Confidence:</span>
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <Button
-                      key={value}
-                      type="button"
-                      size="xs"
-                      variant={rating === value ? "default" : "outline"}
-                      onClick={() => handleRate(skill.name, value)}
+                  <div
+                    className="flex flex-col gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      role="radiogroup"
+                      aria-label={`Confidence in ${skill.name}`}
+                      className="flex gap-1.5"
                     >
-                      {value}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                      {[1, 2, 3, 4, 5].map((value) => {
+                        const isSelected = rating === value;
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            role="radio"
+                            aria-checked={isSelected}
+                            aria-label={`${value} out of 5 — ${RATING_LABELS[value - 1]}`}
+                            onClick={() => handleRate(skill.name, value)}
+                            className={cn(
+                              "min-h-11 flex-1 cursor-pointer rounded-xl border-2 text-sm font-extrabold tabular-nums transition-all",
+                              "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+                              isSelected
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-card hover:border-primary/50 hover:bg-accent/50"
+                            )}
+                          >
+                            {value}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <span className="text-muted-foreground text-xs font-semibold">
+                      {RATING_LABELS[rating - 1]}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Your priority gap</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <p className="text-sm">
-            <span className="font-medium">{prioritySkill?.name}</span> — this is where we&apos;ll
-            focus first. Click any skill above to practice that one instead.
-          </p>
-          <Button onClick={handlePractice} disabled={!prioritySkill}>
-            Practice this skill
-          </Button>
-        </CardContent>
-      </Card>
+        <Card className="border-2 border-primary bg-accent/30 shadow-clay">
+          <CardContent className="flex flex-col gap-4 py-5">
+            <div className="flex items-center gap-2">
+              <Target className="size-5 text-primary" aria-hidden="true" />
+              <span className="font-extrabold">Start with {prioritySkill?.name}</span>
+            </div>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              This is the biggest gap between what the job needs and how you rated yourself. Tap any
+              other skill above to work on that one instead.
+            </p>
+            <Button
+              size="lg"
+              className="clay-press h-12 rounded-xl text-base font-extrabold"
+              onClick={handlePractice}
+              disabled={!prioritySkill}
+            >
+              <Sparkles className="size-5" aria-hidden="true" />
+              Practice this skill
+              <ArrowRight className="size-5" aria-hidden="true" />
+            </Button>
+          </CardContent>
+        </Card>
 
-      {(() => {
-        const allSkillNames = session.skills.map((s) => s.name);
-        const practicedCount = allSkillNames.filter((n) => practicedSkills.includes(n)).length;
-        const allPracticed = practicedCount === allSkillNames.length;
-
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Full interview</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <p className="text-muted-foreground text-sm">
-                Practiced {practicedCount} of {allSkillNames.length} skills.
-              </p>
+        <Card
+          className={cn(
+            "border-2 transition-colors",
+            allPracticed ? "border-success bg-success-muted/40" : "border-border"
+          )}
+        >
+          <CardContent className="flex flex-col gap-3 py-5">
+            <div className="flex items-center gap-2">
               {allPracticed ? (
-                <>
-                  <p className="text-sm">
-                    You&apos;ve practiced every skill from this job. Ready to try a full interview,
-                    like a real one?
-                  </p>
-                  <Button onClick={() => router.push("/interview/full")}>
-                    🎯 Take the full interview
-                  </Button>
-                </>
+                <Trophy className="size-5 text-success" aria-hidden="true" />
               ) : (
-                <p className="text-muted-foreground text-sm">
-                  Practice every skill above to unlock a full, realistic mock interview covering
-                  all of them.
-                </p>
+                <Lock className="text-locked size-5" aria-hidden="true" />
               )}
-            </CardContent>
-          </Card>
-        );
-      })()}
-    </div>
+              <span className="font-extrabold">
+                {allPracticed ? "Full interview unlocked" : "Full interview locked"}
+              </span>
+            </div>
+
+            {allPracticed ? (
+              <>
+                <p className="text-sm leading-relaxed">
+                  You&apos;ve practiced every skill from this job. Ready for the real thing — one
+                  interview covering all of them?
+                </p>
+                <Button
+                  size="lg"
+                  className="clay-press h-12 rounded-xl bg-success text-success-foreground text-base font-extrabold hover:bg-success/90"
+                  onClick={() => router.push("/interview/full")}
+                >
+                  <Trophy className="size-5" aria-hidden="true" />
+                  Take the full interview
+                </Button>
+              </>
+            ) : (
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Practice all {allSkillNames.length} skills to unlock a full mock interview that
+                covers every one of them.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </PageShell>
   );
 }
