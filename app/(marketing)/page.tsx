@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 export const metadata: Metadata = {
   title: "Joblingo — AI Career Skill Coach | Skill Gap Discovery & Voice Mock Interviews",
   description:
-    "Scan live job descriptions from VietnamWorks, ITviec, TopDev; discover your skill gaps, practice bite-sized 5-minute micro-lessons, and conduct voice mock interviews with AI. Built by Team 15 for Global Hackathon 2026.",
+    "Scan live job descriptions from VietnamWorks, ITviec, TopDev; discover your skill gaps, practice bite-sized 5-minute micro-lessons, and conduct voice mock interviews with AI. Built by Team 24 for Global Hackathon 2026.",
 };
 
 // Signing in doesn't change what this page shows — the same marketing

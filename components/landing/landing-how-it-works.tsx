@@ -66,7 +66,7 @@ export function LandingHowItWorks() {
           <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-1 text-xs font-bold tracking-[0.032em] text-carbon mb-6">
             5-STEP CLOSED LOOP
           </div>
-          <h2 className="font-lateral text-[clamp(40px,7vw,96px)] font-extrabold uppercase leading-[0.78] tracking-normal text-carbon">
+          <h2 className="font-lateral text-[clamp(40px,7vw,96px)] font-extrabold uppercase leading-[0.92] tracking-normal text-carbon">
             HOW IT WORKS
           </h2>
           <p className="mt-6 max-w-2xl mx-auto font-aeonik text-base sm:text-xl font-medium leading-[1.3] text-carbon/80">

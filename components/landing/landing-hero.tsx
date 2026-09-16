@@ -62,7 +62,7 @@ export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
         <span>Streak &amp; XP 100%</span>
       </motion.div>
 
-      {/* Middle Left: Team 15 · Track 1 (Lavender #e9ccff) */}
+      {/* Middle Left: Team 24 · Track 1 (Lavender #e9ccff) */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{
@@ -81,7 +81,7 @@ export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
         className="hidden lg:flex absolute top-80 left-[18%] items-center gap-1.5 rounded-[16px] border border-carbon bg-lavender px-3 py-1.5 text-carbon text-xs font-bold tracking-[0.032em] z-20 cursor-pointer"
       >
         <span>✨</span>
-        <span>Team 15 · Track 1</span>
+        <span>Team 24 · Track 1</span>
       </motion.div>
 
       {/* Lower Left: Voice Mock Turn (Voltage Violet #5c4ade) */}
@@ -187,7 +187,7 @@ export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
           className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-1.5 text-xs font-bold tracking-[0.032em] text-carbon mb-6 cursor-pointer"
         >
           <Sparkles className="size-3.5 text-carbon" />
-          <span>Global Hackathon 2026 · Team 15</span>
+          <span>Global Hackathon 2026 · Team 24</span>
         </motion.div>
 
         {/* Sculptural Display Headline (Lateral 800) - Fade-in & Slide-up */}
@@ -195,7 +195,7 @@ export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
           initial={{ opacity: 0, y: 36 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="font-lateral text-[clamp(68px,15vw,220px)] font-extrabold uppercase leading-[0.78] tracking-normal text-carbon text-center"
+          className="font-lateral text-[clamp(68px,15vw,220px)] font-extrabold uppercase leading-[0.92] tracking-normal text-carbon text-center"
         >
           JOBLINGO
         </motion.h1>
@@ -205,7 +205,7 @@ export function LandingHero({ isSignedIn = false }: LandingHeroProps) {
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-2 font-lateral text-[clamp(24px,4vw,56px)] font-extrabold uppercase leading-[0.85] text-carbon"
+          className="mt-2 font-lateral text-[clamp(24px,4vw,56px)] font-extrabold uppercase leading-[0.92] text-carbon"
         >
           CAREER SKILL COACH
         </motion.div>

@@ -91,7 +91,7 @@ export function LandingCtaBanner({ isSignedIn = false }: LandingCtaBannerProps) 
             </div>
 
             {/* Giant Crushed Lateral Display Headline */}
-            <h2 className="font-lateral text-[clamp(44px,8vw,110px)] font-extrabold uppercase leading-[0.78] tracking-normal text-carbon">
+            <h2 className="font-lateral text-[clamp(44px,8vw,110px)] font-extrabold uppercase leading-[0.92] tracking-normal text-carbon">
               START TODAY
             </h2>
 
