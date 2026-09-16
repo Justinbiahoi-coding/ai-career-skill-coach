@@ -47,9 +47,9 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-2">
+          <h1 className="text-2xl font-extrabold tracking-tight break-words sm:text-3xl">
             Welcome back, {greetingName}
           </h1>
           {xp > 0 && <StatPill tone="xp" value={xp} label={`${xp} XP earned`} />}
