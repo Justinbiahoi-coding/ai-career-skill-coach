@@ -29,7 +29,10 @@ export function SignInForm({ next }: SignInFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [offerSignUp, setOfferSignUp] = useState(false);
 
-  const destination = next && next.startsWith("/") ? next : "/home";
+  // "/" only, not "//evil.com" or "/\evil.com" — both are parsed by browsers
+  // as protocol-relative URLs to another origin, not an internal path.
+  const isSafeInternalPath = (path: string) => path.startsWith("/") && !/^\/[\\/]/.test(path);
+  const destination = next && isSafeInternalPath(next) ? next : "/home";
 
   function goToApp() {
     router.push(destination);
