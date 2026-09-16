@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
+import { generateWithFailover } from "@/lib/gemini";
 import {
   GENERATE_PRACTICE_SYSTEM_PROMPT,
   MAX_JD_LENGTH,
@@ -97,14 +97,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const model = getGeminiClient().getGenerativeModel({
-      model: DEFAULT_MODEL,
-      systemInstruction: GENERATE_PRACTICE_SYSTEM_PROMPT,
-      generationConfig: { responseMimeType: "application/json" },
-    });
-
-    const generation = await model.generateContent(buildGeneratePracticePrompt(skillName, jdText));
-    const rawText = generation.response.text();
+    const rawText = await generateWithFailover(
+      buildGeneratePracticePrompt(skillName, jdText),
+      { systemInstruction: GENERATE_PRACTICE_SYSTEM_PROMPT, generationConfig: { responseMimeType: "application/json" } }
+    );
 
     const parsed: unknown = JSON.parse(extractJsonBlock(rawText));
 
