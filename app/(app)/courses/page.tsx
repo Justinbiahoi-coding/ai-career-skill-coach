@@ -10,7 +10,10 @@ import {
   ExternalLink,
   GraduationCap,
   Loader2,
+  PlayCircle,
   RotateCcw,
+  Search,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
@@ -51,6 +54,8 @@ function CoursesPageInner() {
   const [result, setResult] = useState<CourseSearchResult | null>(null);
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [videosError, setVideosError] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [playingVideo, setPlayingVideo] = useState<CourseVideo | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -61,10 +66,28 @@ function CoursesPageInner() {
       .catch(() => setSkillsError("Couldn't load your skills. Try refreshing the page."));
   }, []);
 
+  // Modal-open side effects: block background scroll and let Escape close it,
+  // same as any other overlay in the app.
+  useEffect(() => {
+    if (!playingVideo) return;
+
+    document.body.style.overflow = "hidden";
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setPlayingVideo(null);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [playingVideo]);
+
   function loadVideos(skill: string) {
     setLoadingVideos(true);
     setVideosError(null);
     setResult(null);
+    setPlayingVideo(null);
 
     fetch(`/api/courses/search?skill=${encodeURIComponent(skill)}`)
       .then(async (res) => {
@@ -89,10 +112,18 @@ function CoursesPageInner() {
     router.replace(`/courses?skill=${encodeURIComponent(skill)}`);
   }
 
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const query = searchInput.trim();
+    if (!query) return;
+    handleSelectSkill(query);
+  }
+
   function handleBackToSkills() {
     setSelectedSkill(null);
     setResult(null);
     setVideosError(null);
+    setPlayingVideo(null);
     router.replace("/courses");
   }
 
@@ -130,6 +161,31 @@ function CoursesPageInner() {
               watch and judge for yourself.
             </p>
           </div>
+
+          <motion.form
+            onSubmit={handleSearchSubmit}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center gap-2 rounded-full border border-carbon bg-paper-white p-1.5 pl-4"
+          >
+            <Search className="size-4 shrink-0 text-carbon/50" aria-hidden="true" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search any skill or topic — e.g. Kubernetes, negotiation..."
+              className="min-w-0 flex-1 bg-transparent font-aeonik text-sm font-medium text-carbon placeholder:text-carbon/40 focus:outline-none"
+            />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!searchInput.trim()}
+              className="h-10 shrink-0 rounded-full border border-carbon bg-carbon font-aeonik font-bold text-paper-white hover:bg-carbon/85 disabled:opacity-40"
+            >
+              Search
+            </Button>
+          </motion.form>
 
           {skills === null && !skillsError && (
             <div className="flex items-center gap-2 py-4 font-aeonik text-sm font-medium text-carbon/60">
@@ -255,18 +311,17 @@ function CoursesPageInner() {
         {result && result.videos.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {result.videos.map((video: CourseVideo, i) => (
-              <motion.a
+              <motion.button
                 key={video.videoId}
-                href={`https://www.youtube.com/watch?v=${video.videoId}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                type="button"
+                onClick={() => setPlayingVideo(video)}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ y: -2 }}
                 transition={{ duration: 0.3, delay: Math.min(i * 0.04, 0.3), ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-col gap-3 rounded-[20px] border border-carbon bg-paper-white p-4"
+                className="flex flex-col gap-3 rounded-[20px] border border-carbon bg-paper-white p-4 text-left"
               >
-                <div className="relative aspect-video w-full overflow-hidden rounded-[14px] border border-carbon bg-soft-mist">
+                <div className="group relative aspect-video w-full overflow-hidden rounded-[14px] border border-carbon bg-soft-mist">
                   {video.thumbnailUrl && (
                     <Image
                       src={video.thumbnailUrl}
@@ -276,6 +331,9 @@ function CoursesPageInner() {
                       className="object-cover"
                     />
                   )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-carbon/0 transition-colors group-hover:bg-carbon/20">
+                    <PlayCircle className="size-12 text-paper-white drop-shadow-md" aria-hidden="true" />
+                  </div>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="font-aeonik text-sm font-extrabold leading-snug text-carbon">
@@ -292,14 +350,66 @@ function CoursesPageInner() {
                   </p>
                 )}
                 <span className="mt-auto inline-flex items-center gap-1.5 font-aeonik text-xs font-bold text-carbon">
-                  Watch on YouTube
-                  <ExternalLink className="size-3.5" aria-hidden="true" />
+                  <PlayCircle className="size-3.5" aria-hidden="true" />
+                  Play here
                 </span>
-              </motion.a>
+              </motion.button>
             ))}
           </div>
         )}
       </main>
+
+      {playingVideo && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={playingVideo.title}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-carbon/70 p-4 sm:p-8"
+          onClick={() => setPlayingVideo(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="flex w-full max-w-3xl flex-col gap-3 rounded-[24px] border border-carbon bg-paper-white p-4 sm:p-5"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-aeonik text-sm font-extrabold leading-snug text-carbon">
+                {playingVideo.title}
+              </p>
+              <button
+                type="button"
+                onClick={() => setPlayingVideo(null)}
+                aria-label="Close video"
+                className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-carbon bg-paper-white hover:bg-soft-mist"
+              >
+                <X className="size-4.5 text-carbon" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="relative aspect-video w-full overflow-hidden rounded-[16px] border border-carbon bg-carbon">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${playingVideo.videoId}?autoplay=1`}
+                title={playingVideo.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 size-full"
+              />
+            </div>
+
+            <a
+              href={`https://www.youtube.com/watch?v=${playingVideo.videoId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-fit items-center gap-1.5 font-aeonik text-xs font-bold text-carbon/70 underline underline-offset-2 hover:text-carbon"
+            >
+              Open on YouTube instead
+              <ExternalLink className="size-3.5" aria-hidden="true" />
+            </a>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
