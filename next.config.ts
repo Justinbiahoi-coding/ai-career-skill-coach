@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    // YouTube video thumbnails, shown on the Courses feature's video cards.
+    remotePatterns: [{ protocol: "https", hostname: "i.ytimg.com" }],
+  },
 };
 
 export default nextConfig;

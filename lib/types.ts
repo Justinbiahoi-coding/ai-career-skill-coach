@@ -249,3 +249,30 @@ export interface FullInterviewScoreResult {
   overallFeedback: string;
   usedFallback: boolean;
 }
+
+// --- Course recommendations: real YouTube search results, no AI involved ---
+//
+// This feature never calls Gemini. skillName arrives already English-
+// normalized from extract-skills, so it's a good enough search query on its
+// own — the "AI" here is just the YouTube Data API's own relevance ranking,
+// not a model generating or judging content. That keeps this feature clear
+// of No Fabrication risk entirely: every video is a real, verifiable search
+// result, never invented or rewritten.
+
+/** One real YouTube video from the Data API — never AI-generated. */
+export interface CourseVideo {
+  videoId: string;
+  title: string;
+  channelTitle: string;
+  thumbnailUrl: string;
+  publishedAt: string;
+  /** YouTube's own description snippet, shown as-is — never rewritten by AI. */
+  description: string;
+}
+
+export interface CourseSearchResult {
+  skillName: string;
+  videos: CourseVideo[];
+  /** true when the API/quota failed and these are stale cache (or empty) — never fabricated. */
+  usedFallback: boolean;
+}
