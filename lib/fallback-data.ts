@@ -14,6 +14,51 @@ export interface SampleJd {
   jdText: string;
 }
 
+/**
+ * Nghề gợi ý cho thanh tìm kiếm. Danh sách tĩnh, lọc ngay tại trình duyệt —
+ * KHÔNG gọi API gợi ý theo từng phím gõ, vì đã đo thật: API của VietnamWorks
+ * khớp theo từ nguyên vẹn chứ không khớp tiền tố, nên gõ "mark" trả về 0 kết
+ * quả còn gõ "data" lại trả về "Trade Coordinator" — gợi ý kiểu đó trông như
+ * hỏng. Cách này đổi lại luôn tức thì và không bao giờ trống.
+ *
+ * Mỗi từ khoá đã được kiểm chứng ngày 16/09/2026 là có job thật trả về
+ * (ít nhất 5 job/từ), để người dùng không bấm vào một gợi ý rồi nhận kết quả
+ * rỗng.
+ */
+export const JOB_SUGGESTIONS: string[] = [
+  "Data Analyst",
+  "Business Analyst",
+  "Marketing",
+  "Digital Marketing",
+  "Frontend Developer",
+  "Backend Developer",
+  "Software Engineer",
+  "Tester",
+  "Product Manager",
+  "Project Manager",
+  "Designer",
+  "UI/UX Designer",
+  "Content Writer",
+  "Sales",
+  "Customer Service",
+  "Kế toán",
+  "Nhân sự",
+  "Thực tập sinh",
+];
+
+/**
+ * Bỏ dấu tiếng Việt + hạ chữ thường, để gõ "ke toan" vẫn khớp "Kế toán" —
+ * sinh viên Việt Nam rất hay gõ không dấu khi tìm kiếm.
+ */
+export function normalizeForSearch(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .trim();
+}
+
 export const SAMPLE_JDS: SampleJd[] = [
   {
     label: "Junior Data Analyst",
