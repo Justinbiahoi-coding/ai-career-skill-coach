@@ -190,6 +190,16 @@ async function searchCareerLink(query: string): Promise<JobListing[]> {
     `https://www.careerlink.vn/vieclam/tim-kiem-viec-lam?keyword=${encodeURIComponent(query)}`
   );
   const cards = html.split("job-item").slice(1);
+  // "Không có thẻ job nào" và "tìm không ra kết quả" trông giống hệt nhau từ
+  // bên ngoài nhưng là hai chuyện khác nhau: một bên là trang trả về thứ khác
+  // hẳn (chặn bot, đổi bố cục), bên kia là từ khoá thật sự không khớp. Báo lỗi
+  // kèm dấu vết để còn phân biệt được trên production.
+  if (cards.length === 0) {
+    const hasList = html.includes("tim-viec-lam");
+    throw new Error(
+      `CareerLink returned no job cards (${html.length} bytes, job links present: ${hasList})`
+    );
+  }
   const listings: JobListing[] = [];
 
   for (const card of cards) {
