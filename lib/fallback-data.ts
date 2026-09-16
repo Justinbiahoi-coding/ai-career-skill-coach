@@ -1,8 +1,11 @@
 import type {
+  DialogueReplyResult,
   FullInterviewScoreResult,
   FullInterviewTurnResult,
   GenerateLessonResult,
+  GeneratePracticeResult,
   GradeExerciseResult,
+  GradeStepResult,
   InterviewScoreResult,
   InterviewTurnResult,
   JobListing,
@@ -250,6 +253,74 @@ export const FALLBACK_GRADE: GradeExerciseResult = {
     "The AI grader is unavailable right now, so this is a placeholder score. Your answer was recorded — try again once the connection is back for real feedback.",
   usedFallback: true,
 };
+
+export function buildFallbackPractice(skillName: string): GeneratePracticeResult {
+  return {
+    lessonText: `We couldn't reach the AI coach right now, so here's a general starting point for
+"${skillName}". Break the skill into the smallest task you can practice today, do it once with a
+real example from a job description, and compare your result against what a strong answer would
+look like. Repetition on real examples beats reading theory for skills like this.`,
+    steps: [
+      {
+        type: "multiple_choice",
+        question: `Which approach best describes how to improve at "${skillName}"?`,
+        options: [
+          "Practice on a real example, then compare against a strong answer",
+          "Read about it until it feels familiar",
+          "Wait until a real job requires it",
+          "Memorize a definition",
+        ],
+        correctIndex: 0,
+        explanation:
+          "Deliberate practice on real examples, checked against a strong answer, builds the skill faster than reading alone.",
+      },
+      {
+        type: "fill_blank",
+        sentence: `The fastest way to get better at "${skillName}" is deliberate ___ on real examples.`,
+        correctAnswer: "practice",
+        explanation: "Deliberate practice — repeating a task with feedback — is what turns knowledge into skill.",
+      },
+      {
+        type: "reorder",
+        instruction: `Put these steps for practicing "${skillName}" in the right order.`,
+        correctOrder: [
+          "Pick one real example from a job description",
+          "Attempt it yourself",
+          "Compare your result to a strong answer",
+          "Note the one biggest gap to fix next time",
+        ],
+        explanation: "Starting from a real example keeps practice grounded instead of abstract.",
+      },
+      {
+        type: "free_text",
+        prompt: `Describe one specific situation where "${skillName}" would come up in this job, and write out exactly what you would do step by step.`,
+      },
+      {
+        type: "mini_dialogue",
+        openingQuestion: `Can you walk me through a time you actually used "${skillName}" on something real?`,
+      },
+    ],
+    usedFallback: true,
+  };
+}
+
+export const FALLBACK_STEP_GRADE: GradeStepResult = {
+  score: 6,
+  feedback:
+    "The AI grader is unavailable right now, so this is a placeholder score. Your answer was recorded — try again once the connection is back for real feedback.",
+  usedFallback: true,
+};
+
+export function buildFallbackDialogueReply(turnNumber: number): DialogueReplyResult {
+  const isLast = turnNumber >= 2;
+  return {
+    reply: isLast
+      ? "Thanks for walking me through that — the AI interviewer is unavailable right now, but that's a good real-world example to have ready."
+      : "Interesting — the AI interviewer is unavailable right now, but keep that example in mind for later.",
+    isLast,
+    usedFallback: true,
+  };
+}
 
 const FALLBACK_INTERVIEW_QUESTIONS = [
   "Can you walk me through a time you actually used this skill on a real project?",

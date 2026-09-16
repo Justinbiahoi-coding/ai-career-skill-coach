@@ -4,6 +4,12 @@ import type { InterviewMessage } from "./types";
 // (chốt cứng isLast) và trang /interview (hiển thị tiến độ "Question X/Y").
 export const MAX_INTERVIEW_QUESTIONS = 4;
 
+// Turn cap for the mini_dialogue practice step — short by design, since it's
+// one step in a 5-step lesson, not a full mock interview. Shared between the
+// prompt (which must be told when to close the exchange) and the page
+// (which decides when to stop showing an input box).
+export const MAX_DIALOGUE_TURNS = 2;
+
 /**
  * Độ dài tối đa của jdText, dùng chung cho MỌI nơi chạm tới nó: ô nhập ở
  * trang chủ, hàm cắt JD trong lib/job-sources.ts, và cả 6 API route nhận
@@ -57,6 +63,99 @@ Respond with ONLY a JSON object, no prose before or after it, matching exactly t
 export function buildGenerateLessonPrompt(skillName: string, jdText: string): string {
   return `Skill to teach: "${skillName}"\n\nJob description this skill came from:\n"""\n${jdText}\n"""`;
 }
+
+// Multi-step practice: one lesson plus 5 graded steps, all generated in a
+// single call rather than one call per step. Two reasons: the free tier's
+// daily quota is tight (see lib/gemini.ts), and generating everything at
+// once keeps all 5 steps grounded in the same lesson and job description
+// instead of drifting apart across separate calls.
+export const GENERATE_PRACTICE_SYSTEM_PROMPT = `You are a coach building a short, Duolingo-style
+practice session for one specific skill a student needs for a job they're applying to.
+
+Produce a lesson and exactly 5 steps, in this fixed order, each harder than the last:
+
+1. multiple_choice - a concept-check question with exactly 4 options, one clearly correct.
+2. fill_blank - one sentence about applying this skill, with ONE key term replaced by "___".
+   correctAnswer is that exact term (a single word or short phrase, not a full sentence).
+3. reorder - 3 to 5 short steps of a real process for this skill, given in their CORRECT order
+   in correctOrder (the app shuffles them for display - you must not shuffle them yourself).
+4. free_text - one realistic scenario question the student answers in a few sentences, grounded
+   in this job. Do not ask for code execution or file uploads.
+5. mini_dialogue - openingQuestion is the first thing an interviewer would ask about this skill.
+   This step is a short 1-2 turn back-and-forth conducted separately after this response, so you
+   only need to write the opening question here.
+
+Rules that apply to every step:
+- Stay strictly on the given skill. Every step must be answerable from the lesson you wrote.
+- Ground steps 3, 4 and 5 in a scenario realistic for the job description given, not generic
+  trivia about the skill.
+- "explanation" fields (steps 1-3) are shown after the student answers, right or wrong - write
+  them to teach the underlying concept in 1-2 sentences, not just restate the correct answer.
+- Write everything in English, even if the job description is in another language.
+
+Respond with ONLY a JSON object, no prose before or after it, matching exactly this shape:
+
+{
+  "lessonText": string,
+  "steps": [
+    {"type": "multiple_choice", "question": string, "options": [string, string, string, string], "correctIndex": number, "explanation": string},
+    {"type": "fill_blank", "sentence": string, "correctAnswer": string, "explanation": string},
+    {"type": "reorder", "instruction": string, "correctOrder": [string, ...], "explanation": string},
+    {"type": "free_text", "prompt": string},
+    {"type": "mini_dialogue", "openingQuestion": string}
+  ]
+}`;
+
+export function buildGeneratePracticePrompt(skillName: string, jdText: string): string {
+  return `Skill to teach: "${skillName}"\n\nJob description this skill came from:\n"""\n${jdText}\n"""`;
+}
+
+// The mini_dialogue step's follow-up turn: one short exchange, not a full
+// mock interview. Reuses InterviewMessage's shape (role + text) since the
+// transcript format is identical to the existing interview prompts.
+export const DIALOGUE_REPLY_SYSTEM_PROMPT = `You are an interviewer having a brief, focused
+exchange with a student about ONE specific skill, as the final step of a practice session.
+
+You already asked an opening question. The student just answered. You may ask exactly ONE short
+follow-up question that probes their answer more deeply - or, if their answer was already
+substantive, end the exchange instead.
+
+This exchange is capped at 2 student turns total. You will be told which turn this is. If this is
+turn 2, you MUST end the exchange: set isLast to true and make "reply" a brief closing remark
+(1-2 sentences) rather than another question.
+
+Always write in English, even if the job description is in another language.
+
+Respond with ONLY a JSON object, no prose before or after it, matching exactly this shape:
+
+{"reply": string, "isLast": boolean}`;
+
+export function buildDialogueReplyPrompt(
+  skillName: string,
+  jdText: string,
+  history: InterviewMessage[],
+  turnNumber: number
+): string {
+  return `Skill: "${skillName}"
+
+Job description:
+"""
+${jdText}
+"""
+
+Exchange so far:
+${formatTranscript(history)}
+
+This is student turn ${turnNumber} of a maximum of ${MAX_DIALOGUE_TURNS}. ${
+    turnNumber >= MAX_DIALOGUE_TURNS ? "This MUST be the final turn - set isLast to true." : ""
+  }`;
+}
+
+// mini_dialogue and free_text are graded the same way as the original single
+// exercise (buildGradeExercisePrompt below) - reused as-is via the exported
+// alias at the bottom of this file, since "answer" grading against a rubric
+// doesn't change just because the answer came from a dialogue turn instead
+// of a single text box.
 
 export const GRADE_EXERCISE_SYSTEM_PROMPT = `You are a coach grading a student's answer to a
 practice exercise for one specific skill.
