@@ -1,3 +1,4 @@
+import { normalizeForSearch } from "./fallback-data";
 import { MAX_JD_LENGTH } from "./prompts";
 import type { JobListing, JobSource } from "./types";
 
@@ -12,11 +13,11 @@ const MAX_PER_SOURCE = 6;
 const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
 
-// Chỉ ITviec cần tải thêm trang chi tiết để lấy JD, nên cũng chỉ đúng tên miền
-// đó được phép. Route /api/jobs/jd nhận URL từ client rồi tự đi fetch, nếu
-// không khoá danh sách thì thành lỗ hổng SSRF (client ép server gọi vào địa chỉ
-// nội bộ). So khớp hostname chính xác, không dùng includes().
-const JD_FETCH_ALLOWED_HOSTS = new Set(["itviec.com"]);
+// Ba trang này trả JD ở trang chi tiết nên phải tải thêm một lượt; cũng chỉ
+// đúng ba tên miền này được phép. Route /api/jobs/jd nhận URL từ client rồi tự
+// đi fetch, nếu không khoá danh sách thì thành lỗ hổng SSRF (client ép server
+// gọi vào địa chỉ nội bộ). So khớp hostname chính xác, không dùng includes().
+const JD_FETCH_ALLOWED_HOSTS = new Set(["itviec.com", "www.careerlink.vn", "topdev.vn"]);
 
 /**
  * URL này có được phép cho server đi tải hộ không. Dùng ở cả route (để trả mã
@@ -32,15 +33,43 @@ export function isAllowedJobUrl(rawUrl: string): boolean {
   }
 }
 
+// Chỉ những thực thể có TÊN mới cần bảng tra; dạng số (&#233; &#x1EA1;) được
+// giải mã tổng quát bên dưới — và tiếng Việt chủ yếu rơi vào dạng số vì các
+// chữ ă/ơ/ư cùng dấu thanh không có tên riêng trong HTML.
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+  bull: "•", hellip: "…", ndash: "–", mdash: "—", middot: "·",
+  lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”",
+  deg: "°", copy: "©", reg: "®", trade: "™", euro: "€", pound: "£",
+  aacute: "á", agrave: "à", acirc: "â", atilde: "ã", auml: "ä",
+  eacute: "é", egrave: "è", ecirc: "ê", euml: "ë",
+  iacute: "í", igrave: "ì", icirc: "î", iuml: "ï",
+  oacute: "ó", ograve: "ò", ocirc: "ô", otilde: "õ", ouml: "ö",
+  uacute: "ú", ugrave: "ù", ucirc: "û", uuml: "ü",
+  yacute: "ý", ntilde: "ñ", ccedil: "ç",
+  Aacute: "Á", Agrave: "À", Acirc: "Â", Atilde: "Ã",
+  Eacute: "É", Egrave: "È", Ecirc: "Ê",
+  Iacute: "Í", Igrave: "Ì",
+  Oacute: "Ó", Ograve: "Ò", Ocirc: "Ô", Otilde: "Õ",
+  Uacute: "Ú", Ugrave: "Ù", Yacute: "Ý", Ntilde: "Ñ", Ccedil: "Ç",
+};
+
+/**
+ * Giải mã thực thể HTML trong MỘT lượt duy nhất. Làm nhiều lượt `.replace()`
+ * nối nhau sẽ sai: đổi `&amp;` thành `&` trước sẽ biến `&amp;iacute;` thành
+ * `&iacute;` rồi để nguyên đó — đúng lỗi đã gặp thật, khiến JD tiếng Việt của
+ * TopDev gửi tới Gemini ở dạng "Chuy&ecirc;n vi&ecirc;n".
+ */
 function decodeEntities(text: string): string {
-  return text
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&#x27;/g, "'");
+  return text.replace(/&(#[xX][0-9a-fA-F]+|#\d+|[a-zA-Z][a-zA-Z0-9]*);/g, (match, body: string) => {
+    if (body.startsWith("#")) {
+      const isHex = body[1] === "x" || body[1] === "X";
+      const code = parseInt(isHex ? body.slice(2) : body.slice(1), isHex ? 16 : 10);
+      if (!Number.isFinite(code) || code <= 0 || code > 0x10ffff) return match;
+      return String.fromCodePoint(code);
+    }
+    return NAMED_ENTITIES[body] ?? match;
+  });
 }
 
 /** Bỏ thẻ HTML, gộp khoảng trắng, cắt còn tối đa `maxChars`. */
@@ -151,6 +180,78 @@ async function searchItviec(query: string): Promise<JobListing[]> {
   return listings;
 }
 
+// --- CareerLink -------------------------------------------------------------
+// Tham số tìm kiếm là `keyword` — biết được là nhờ chính trang khai báo
+// SearchAction trong JSON-LD ("urlTemplate": ".../tim-kiem-viec-lam?keyword=").
+// Đoán sai thành `searchKeyword` thì trang vẫn trả HTTP 200 nhưng là TOÀN BỘ
+// hơn 32.000 job không lọc — hỏng âm thầm, không có lỗi nào báo ra.
+async function searchCareerLink(query: string): Promise<JobListing[]> {
+  const html = await fetchText(
+    `https://www.careerlink.vn/vieclam/tim-kiem-viec-lam?keyword=${encodeURIComponent(query)}`
+  );
+  const cards = html.split("job-item").slice(1);
+  const listings: JobListing[] = [];
+
+  for (const card of cards) {
+    if (listings.length >= MAX_PER_SOURCE) break;
+    const path = /href="(\/tim-viec-lam\/[^"?]+)/.exec(card)?.[1];
+    const title = /class="job-link[^"]*"\s+title="([^"]+)"/.exec(card)?.[1];
+    const company = /class="text-dark job-company[^"]*"\s+title="([^"]+)"/.exec(card)?.[1];
+    if (!path || !title || !company) continue;
+    listings.push(
+      makeListing(
+        "CareerLink",
+        decodeEntities(title).trim(),
+        decodeEntities(company).trim(),
+        `https://www.careerlink.vn${path}`
+      )
+    );
+  }
+  return listings;
+}
+
+// --- TopDev -----------------------------------------------------------------
+// Trang dùng class Tailwind nên không có tên class ngữ nghĩa để bám. Neo vào
+// hai class màu ổn định nhất (`text-brand-600` cho tiêu đề, `text-text-500` cho
+// tên công ty) — đây là chỗ dễ vỡ nhất nếu TopDev đổi giao diện, và khi đó
+// nguồn này chỉ đơn giản là không trả job chứ không làm hỏng tìm kiếm.
+const TOPDEV_CARD_RE =
+  /<a class="[^"]*text-brand-600[^"]*"\s+href="(\/viec-lam\/[^"?]+)[^"]*">([^<]+)<\/a>\s*<span class="[^"]*text-text-500[^"]*">([^<]+)<\/span>/g;
+
+async function searchTopDev(query: string): Promise<JobListing[]> {
+  const html = await fetchText(
+    `https://topdev.vn/viec-lam/tim-kiem?keyword=${encodeURIComponent(query)}`
+  );
+  const listings: JobListing[] = [];
+  const seen = new Set<string>();
+
+  // TopDev không trả rỗng khi không khớp — nó rơi về danh sách job nổi bật.
+  // Tìm "zzzqqqxxnothing" vẫn ra 6 job hoàn toàn lạc đề, trông như kết quả
+  // thật. Lọc lại phía mình: giữ job nếu có BẤT KỲ từ nào trong truy vấn xuất
+  // hiện ở tiêu đề hoặc tên công ty (bỏ dấu, bỏ từ quá ngắn để không khớp bừa).
+  const terms = normalizeForSearch(query)
+    .split(/\s+/)
+    .filter((t) => t.length >= 3);
+
+  for (const match of html.matchAll(TOPDEV_CARD_RE)) {
+    if (listings.length >= MAX_PER_SOURCE) break;
+    const [, path, title, company] = match;
+    if (seen.has(path)) continue;
+    const haystack = normalizeForSearch(decodeEntities(`${title} ${company}`));
+    if (terms.length > 0 && !terms.some((t) => haystack.includes(t))) continue;
+    seen.add(path);
+    listings.push(
+      makeListing(
+        "TopDev",
+        decodeEntities(title).trim(),
+        decodeEntities(company).trim(),
+        `https://topdev.vn${path}`
+      )
+    );
+  }
+  return listings;
+}
+
 // --- RemoteOK ---------------------------------------------------------------
 // API JSON công khai, không cần key. Phần tử đầu tiên là thông báo điều khoản
 // của họ chứ không phải job, nên phải bỏ qua.
@@ -197,6 +298,8 @@ export async function searchAllSources(query: string): Promise<JobListing[]> {
   const sources: [JobSource, Promise<JobListing[]>][] = [
     ["VietnamWorks", searchVietnamWorks(query)],
     ["ITviec", searchItviec(query)],
+    ["CareerLink", searchCareerLink(query)],
+    ["TopDev", searchTopDev(query)],
     ["RemoteOK", searchRemoteOk(query)],
   ];
   const settled = await Promise.allSettled(sources.map(([, promise]) => promise));
@@ -224,18 +327,7 @@ export async function searchAllSources(query: string): Promise<JobListing[]> {
   return interleaved;
 }
 
-/**
- * Tải trang chi tiết của ITviec để lấy JD. Chỉ gọi khi người dùng đã chọn một
- * job cụ thể — tải sẵn hết ~40 trang chi tiết lúc search sẽ rất chậm.
- *
- * @throws nếu hostname không nằm trong danh sách cho phép (chống SSRF).
- */
-export async function fetchJobDescription(rawUrl: string): Promise<string> {
-  if (!isAllowedJobUrl(rawUrl)) {
-    throw new Error("Refusing to fetch job description from a non-allowlisted URL");
-  }
-  const html = await fetchText(new URL(rawUrl).toString());
-
+function extractItviecJd(html: string): string {
   const marker = html.indexOf("data-jobs--jd-scroll-target='jobContent'");
   if (marker === -1) throw new Error("ITviec job content block not found");
   // Nhảy qua phần còn lại của thẻ mở, nếu không tên thuộc tính sẽ lọt vào JD.
@@ -244,4 +336,50 @@ export async function fetchJobDescription(rawUrl: string): Promise<string> {
   const rest = html.slice(start);
   const end = rest.indexOf("relative-jobs");
   return stripHtml(end === -1 ? rest : rest.slice(0, end));
+}
+
+function extractCareerLinkJd(html: string): string {
+  const marker = html.indexOf("job-description");
+  if (marker === -1) throw new Error("CareerLink job description block not found");
+  // Nhảy qua phần còn lại của thẻ mở, nếu không tên class sẽ lọt vào đầu JD.
+  const start = html.indexOf(">", marker) + 1;
+  return stripHtml(html.slice(start));
+}
+
+// TopDev là app Next.js: JD không nằm trong HTML thường mà trong payload của
+// React, nơi các thẻ bị escape thành <p>. Phải bỏ <script> TRƯỚC khi
+// giải mã (để không kéo theo mã JS), giải mã, rồi bỏ <script> lần nữa vì sau
+// khi giải mã có thể lộ ra thẻ script mới.
+function extractTopDevJd(html: string): string {
+  const withoutScripts = html.replace(/<script[\s\S]*?<\/script>/gi, " ");
+  const decoded = withoutScripts
+    .replace(/\\u003c/gi, "<")
+    .replace(/\\u003e/gi, ">")
+    .replace(/\\u0026/gi, "&")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ");
+
+  const blocks = decoded.match(/<p[^>]*>[\s\S]{0,3000}?<\/p>|<li[^>]*>[\s\S]{0,2000}?<\/li>/gi);
+  if (!blocks || blocks.length === 0) throw new Error("TopDev job description blocks not found");
+  // \r và \n trong payload còn ở dạng chuỗi escape hai ký tự, không phải xuống
+  // dòng thật — đổi lại trước khi strip để JD không dính thành một khối chữ.
+  const joined = blocks.join("\n").replace(/\\r/g, " ").replace(/\\n/g, "\n");
+  return stripHtml(joined);
+}
+
+/**
+ * Tải trang chi tiết để lấy JD. Chỉ gọi khi người dùng đã chọn một job cụ thể —
+ * tải sẵn hết ~40 trang chi tiết lúc search sẽ rất chậm.
+ *
+ * @throws nếu hostname không nằm trong danh sách cho phép (chống SSRF).
+ */
+export async function fetchJobDescription(rawUrl: string): Promise<string> {
+  if (!isAllowedJobUrl(rawUrl)) {
+    throw new Error("Refusing to fetch job description from a non-allowlisted URL");
+  }
+  const url = new URL(rawUrl);
+  const html = await fetchText(url.toString());
+
+  if (url.hostname === "www.careerlink.vn") return extractCareerLinkJd(html);
+  if (url.hostname === "topdev.vn") return extractTopDevJd(html);
+  return extractItviecJd(html);
 }

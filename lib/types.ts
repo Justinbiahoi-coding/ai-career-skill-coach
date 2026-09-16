@@ -16,7 +16,13 @@ export interface ExtractSkillsResult {
 // của họ chặn (403) cả IP datacenter lẫn IP thường sau vài chục request, và
 // trang 403 nói rõ request của mình đã kích hoạt hệ thống bảo vệ — nên không
 // gọi nữa. Ảnh chụp một job TopCV thật vẫn giữ trong FALLBACK_JOBS.
-export type JobSource = "VietnamWorks" | "ITviec" | "TopCV" | "RemoteOK";
+export type JobSource =
+  | "VietnamWorks"
+  | "ITviec"
+  | "CareerLink"
+  | "TopDev"
+  | "TopCV"
+  | "RemoteOK";
 
 export interface JobListing {
   id: string;
