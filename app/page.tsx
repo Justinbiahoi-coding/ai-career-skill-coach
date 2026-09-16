@@ -62,7 +62,7 @@ export default function Home() {
     setSearchNotice(null);
 
     try {
-      // VietnamWorks/RemoteOK đã trả JD ngay khi search; ITviec/TopCV phải tải
+      // VietnamWorks/RemoteOK đã trả JD ngay khi search; ITviec phải tải
       // thêm trang chi tiết, nên chỉ gọi khi người dùng thật sự chọn job đó.
       let text = job.jdText;
       if (!text) {
@@ -211,8 +211,8 @@ export default function Home() {
               })}
 
               <p className="text-muted-foreground text-[11px] leading-relaxed">
-                Job listings are borrowed from public postings on VietnamWorks, ITviec, TopCV and
-                RemoteOK for this demo. All rights belong to the original sites and employers.
+                Job listings are borrowed from public postings on VietnamWorks, ITviec and RemoteOK
+                for this demo. All rights belong to the original sites and employers.
               </p>
             </div>
           )}

@@ -12,6 +12,10 @@ export interface ExtractSkillsResult {
   usedFallback: boolean;
 }
 
+// "TopCV" vẫn nằm trong kiểu dù KHÔNG còn được tìm kiếm trực tiếp: Cloudflare
+// của họ chặn (403) cả IP datacenter lẫn IP thường sau vài chục request, và
+// trang 403 nói rõ request của mình đã kích hoạt hệ thống bảo vệ — nên không
+// gọi nữa. Ảnh chụp một job TopCV thật vẫn giữ trong FALLBACK_JOBS.
 export type JobSource = "VietnamWorks" | "ITviec" | "TopCV" | "RemoteOK";
 
 export interface JobListing {
@@ -21,7 +25,7 @@ export interface JobListing {
   source: JobSource;
   /** Link tin tuyển dụng gốc, để người dùng kiểm chứng và để ghi nguồn. */
   url: string;
-  /** VietnamWorks/RemoteOK trả JD ngay khi search; ITviec/TopCV phải tải thêm. */
+  /** VietnamWorks/RemoteOK trả JD ngay khi search; ITviec phải tải thêm. */
   jdText?: string;
 }
 
