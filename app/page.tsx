@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SAMPLE_JDS } from "@/lib/fallback-data";
+import { JOB_SUGGESTIONS, SAMPLE_JDS, normalizeForSearch } from "@/lib/fallback-data";
 import { MAX_JD_LENGTH } from "@/lib/prompts";
 import { saveExtractedSkills } from "@/lib/session-store";
 import type { ExtractSkillsResult, JobDescriptionResult, JobListing, JobSearchResult } from "@/lib/types";
@@ -25,14 +25,26 @@ export default function Home() {
   const [pickingJobId, setPickingJobId] = useState<string | null>(null);
   const [pickedJob, setPickedJob] = useState<JobListing | null>(null);
 
-  async function handleSearch() {
-    if (!query.trim() || searching) return;
+  // Lọc gợi ý ngay tại trình duyệt: tức thì, không gọi mạng theo từng phím gõ.
+  // So khớp sau khi bỏ dấu để gõ "ke toan" vẫn ra "Kế toán".
+  const suggestions = useMemo(() => {
+    const typed = normalizeForSearch(query);
+    if (!typed) return JOB_SUGGESTIONS.slice(0, 8);
+    return JOB_SUGGESTIONS.filter((s) => normalizeForSearch(s).includes(typed)).slice(0, 8);
+  }, [query]);
+
+  // Nhận từ khoá qua tham số chứ không đọc từ state: khi bấm một gợi ý, state
+  // `query` chưa kịp cập nhật (setState bất đồng bộ) nên sẽ tìm nhầm từ cũ.
+  async function handleSearch(term: string = query) {
+    const q = term.trim();
+    if (!q || searching) return;
+    setQuery(term);
     setSearching(true);
     setSearchNotice(null);
     setJobs(null);
 
     try {
-      const res = await fetch(`/api/jobs/search?q=${encodeURIComponent(query.trim())}`);
+      const res = await fetch(`/api/jobs/search?q=${encodeURIComponent(q)}`);
       const data: JobSearchResult = await res.json();
       setJobs(data.jobs);
       if (data.usedFallback) {
@@ -129,10 +141,31 @@ export default function Home() {
                 if (e.key === "Enter") handleSearch();
               }}
             />
-            <Button onClick={handleSearch} disabled={searching || !query.trim()}>
+            {/* Bọc trong arrow function: nếu truyền thẳng handleSearch thì
+                React đưa object sự kiện vào tham số `term` thay vì chuỗi. */}
+            <Button onClick={() => handleSearch()} disabled={searching || !query.trim()}>
               {searching ? "Searching..." : "Search"}
             </Button>
           </div>
+
+          {suggestions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-muted-foreground text-xs">
+                {query.trim() ? "Suggestions:" : "Try:"}
+              </span>
+              {suggestions.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => handleSearch(s)}
+                  disabled={searching}
+                  className="border-input hover:bg-muted rounded-full border px-2.5 py-1 text-xs transition-colors disabled:opacity-60"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
 
           {searchNotice && <p className="text-muted-foreground text-xs">{searchNotice}</p>}
 
