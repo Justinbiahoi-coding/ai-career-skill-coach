@@ -1,115 +1,108 @@
-import { Search, Compass, BookOpen, Mic, CheckCircle2 } from "lucide-react";
+import { Search, BrainCircuit, BookOpen, Mic, Trophy } from "lucide-react";
 
 export function LandingHowItWorks() {
   const steps = [
     {
       number: "01",
+      badge: "STEP 01",
+      badgeBg: "bg-sunburst text-carbon",
+      title: "Parse Live JDs",
+      description: "Paste URLs or raw job postings directly from VietnamWorks, ITviec, TopDev to extract structured requirements.",
       icon: Search,
-      title: "Tìm Việc Tuyển Dụng Thật",
-      description:
-        "Nhập từ khóa tìm kiếm việc làm trực tiếp từ VietnamWorks, ITviec, TopDev, CareerLink hoặc dán bất kỳ mô tả công việc (JD) nào bạn đang nhắm tới.",
-      tag: "Live Job Scraping",
-      badgeColor: "bg-blue-500/10 text-blue-600 border-blue-200",
+      cardBg: "bg-paper-white",
     },
     {
       number: "02",
-      icon: Compass,
-      title: "Đo Khoảng Trống Kỹ Năng",
-      description:
-        "AI bóc tách 5 kỹ năng then chốt (Hard/Soft skills). Bạn tự chấm độ tự tin từ 1–5 sao. Hệ thống phân tích và xác định chính xác kỹ năng ưu tiên cần bù đắp.",
-      tag: "Skill Gap Analysis",
-      badgeColor: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
+      badge: "STEP 02",
+      badgeBg: "bg-voltage-violet text-paper-white",
+      title: "Map Skill Gaps",
+      description: "AI compares your current profile against the JD, isolating your top 3–5 high-impact missing skills.",
+      icon: BrainCircuit,
+      cardBg: "bg-lavender",
     },
     {
       number: "03",
+      badge: "STEP 03",
+      badgeBg: "bg-electric-blue text-carbon",
+      title: "5-Min Micro-Lessons",
+      description: "Bite-sized 5-step learning: core concepts, recruiter grilling scenarios, pitfalls, and interactive 0–10 grading.",
       icon: BookOpen,
-      title: "Học Vi Mô 5 Bước",
-      description:
-        "Bài học 5 phút bám sát đúng ngữ cảnh công việc đã chọn. Luyện tập qua 5 câu hỏi tương tác phong cách Duolingo, chấm điểm tự động từ 0–10 kèm nhận xét cụ thể.",
-      tag: "Targeted Micro-Lesson",
-      badgeColor: "bg-amber-500/10 text-amber-600 border-amber-200",
+      cardBg: "bg-sky-wash",
     },
     {
       number: "04",
+      badge: "STEP 04",
+      badgeBg: "bg-ember text-paper-white",
+      title: "AI Voice Mock Turn",
+      description: "Put on headphones and practice spoken responses hands-free in natural English with instant conversational critique.",
       icon: Mic,
-      title: "Phỏng Vấn Thoại Rảnh Tay",
-      description:
-        "Mô phỏng phỏng vấn thực tế: AI đọc câu hỏi bằng tiếng Anh, micro tự động kích hoạt để bạn trả lời bằng giọng nói và chỉ cần nói \"I'm done\" để hoàn thành.",
-      tag: "Hands-free Voice AI",
-      badgeColor: "bg-purple-500/10 text-purple-600 border-purple-200",
+      cardBg: "bg-paper-white",
     },
     {
       number: "05",
-      icon: CheckCircle2,
-      title: "Báo Cáo Sẵn Sàng Toàn Diện",
-      description:
-        "Đối chiếu mức độ tự tin ban đầu với năng lực thực chiến được đo lường qua phỏng vấn. Mở khóa vòng phỏng vấn tổng hợp để đánh giá toàn diện khả năng trúng tuyển.",
-      tag: "Readiness Score",
-      badgeColor: "bg-rose-500/10 text-rose-600 border-rose-200",
+      badge: "STEP 05",
+      badgeBg: "bg-carbon text-paper-white",
+      title: "Readiness Score",
+      description: "Get a comprehensive 0–100% readiness evaluation, diagnose remaining blindspots, and sustain your daily streak.",
+      icon: Trophy,
+      cardBg: "bg-mint-pop",
     },
   ];
 
   return (
-    <section id="how-it-works" className="py-28 md:py-36 lg:py-44">
+    <section id="how-it-works" className="w-full bg-concrete-gray border-b border-carbon py-24 md:py-32 select-none">
       <div className="mx-auto max-w-[1440px] px-6 sm:px-8 lg:px-12">
         {/* Section Header */}
-        <div className="mx-auto max-w-3xl text-center">
-          <span className="text-xs font-extrabold tracking-widest text-primary uppercase">
-            Chu trình 5 bước khép kín
-          </span>
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            Từ tin tuyển dụng đến phản xạ phỏng vấn tự tin
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-1 text-xs font-bold tracking-[0.032em] text-carbon mb-6">
+            5-STEP CLOSED LOOP
+          </div>
+          <h2 className="font-lateral text-[clamp(40px,7vw,96px)] font-extrabold uppercase leading-[0.78] tracking-normal text-carbon">
+            HOW IT WORKS
           </h2>
-          <p className="mt-5 text-base sm:text-lg leading-relaxed text-muted-foreground">
-            Quy trình được thiết kế theo đúng yêu cầu của Challenge Track 1 — Future Skills Readiness:
-            Nhận diện ➔ Phát triển ➔ Thực hành có ý nghĩa.
+          <p className="mt-6 max-w-2xl mx-auto font-aeonik text-base sm:text-xl font-medium leading-[1.3] text-carbon/80">
+            From live job description parsing to real-time conversational mastery in five smooth steps.
           </p>
         </div>
 
-        {/* 5-Step Stepper Cards */}
-        <div className="mt-16 sm:mt-20 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {/* 5-Step Card Grid with 1px Hand-cut Black Borders */}
+        <div className="mt-16 sm:mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {steps.map((step, idx) => {
             const Icon = step.icon;
             return (
               <div
-                key={step.number}
-                className={`group relative flex flex-col justify-between rounded-3xl border border-border bg-card p-8 sm:p-9 shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl ${
-                  idx === 4 ? "md:col-span-2 lg:col-span-1" : ""
-                }`}
+                key={idx}
+                className={`flex flex-col justify-between rounded-[24px] border border-carbon ${step.cardBg} p-6 sm:p-7 text-carbon transition-transform hover:-translate-y-1.5`}
               >
                 <div>
-                  {/* Step Number & Tag */}
+                  {/* Step Badge & Number */}
                   <div className="flex items-center justify-between">
-                    <span className="text-4xl font-black text-muted-foreground/30 group-hover:text-primary transition-colors">
+                    <span
+                      className={`rounded-full border border-carbon px-3 py-1 text-[11px] font-extrabold tracking-[0.032em] ${step.badgeBg}`}
+                    >
+                      {step.badge}
+                    </span>
+                    <span className="font-lateral text-3xl font-extrabold text-carbon/40">
                       {step.number}
                     </span>
-                    <span
-                      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold ${step.badgeColor}`}
-                    >
-                      {step.tag}
-                    </span>
                   </div>
 
-                  {/* Icon & Title */}
-                  <div className="mt-8 flex items-center gap-3.5">
-                    <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
-                      <Icon className="size-6" />
-                    </span>
-                    <h3 className="text-xl font-bold text-foreground">{step.title}</h3>
+                  {/* Icon Circle */}
+                  <div className="mt-6 flex size-12 items-center justify-center rounded-full border border-carbon bg-paper-white text-carbon">
+                    <Icon className="size-6 text-carbon" />
                   </div>
 
-                  {/* Description */}
-                  <p className="mt-4 text-sm sm:text-base leading-relaxed text-muted-foreground">
+                  {/* Title & Description */}
+                  <h3 className="mt-5 text-xl font-extrabold tracking-tight text-carbon">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-sm font-medium leading-relaxed text-carbon/80">
                     {step.description}
                   </p>
                 </div>
 
-                {/* Bottom Step Flow Indicator */}
-                <div className="mt-8 pt-5 border-t border-border/60 flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
-                  <span>Bước {step.number}/05</span>
-                  <span className="text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                    Khám phá →
-                  </span>
+                <div className="mt-6 pt-4 border-t border-carbon/20 text-[11px] font-bold tracking-[0.032em] text-carbon/60 uppercase">
+                  Step {idx + 1} of 5
                 </div>
               </div>
             );

@@ -1,68 +1,74 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
-import { Mascot } from "@/components/mascot";
+import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 
 export function LandingCtaBanner() {
   return (
-    <section className="border-t border-border/60 bg-muted/20 py-28 pb-36 md:py-36 md:pb-48">
-      <div className="mx-auto max-w-[1440px] px-6 sm:px-8 lg:px-12">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-primary/10 p-10 sm:p-16 lg:p-20 text-center shadow-2xl">
-          {/* Subtle Background Glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-96 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
+    <section className="w-full bg-concrete-gray py-20 md:py-28 px-6 sm:px-8 lg:px-12 select-none">
+      <div className="mx-auto max-w-[1440px]">
+        {/* Giant Electric Blue Slush Card with Hand-cut 1px Black Border & 40px Radius */}
+        <div className="relative rounded-[40px] border border-carbon bg-electric-blue p-10 sm:p-16 md:p-20 text-center text-carbon overflow-hidden">
+          {/* Floating Sticker Confetti */}
+          <div className="hidden sm:flex absolute top-8 left-8 -rotate-12 rounded-[18px] border border-carbon bg-ember px-3.5 py-1.5 text-xs font-bold text-paper-white">
+            🚀 Ready for Offer
+          </div>
+          <div className="hidden sm:flex absolute top-8 right-8 rotate-12 rounded-[18px] border border-carbon bg-sunburst px-3.5 py-1.5 text-xs font-bold text-carbon">
+            🪙 100% Free
+          </div>
+          <div className="hidden sm:flex absolute bottom-8 left-12 rotate-6 rounded-[18px] border border-carbon bg-mint-pop px-3.5 py-1.5 text-xs font-bold text-carbon">
+            ✓ Real Mock Turns
+          </div>
+          <div className="hidden sm:flex absolute bottom-8 right-12 -rotate-6 rounded-[18px] border border-carbon bg-lavender px-3.5 py-1.5 text-xs font-bold text-carbon">
+            ⚡ Zero Delay
+          </div>
 
-          <div className="relative z-10 flex flex-col items-center">
-            {/* Cheering Mascot Job Buddy */}
-            <div className="mb-6">
-              <Mascot mood="encourage" size="xl" decorative />
+          <div className="relative z-10 mx-auto max-w-3xl flex flex-col items-center">
+            {/* Hackathon Badge */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-1.5 text-xs font-bold tracking-[0.032em] text-carbon mb-6">
+              <Sparkles className="size-3.5 text-carbon" />
+              <span>GET STARTED IN 30 SECONDS</span>
             </div>
 
-            {/* Title */}
-            <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl xl:text-6xl max-w-3xl leading-[1.12]">
-              Biến khoảng trống kỹ năng thành tấm vé tuyển dụng ngay hôm nay.
+            {/* Giant Crushed Lateral Display Headline */}
+            <h2 className="font-lateral text-[clamp(44px,8vw,110px)] font-extrabold uppercase leading-[0.78] tracking-normal text-carbon">
+              START TODAY
             </h2>
 
-            {/* Subhead */}
-            <p className="mt-6 max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed">
-              Trải nghiệm chu trình khép kín: Quét JD thật ➔ Đo độ tự tin ➔ Luyện tập 5 bước ➔ Phỏng vấn phản xạ giọng nói.
-              Hoàn toàn miễn phí, không rào cản.
+            <p className="mt-6 max-w-xl font-aeonik text-lg sm:text-2xl font-medium leading-[1.3] text-carbon">
+              Don&apos;t let knowledge gaps hold back your career. Discover what recruiters expect and master live voice interview reflexes today.
             </p>
 
-            {/* Action Buttons */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-5">
+            {/* Action Buttons: Carbon Filled CTA + Paper White Outlined Ghost Button */}
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/home"
-                className="inline-flex items-center gap-2.5 rounded-full bg-primary px-9 py-4.5 text-base font-bold text-primary-foreground shadow-xl transition-transform hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-carbon px-8 py-4 text-base font-bold tracking-[0.032em] text-paper-white transition-transform hover:scale-105 active:scale-95"
               >
-                <span>Bắt đầu trải nghiệm ngay</span>
+                <span>Start Practicing Free</span>
                 <ArrowRight className="size-5" />
               </Link>
 
-              {/* Placeholder Sign In button as requested */}
-              <button
-                type="button"
-                className="cursor-pointer rounded-full border border-border bg-background px-9 py-4.5 text-base font-bold text-foreground transition-colors hover:bg-muted"
-                onClick={() => alert("Chức năng Đăng nhập đang được kích hoạt...")}
+              <Link
+                href="/gap"
+                className="inline-flex items-center gap-2.5 rounded-full border border-carbon bg-paper-white px-8 py-4 text-base font-bold tracking-[0.032em] text-carbon transition-transform hover:bg-soft-mist active:scale-95"
               >
-                Đăng nhập tài khoản
-              </button>
+                <span>Scan Job Postings</span>
+              </Link>
             </div>
 
-            {/* Quick Micro Assurance */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground font-medium">
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-primary" />
-                Không cần thẻ ngân hàng
-              </span>
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-primary" />
-                Tương thích mọi thiết bị
-              </span>
-              <span className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-primary" />
-                Gemini 3.6 Flash Native
-              </span>
+            {/* Trust Points */}
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs sm:text-sm font-bold tracking-[0.02em] text-carbon">
+              <div className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="size-4 text-carbon" />
+                <span>No Credit Card Required</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="size-4 text-carbon" />
+                <span>Instant Browser Access</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5">
+                <CheckCircle2 className="size-4 text-carbon" />
+                <span>Free for Students</span>
+              </div>
             </div>
           </div>
         </div>

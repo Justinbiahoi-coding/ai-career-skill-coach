@@ -9,9 +9,9 @@ import { LandingTeam } from "@/components/landing/landing-team";
 import { LandingCtaBanner } from "@/components/landing/landing-cta-banner";
 
 export const metadata: Metadata = {
-  title: "Joblingo — AI Career Skill Coach | Chu trình luyện kỹ năng & Phỏng vấn thử",
+  title: "Joblingo — AI Career Skill Coach | Skill Gap Discovery & Voice Mock Interviews",
   description:
-    "Quét tin tuyển dụng thật từ VietnamWorks, ITviec, TopDev; phát hiện khoảng trống kỹ năng, học vi mô 5 phút và phỏng vấn thoại cùng AI. Dự án Team 15 tại Global Hackathon 2026.",
+    "Scan live job descriptions from VietnamWorks, ITviec, TopDev; discover your skill gaps, practice bite-sized 5-minute micro-lessons, and conduct voice mock interviews with AI. Built by Team 15 for Global Hackathon 2026.",
 };
 
 export default function LandingPage() {

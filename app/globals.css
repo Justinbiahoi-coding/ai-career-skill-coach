@@ -27,7 +27,7 @@
   --color-voltage-violet: #5c4ade;
 
   /* Typography */
-  --font-lateral: 'Lateral', 'Druk', 'Bowlby One', 'Antonio', ui-sans-serif, system-ui, sans-serif;
+  --font-lateral: 'Lateral', 'Antonio', 'Bowlby One', 'Impact', 'Arial Black', ui-sans-serif, system-ui, sans-serif;
   --font-aeonik: 'Aeonik Pro', 'Inter', 'Satoshi', 'General Sans', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
 
   /* Slush Border Radii */
@@ -130,56 +130,54 @@
   --surface-sticker-surfaces: #e9ccff;
 
   /* Typography Variables */
-  --font-lateral: 'Lateral', 'Druk', 'Bowlby One', 'Antonio', ui-sans-serif, system-ui, sans-serif;
-  --font-aeonik-pro: 'Aeonik Pro', 'Inter', 'Satoshi', 'General Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-lateral: 'Lateral', 'Antonio', 'Bowlby One', 'Impact', 'Arial Black', ui-sans-serif, system-ui, sans-serif;
+  --font-aeonik-pro: 'Aeonik Pro', 'Inter', 'Satoshi', 'General Sans', var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
 
-  /* Theme Tokens */
-  --background: oklch(0.985 0.006 195);
-  --foreground: oklch(0.24 0.03 220);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.03 220);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.24 0.03 220);
+  /* Theme Tokens - Slush Light Theme (Zero Teal) */
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
 
-  --primary: oklch(0.52 0.12 185);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.02 195);
-  --secondary-foreground: oklch(0.36 0.07 200);
-  --muted: oklch(0.96 0.01 200);
-  --muted-foreground: oklch(0.52 0.03 215);
-  --accent: oklch(0.93 0.04 195);
-  --accent-foreground: oklch(0.32 0.07 200);
-  --destructive: oklch(0.6 0.2 22);
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #dceeff;
+  --secondary-foreground: #000000;
+  --muted: #f4f4f4;
+  --muted-foreground: #555555;
+  --accent: #4da2ff;
+  --accent-foreground: #000000;
+  --destructive: #fb4903;
+  --destructive-foreground: #ffffff;
 
-  --success: oklch(0.68 0.16 150);
-  --success-foreground: oklch(1 0 0);
-  --success-muted: oklch(0.94 0.05 150);
-  --warning: oklch(0.75 0.15 70);
-  --warning-foreground: oklch(0.26 0.05 70);
-  --warning-muted: oklch(0.96 0.05 80);
-  --xp: oklch(0.76 0.16 85);
-  --xp-muted: oklch(0.96 0.06 85);
-  --streak: oklch(0.68 0.19 40);
-  --streak-muted: oklch(0.95 0.06 45);
-  --locked: oklch(0.86 0.01 210);
+  --success: #55db9c;
+  --success-foreground: #000000;
+  --success-muted: #dceeff;
+  --warning: #ffd731;
+  --warning-foreground: #000000;
+  --warning-muted: #fef08a;
+  --xp: #ffd731;
+  --xp-muted: #fef9c3;
+  --streak: #fb4903;
+  --streak-muted: #ffedd5;
+  --locked: #cccccc;
 
-  --border: oklch(0.9 0.015 200);
-  --input: oklch(0.9 0.015 200);
-  --ring: oklch(0.52 0.12 185);
+  --border: #000000;
+  --input: #000000;
+  --ring: #000000;
 
-  --clay-edge: oklch(0.88 0.02 200);
-  --clay-ambient: oklch(0.6 0.08 200 / 0.28);
+  --radius: 1.25rem;
 
-  --radius: 1rem;
-
-  --sidebar: oklch(0.99 0.006 195);
-  --sidebar-foreground: oklch(0.24 0.03 220);
-  --sidebar-primary: oklch(0.52 0.12 185);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0.02 195);
-  --sidebar-accent-foreground: oklch(0.32 0.07 200);
-  --sidebar-border: oklch(0.9 0.015 200);
-  --sidebar-ring: oklch(0.52 0.12 185);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #000000;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dceeff;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #000000;
+  --sidebar-ring: #000000;
 }
 
 .dark {
@@ -252,9 +250,24 @@
     text-transform: uppercase;
   }
 
-  /* Slush hand-cut sticker border utility */
+  /* Slush hand-cut sticker border utilities */
   .sticker-border {
     border: 1px solid var(--color-carbon);
+  }
+
+  .sticker-pill {
+    border: 1px solid var(--color-carbon);
+    border-radius: 1600px;
+  }
+
+  .sticker-card {
+    border: 1px solid var(--color-carbon);
+    border-radius: 20px;
+  }
+
+  .sticker-card-lg {
+    border: 1px solid var(--color-carbon);
+    border-radius: 40px;
   }
 
   /* Pressable clay surface */

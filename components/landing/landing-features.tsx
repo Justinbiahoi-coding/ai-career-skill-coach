@@ -1,54 +1,46 @@
-import { Globe, Cpu, Mic, Flame, Shield, Sparkles, Volume2 } from "lucide-react";
+import { Sparkles, Mic, FileSearch, CheckCircle2, Flame, Award, QrCode } from "lucide-react";
 
 export function LandingFeatures() {
   return (
-    <section id="features" className="border-t border-border/60 bg-muted/20 py-28 md:py-36 lg:py-44">
+    <section id="features" className="w-full bg-paper-white border-b border-carbon py-24 md:py-32 select-none">
       <div className="mx-auto max-w-[1440px] px-6 sm:px-8 lg:px-12">
-        {/* Section Header */}
-        <div className="mx-auto max-w-3xl text-center">
-          <span className="text-xs font-extrabold tracking-widest text-primary uppercase">
-            Công nghệ đột phá
-          </span>
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            Được xây dựng cho tốc độ, độ chính xác &amp; trải nghiệm mượt mà
+        {/* Section Header with Crushed Lateral Display Headline */}
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-lavender px-4 py-1 text-xs font-bold tracking-[0.032em] text-carbon mb-6">
+            FEATURE ECOSYSTEM
+          </div>
+          <h2 className="font-lateral text-[clamp(40px,7vw,96px)] font-extrabold uppercase leading-[0.78] tracking-normal text-carbon">
+            POWERFUL FEATURES
           </h2>
-          <p className="mt-5 text-base sm:text-lg leading-relaxed text-muted-foreground">
-            Sự kết hợp giữa công nghệ thu thập dữ liệu thời gian thực, mô hình AI tiên tiến và giao diện
-            phản hồi tức thì giúp bạn sẵn sàng cho thị trường lao động thời đại AI.
+          <p className="mt-6 max-w-2xl mx-auto font-aeonik text-base sm:text-xl font-medium leading-[1.3] text-carbon/80">
+            Rigorous interview preparation mechanics wrapped in a vibrant, physical sticker-book aesthetic.
           </p>
         </div>
 
-        {/* Asymmetric Bento Grid */}
-        <div className="mt-16 sm:mt-20 grid grid-cols-1 gap-8 md:grid-cols-3 lg:grid-cols-3">
-          {/* Bento Card 1: Multi-source Scraping (Spans 2 columns on tablet/desktop) */}
-          <div className="group relative flex flex-col justify-between rounded-3xl border border-border bg-card p-8 sm:p-10 shadow-xs transition-all duration-300 hover:shadow-xl md:col-span-2">
+        {/* Bento Grid with 1px Hand-cut Black Borders */}
+        <div className="mt-16 sm:mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Bento Card 1: Job Match Engine (Sky Wash) */}
+          <div className="flex flex-col justify-between rounded-[30px] border border-carbon bg-sky-wash p-8 text-carbon">
             <div>
               <div className="flex items-center justify-between">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600">
-                  <Globe className="size-6" />
+                <span className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
+                  REAL-WORLD DATA
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-600">
-                  <Shield className="size-3.5" />
-                  SSRF Protected
-                </span>
+                <FileSearch className="size-5 text-carbon" />
               </div>
-
-              <h3 className="mt-8 text-2xl font-bold text-foreground">
-                Thu thập việc làm thời gian thực đa nguồn
+              <h3 className="mt-6 text-2xl font-extrabold tracking-tight text-carbon">
+                Job Match &amp; JD Parser
               </h3>
-              <p className="mt-3.5 text-base leading-relaxed text-muted-foreground max-w-2xl">
-                Tích hợp crawler trực tiếp từ <strong>VietnamWorks, ITviec, TopDev, CareerLink</strong> và{" "}
-                <strong>RemoteOK</strong>. Hệ thống hỗ trợ tìm kiếm không dấu (như gõ <code>ke toan</code> tìm{" "}
-                <em>Kế toán</em>) và tự động lọc mã độc với cơ chế xác thực host nghiêm ngặt.
+              <p className="mt-3 text-sm font-medium leading-relaxed text-carbon/80">
+                Automatically extract tech keywords from live postings on VietnamWorks, ITviec, TopDev, isolating the exact skills recruiters demand.
               </p>
             </div>
 
-            {/* Simulated Live Portal Tags */}
-            <div className="mt-8 flex flex-wrap gap-2.5 pt-6 border-t border-border/60">
-              {["ITviec Live", "VietnamWorks", "TopDev", "CareerLink", "RemoteOK (Global)"].map((tag) => (
+            <div className="mt-8 flex flex-wrap gap-2">
+              {["VietnamWorks", "ITviec", "TopDev", "Regex Parser"].map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-full bg-muted px-4 py-1.5 text-xs sm:text-sm font-semibold text-foreground/80 border border-border/40"
+                  className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold text-carbon"
                 >
                   {tag}
                 </span>
@@ -56,90 +48,114 @@ export function LandingFeatures() {
             </div>
           </div>
 
-          {/* Bento Card 2: Voice AI Mock Interviewer */}
-          <div className="group relative flex flex-col justify-between rounded-3xl border border-border bg-card p-8 sm:p-10 shadow-xs transition-all duration-300 hover:shadow-xl">
+          {/* Bento Card 2: AI Voice Interviewer (Lavender) */}
+          <div className="flex flex-col justify-between rounded-[30px] border border-carbon bg-lavender p-8 text-carbon">
             <div>
               <div className="flex items-center justify-between">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600">
-                  <Mic className="size-6" />
+                <span className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
+                  VOICE AI HANDS-FREE
                 </span>
-                <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-bold text-purple-600">
-                  en-US Engine
-                </span>
+                <Mic className="size-5 text-carbon" />
               </div>
-
-              <h3 className="mt-8 text-2xl font-bold text-foreground">
-                Phỏng vấn thoại rảnh tay
+              <h3 className="mt-6 text-2xl font-extrabold tracking-tight text-carbon">
+                AI Voice Interviewer
               </h3>
-              <p className="mt-3.5 text-base leading-relaxed text-muted-foreground">
-                Câu hỏi được đọc to tự động, micro kích hoạt ngay lập tức. Bạn trả lời bằng giọng nói và chỉ cần
-                nói <em>&quot;I&apos;m done&quot;</em> để gửi bài.
+              <p className="mt-3 text-sm font-medium leading-relaxed text-carbon/80">
+                Practice 1:1 spoken interviews in English with Job Buddy. Receive instant feedback on pronunciation, answer structure, and behavioral agility.
               </p>
             </div>
 
-            <div className="mt-8 flex items-center gap-3 rounded-2xl bg-purple-500/5 p-4 border border-purple-200/50 text-xs sm:text-sm font-semibold text-purple-700">
-              <Volume2 className="size-5 shrink-0" />
-              <span>Phản xạ phỏng vấn như nói chuyện với người thật.</span>
+            <div className="mt-8 rounded-[20px] border border-carbon bg-paper-white p-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="size-2.5 rounded-full border border-carbon bg-mint-pop animate-pulse" />
+                <span className="text-xs font-bold text-carbon">Response Latency</span>
+              </div>
+              <span className="text-xs font-extrabold text-carbon">&lt; 800ms</span>
             </div>
           </div>
 
-          {/* Bento Card 3: Gemini 3.6 Flash JSON Engine */}
-          <div className="group relative flex flex-col justify-between rounded-3xl border border-border bg-card p-8 sm:p-10 shadow-xs transition-all duration-300 hover:shadow-xl">
+          {/* Bento Card 3: Split QR Card & Mobile Access (Slush Signature Blueprint) */}
+          <div className="flex flex-col justify-between rounded-[30px] border border-carbon bg-soft-mist p-8 text-carbon">
             <div>
               <div className="flex items-center justify-between">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
-                  <Cpu className="size-6" />
+                <span className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
+                  CROSS-PLATFORM
                 </span>
-                <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600">
-                  Gemini 3.6 Flash
-                </span>
+                <Sparkles className="size-5 text-carbon" />
               </div>
-
-              <h3 className="mt-8 text-2xl font-bold text-foreground">
-                Trích xuất kỹ năng chuẩn cấu trúc
+              <h3 className="mt-6 text-2xl font-extrabold tracking-tight text-carbon">
+                Learn Anywhere on Mobile
               </h3>
-              <p className="mt-3.5 text-base leading-relaxed text-muted-foreground">
-                Ứng dụng schema JSON nghiêm ngặt để phân định chính xác Hard Skill và Soft Skill, đánh giá mức độ
-                ưu tiên và tạo bài giảng cá nhân hóa dưới 3 giây.
+              <p className="mt-3 text-sm font-medium leading-relaxed text-carbon/80">
+                Scan the QR code to open our mobile-optimized web experience and practice spoken mock turns whenever you have 5 minutes.
               </p>
             </div>
 
-            <div className="mt-8 rounded-2xl bg-muted/60 p-4 font-mono text-xs text-muted-foreground border border-border/60">
-              <code>{`{ "skills": ["FastAPI", "Postgres"], "priority": "System Design" }`}</code>
+            {/* Slush Signature Blueprint 3.4: Split QR Download Card */}
+            <div className="mt-8 flex w-full items-stretch rounded-[20px] border border-carbon bg-voltage-violet overflow-hidden">
+              <div className="flex items-center justify-center bg-paper-white p-3.5 border-r border-carbon">
+                <QrCode className="size-12 text-carbon" />
+              </div>
+              <div className="flex flex-1 flex-col justify-center px-4 py-3 text-paper-white">
+                <span className="text-[10px] font-bold uppercase tracking-[0.032em] opacity-80">
+                  Quick Mobile Scan
+                </span>
+                <span className="text-[14px] font-extrabold tracking-[0.032em]">
+                  JOBLINGO APP
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Bento Card 4: Gamification Duolingo Experience (Spans 2 columns on tablet/desktop) */}
-          <div className="group relative flex flex-col justify-between rounded-3xl border border-border bg-card p-8 sm:p-10 shadow-xs transition-all duration-300 hover:shadow-xl md:col-span-2">
+          {/* Bento Card 4: Micro-Lesson Engine (Paper White with Mint Pop border) */}
+          <div className="flex flex-col justify-between rounded-[30px] border border-carbon bg-paper-white p-8 text-carbon">
             <div>
               <div className="flex items-center justify-between">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
-                  <Flame className="size-6" />
+                <span className="rounded-full border border-carbon bg-mint-pop px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
+                  5-MIN LESSONS
                 </span>
-                <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600">
-                  Gamified Learning
-                </span>
+                <CheckCircle2 className="size-5 text-carbon" />
               </div>
-
-              <h3 className="mt-8 text-2xl font-bold text-foreground">
-                Học kỹ năng hào hứng như chơi game
+              <h3 className="mt-6 text-2xl font-extrabold tracking-tight text-carbon">
+                Bite-Sized Micro-Lessons
               </h3>
-              <p className="mt-3.5 text-base leading-relaxed text-muted-foreground max-w-2xl">
-                Mỗi bài tập hoàn thành mang lại điểm kinh nghiệm XP, duy trì chuỗi ngày học liên tục (Streak),
-                và mở khóa cấp độ phỏng vấn nâng cao. Không còn cảm giác chán nản khi tự học một mình.
+              <p className="mt-3 text-sm font-medium leading-relaxed text-carbon/80">
+                5-step modules: core concepts, recruiter grilling scenarios, common pitfalls, and interactive 0–10 grading rubrics with thorough explanations.
               </p>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-6 pt-6 border-t border-border/60 text-xs sm:text-sm font-bold">
-              <span className="flex items-center gap-2 text-amber-500">
-                <Flame className="size-4.5" /> Streak Tracker
-              </span>
-              <span className="flex items-center gap-2 text-primary">
-                <Sparkles className="size-4.5" /> Instant XP Rewards
-              </span>
-              <span className="flex items-center gap-2 text-emerald-600">
-                <Shield className="size-4.5" /> Skill Mastery Badge
-              </span>
+            <div className="mt-8 rounded-[20px] border border-carbon bg-sky-wash p-4 text-xs font-bold text-carbon">
+              ✓ Master critical interview skills in just 5–7 minutes a day
+            </div>
+          </div>
+
+          {/* Bento Card 5: Gamification & Streak (Sunburst) */}
+          <div className="md:col-span-2 flex flex-col justify-between rounded-[30px] border border-carbon bg-sunburst p-8 text-carbon">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="rounded-full border border-carbon bg-paper-white px-3 py-1 text-xs font-bold tracking-[0.032em] text-carbon">
+                  HABIT BUILDING
+                </span>
+                <Flame className="size-5 text-carbon" />
+              </div>
+              <h3 className="mt-6 text-2xl sm:text-3xl font-extrabold tracking-tight text-carbon">
+                Gamification, Streaks &amp; Readiness Score
+              </h3>
+              <p className="mt-3 max-w-xl text-sm sm:text-base font-medium leading-relaxed text-carbon/90">
+                Build lasting confidence through daily streaks, XP rewards, and an objective 0–100% interview readiness index that tracks your actual growth.
+              </p>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-4 items-center">
+              <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-2 text-sm font-bold text-carbon">
+                <span>🔥 7-Day Streak</span>
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-2 text-sm font-bold text-carbon">
+                <span>⭐ +500 XP</span>
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-paper-white px-4 py-2 text-sm font-bold text-carbon">
+                <span>🏆 92% Readiness</span>
+              </div>
             </div>
           </div>
         </div>
