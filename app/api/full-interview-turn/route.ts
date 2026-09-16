@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
+import { generateWithFailover } from "@/lib/gemini";
 import { FULL_INTERVIEW_TURN_SYSTEM_PROMPT, MAX_JD_LENGTH, buildFullInterviewTurnPrompt, computeMaxFullInterviewQuestions } from "@/lib/prompts";
 import { buildFallbackFullInterviewTurn } from "@/lib/fallback-data";
 import { extractJsonBlock } from "@/lib/json-utils";
@@ -66,16 +66,10 @@ export async function POST(request: Request) {
   const maxQuestions = computeMaxFullInterviewQuestions(practicedSkills.length);
 
   try {
-    const model = getGeminiClient().getGenerativeModel({
-      model: DEFAULT_MODEL,
-      systemInstruction: FULL_INTERVIEW_TURN_SYSTEM_PROMPT,
-      generationConfig: { responseMimeType: "application/json" },
-    });
-
-    const generation = await model.generateContent(
-      buildFullInterviewTurnPrompt(jdText, practicedSkills, history, questionNumber, maxQuestions)
+    const rawText = await generateWithFailover(
+      buildFullInterviewTurnPrompt(jdText, practicedSkills, history, questionNumber, maxQuestions),
+      { systemInstruction: FULL_INTERVIEW_TURN_SYSTEM_PROMPT, generationConfig: { responseMimeType: "application/json" } }
     );
-    const rawText = generation.response.text();
 
     const parsed: unknown = JSON.parse(extractJsonBlock(rawText));
 

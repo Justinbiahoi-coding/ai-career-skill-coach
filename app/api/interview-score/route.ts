@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, DEFAULT_MODEL } from "@/lib/gemini";
+import { generateWithFailover } from "@/lib/gemini";
 import { INTERVIEW_SCORE_SYSTEM_PROMPT, MAX_JD_LENGTH, buildInterviewScorePrompt } from "@/lib/prompts";
 import { FALLBACK_INTERVIEW_SCORE } from "@/lib/fallback-data";
 import { extractJsonBlock } from "@/lib/json-utils";
@@ -70,16 +70,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const model = getGeminiClient().getGenerativeModel({
-      model: DEFAULT_MODEL,
-      systemInstruction: INTERVIEW_SCORE_SYSTEM_PROMPT,
-      generationConfig: { responseMimeType: "application/json" },
-    });
-
-    const generation = await model.generateContent(
-      buildInterviewScorePrompt(skillName, jdText, history)
+    const rawText = await generateWithFailover(
+      buildInterviewScorePrompt(skillName, jdText, history),
+      { systemInstruction: INTERVIEW_SCORE_SYSTEM_PROMPT, generationConfig: { responseMimeType: "application/json" } }
     );
-    const rawText = generation.response.text();
 
     const parsed: unknown = JSON.parse(extractJsonBlock(rawText));
 
