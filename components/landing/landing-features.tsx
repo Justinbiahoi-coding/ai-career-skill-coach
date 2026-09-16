@@ -7,12 +7,12 @@ import {
   FileSearch,
   CheckCircle2,
   Flame,
-  QrCode,
   ClipboardList,
   Trophy,
   Search,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { RealQrCode } from "./real-qr-code";
 
 /** Where each described feature actually lives, for the row below the cards. */
 const FEATURE_DESTINATIONS = [
@@ -36,7 +36,7 @@ export function LandingFeatures() {
           <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-lavender px-4 py-1 text-xs font-bold tracking-[0.032em] text-carbon mb-6">
             FEATURE ECOSYSTEM
           </div>
-          <h2 className="font-lateral text-[clamp(40px,7vw,96px)] font-extrabold uppercase leading-[0.78] tracking-normal text-carbon">
+          <h2 className="font-lateral text-[clamp(40px,7vw,96px)] font-extrabold uppercase leading-[0.92] tracking-normal text-carbon">
             POWERFUL FEATURES
           </h2>
           <p className="mt-6 max-w-2xl mx-auto font-aeonik text-base sm:text-xl font-medium leading-[1.3] text-carbon/80">
@@ -140,24 +140,27 @@ export function LandingFeatures() {
               </p>
             </div>
 
-            {/* Slush Signature Blueprint 3.4: Split QR Download Card with Hover Zoom */}
-            <motion.div
+            {/* Slush Signature Blueprint 3.4: Split QR Download Card with Hover Zoom.
+                Also a real link (not just a scannable image), so clicking works
+                the same as scanning for anyone already on desktop. */}
+            <motion.a
+              href="/"
               whileHover={{ scale: 1.03 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
               className="mt-8 flex w-full items-stretch rounded-[20px] border border-carbon bg-voltage-violet overflow-hidden cursor-pointer"
             >
-              <div className="flex items-center justify-center bg-paper-white p-3.5 border-r border-carbon">
-                <QrCode className="size-12 text-carbon" />
+              <div className="flex items-center justify-center bg-paper-white p-2.5 border-r border-carbon">
+                <RealQrCode className="size-14" />
               </div>
               <div className="flex flex-1 flex-col justify-center px-4 py-3 text-paper-white">
                 <span className="text-[10px] font-bold uppercase tracking-[0.032em] opacity-80">
                   Quick Mobile Scan
                 </span>
                 <span className="text-[14px] font-extrabold tracking-[0.032em]">
-                  JOBLINGO APP
+                  OPEN JOBLINGO
                 </span>
               </div>
-            </motion.div>
+            </motion.a>
           </motion.div>
 
           {/* Bento Card 4: Micro-Lesson Engine */}

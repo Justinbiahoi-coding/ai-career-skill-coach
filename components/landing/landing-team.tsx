@@ -5,36 +5,39 @@ import { motion } from "motion/react";
 export function LandingTeam() {
   const members = [
     {
-      name: "Justin Biahoi",
-      role: "AI Tech Lead & Fullstack",
+      name: "Bui Van Thien",
+      role: "Team Lead",
       tagColor: "bg-sunburst text-carbon",
       avatarBg: "bg-sky-wash",
-      initials: "JB",
-      bio: "Leads Next.js App Router architecture, Gemini Structured Outputs pipeline, and AI Voice Mock interview turns.",
+      initials: "BT",
     },
     {
-      name: "Alex Nguyen",
-      role: "AI Research & Prompt Eng",
+      name: "Neo Rong Xuan",
+      role: "Team Member",
       tagColor: "bg-lavender text-carbon",
       avatarBg: "bg-mint-pop",
-      initials: "AN",
-      bio: "Engineered 0–10 rubric grading logic, Readiness Score algorithms, and anti-hallucination grounding.",
+      initials: "NX",
     },
     {
-      name: "Minh Tran",
-      role: "Product & UI/UX Design",
+      name: "Nguyen Thi Thanh Nhan",
+      role: "Team Member",
       tagColor: "bg-mint-pop text-carbon",
       avatarBg: "bg-lavender",
-      initials: "MT",
-      bio: "Designed the Slush Inflatable Sticker Universe design system, Job Buddy mascot interactions, and micro-learning UX.",
+      initials: "TN",
     },
     {
-      name: "Ha Le",
-      role: "Data & Scraping Engineer",
+      name: "Nguyen Phuc Phi",
+      role: "Team Member",
       tagColor: "bg-voltage-violet text-paper-white",
       avatarBg: "bg-sunburst",
-      initials: "HL",
-      bio: "Built real-world JD scrapers for VietnamWorks, ITviec, TopDev, along with skill taxonomy normalization.",
+      initials: "PP",
+    },
+    {
+      name: "Karis Huang",
+      role: "Team Member",
+      tagColor: "bg-sky-wash text-carbon",
+      avatarBg: "bg-voltage-violet",
+      initials: "KH",
     },
   ];
 
@@ -52,16 +55,16 @@ export function LandingTeam() {
           <div className="inline-flex items-center gap-2 rounded-full border border-carbon bg-mint-pop px-4 py-1 text-xs font-bold tracking-[0.032em] text-carbon mb-6">
             GLOBAL HACKATHON 2026
           </div>
-          <h2 className="font-lateral text-[clamp(40px,7vw,96px)] font-extrabold uppercase leading-[0.78] tracking-normal text-carbon">
+          <h2 className="font-lateral text-[clamp(40px,7vw,96px)] font-extrabold uppercase leading-[0.92] tracking-normal text-carbon">
             MEET THE TEAM
           </h2>
           <p className="mt-6 max-w-2xl mx-auto font-aeonik text-base sm:text-xl font-medium leading-[1.3] text-carbon/80">
-            Crafted by Team 15 for Global Hackathon 2026 — Empowering students to bridge skill gaps and master interviews.
+            Crafted by Team 24 for Global Hackathon 2026 — Empowering students to bridge skill gaps and master interviews.
           </p>
         </motion.div>
 
         {/* Team Grid with Staggered Scroll-Triggered Entrance */}
-        <div className="mt-16 sm:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mt-16 sm:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {members.map((member, idx) => (
             <motion.div
               key={idx}
@@ -95,14 +98,11 @@ export function LandingTeam() {
                   <h3 className="mt-3 text-xl font-extrabold tracking-tight text-carbon">
                     {member.name}
                   </h3>
-                  <p className="mt-2.5 text-xs sm:text-sm font-medium leading-relaxed text-carbon/80">
-                    {member.bio}
-                  </p>
                 </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-carbon/20 text-[11px] font-bold tracking-[0.032em] text-carbon/60">
-                Team 15 Member
+                Team 24 Member
               </div>
             </motion.div>
           ))}
