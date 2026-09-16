@@ -61,11 +61,11 @@ export function ReorderStepView({ step, onCorrect }: ReorderStepProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-lg font-bold leading-snug">{step.instruction}</p>
+      <p className="font-aeonik text-lg leading-snug font-bold text-carbon">{step.instruction}</p>
 
       <div className="flex flex-col gap-2" aria-label="Your order">
         {chosen.length === 0 && (
-          <p className="text-muted-foreground rounded-xl border-2 border-dashed border-border px-4 py-4 text-center text-sm">
+          <p className="rounded-[16px] border border-dashed border-carbon/40 px-4 py-4 text-center font-aeonik text-sm text-carbon/60">
             Tap the steps below in order
           </p>
         )}
@@ -79,19 +79,19 @@ export function ReorderStepView({ step, onCorrect }: ReorderStepProps) {
               disabled={checked}
               onClick={() => handleUndo(i)}
               className={cn(
-                "flex min-h-14 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left text-sm font-semibold transition-all",
-                "focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:cursor-default",
-                !checked && "border-primary bg-accent/50",
-                isRight && "border-success bg-success-muted",
-                isWrongSpot && "border-destructive bg-destructive/10"
+                "flex min-h-14 items-center gap-3 rounded-[16px] border border-carbon px-4 py-3 text-left font-aeonik text-sm font-semibold text-carbon transition-all",
+                "focus-visible:ring-3 focus-visible:ring-carbon/30 focus-visible:outline-none disabled:cursor-default",
+                !checked && "bg-sky-wash",
+                isRight && "bg-mint-pop",
+                isWrongSpot && "bg-ember text-paper-white"
               )}
             >
               <span
                 className={cn(
-                  "flex size-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-extrabold",
-                  !checked && "border-primary bg-primary text-primary-foreground",
-                  isRight && "border-success bg-success text-success-foreground",
-                  isWrongSpot && "border-destructive bg-destructive text-white"
+                  "flex size-6 shrink-0 items-center justify-center rounded-full border border-carbon font-aeonik text-xs font-extrabold",
+                  !checked && "bg-carbon text-paper-white",
+                  isRight && "bg-carbon text-paper-white",
+                  isWrongSpot && "bg-paper-white text-carbon"
                 )}
               >
                 {checked ? (
@@ -112,7 +112,7 @@ export function ReorderStepView({ step, onCorrect }: ReorderStepProps) {
 
       {remaining.length > 0 && (
         <div className="flex flex-col gap-2">
-          <span className="text-muted-foreground text-xs font-bold uppercase tracking-wide">
+          <span className="font-aeonik text-xs font-bold tracking-[0.02em] text-carbon/50 uppercase">
             Available
           </span>
           <div className="flex flex-wrap gap-2">
@@ -121,7 +121,7 @@ export function ReorderStepView({ step, onCorrect }: ReorderStepProps) {
                 key={item}
                 type="button"
                 onClick={() => handlePick(item)}
-                className="min-h-11 cursor-pointer rounded-xl border-2 border-border bg-card px-3.5 py-2 text-sm font-semibold transition-colors hover:border-primary/50 hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                className="min-h-11 cursor-pointer rounded-full border border-carbon bg-paper-white px-3.5 py-2 font-aeonik text-sm font-semibold text-carbon transition-colors hover:bg-soft-mist focus-visible:ring-3 focus-visible:ring-carbon/30 focus-visible:outline-none"
               >
                 {item}
               </button>
@@ -133,8 +133,8 @@ export function ReorderStepView({ step, onCorrect }: ReorderStepProps) {
       {checked && (
         <p
           className={cn(
-            "animate-pop rounded-xl px-4 py-3 text-sm leading-relaxed",
-            isCorrect ? "bg-success-muted" : "bg-warning-muted"
+            "animate-pop rounded-[16px] border border-carbon px-4 py-3 font-aeonik text-sm leading-relaxed text-carbon",
+            isCorrect ? "bg-mint-pop" : "bg-sunburst"
           )}
           aria-live="polite"
         >
@@ -145,7 +145,7 @@ export function ReorderStepView({ step, onCorrect }: ReorderStepProps) {
       {!checked ? (
         <Button
           size="lg"
-          className="clay-press h-12 self-start rounded-xl font-extrabold"
+          className="h-12 self-start rounded-full border border-carbon bg-carbon font-aeonik font-extrabold text-paper-white hover:bg-carbon/85"
           disabled={!isComplete}
           onClick={handleCheck}
         >
@@ -155,7 +155,7 @@ export function ReorderStepView({ step, onCorrect }: ReorderStepProps) {
         <Button
           size="lg"
           variant="outline"
-          className="h-12 self-start rounded-xl font-bold"
+          className="h-12 self-start rounded-full border border-carbon bg-paper-white font-aeonik font-bold text-carbon hover:bg-soft-mist"
           onClick={handleRetry}
         >
           <RotateCcw className="size-4" aria-hidden="true" />

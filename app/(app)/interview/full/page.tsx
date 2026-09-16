@@ -14,19 +14,13 @@ import {
   VolumeX,
 } from "lucide-react";
 import { MascotSays } from "@/components/game/mascot-says";
-import { PageShell } from "@/components/game/page-shell";
-import { XpBar } from "@/components/game/xp-bar";
+import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "cn";
 import { computeMaxFullInterviewQuestions } from "@/lib/prompts";
-import {
-  loadExtractedSkills,
-  loadPracticedSkills,
-  saveFullInterviewScore,
-} from "@/lib/session-store";
+import { loadExtractedSkills, saveFullInterviewScore } from "@/lib/session-store";
 import {
   useSpeech,
   stripDoneKeyword,
@@ -46,6 +40,7 @@ interface FullInterviewContext {
 
 export default function FullInterviewPage() {
   const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
   const [context, setContext] = useState<FullInterviewContext | null>(null);
   const [checkedStorage, setCheckedStorage] = useState(false);
 
@@ -125,13 +120,38 @@ export default function FullInterviewPage() {
   }, [listening, scheduleSilenceNudge, clearSilenceTimer]);
 
   useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null));
+
     const extracted = loadExtractedSkills();
-    const practicedSkills = loadPracticedSkills();
-    const allDone =
-      extracted && practicedSkills.length > 0 &&
-      extracted.skills.every((s) => practicedSkills.includes(s.name));
+
+    // Both entry points — /gap's "Take the full interview" button and Mock
+    // Test's "Start anyway"/"Take the full interview" — write this key right
+    // before pushing here, after they've each already decided (or let the
+    // student decide) whether enough practice has happened. This page never
+    // re-checks that decision; it only needs the list of skills to interview
+    // on and the JD to ground questions in.
+    //
+    // Deliberately NOT cleared after reading: this effect can run twice in
+    // one mount (React Strict Mode in dev, and any future re-render that
+    // re-triggers it) — a one-shot removeItem here means the second run
+    // reads null and wipes out the context the first run just set. The key
+    // is safely overwritten the next time either entry point is used, so
+    // leaving it stale between visits costs nothing.
+    const practicedRaw = sessionStorage.getItem("acsc:mockTestPracticedSkills");
+    let context: FullInterviewContext | null = null;
+
+    if (extracted && practicedRaw) {
+      try {
+        const practicedSkills = JSON.parse(practicedRaw) as string[];
+        context = { jdText: extracted.jdText, practicedSkills };
+      } catch {
+        context = null;
+      }
+    }
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setContext(allDone ? { jdText: extracted.jdText, practicedSkills } : null);
+    setContext(context);
     setCheckedStorage(true);
   }, []);
 
@@ -288,28 +308,32 @@ export default function FullInterviewPage() {
 
   if (checkedStorage && !context) {
     return (
-      <PageShell step="interview">
-        <div className="flex flex-col items-center gap-4 py-10 text-center">
-          <MascotSays mood="thinking">
+      <div className="flex min-h-screen flex-col bg-sky-wash">
+        <LandingNavbar userEmail={userEmail} />
+        <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col items-center justify-center gap-4 px-5 py-12 text-center">
+          <p className="font-aeonik text-base font-medium text-carbon/80">
             Practice every skill first — then the full interview opens up.
-          </MascotSays>
+          </p>
           <Button
             size="lg"
-            className="clay-press rounded-xl font-bold"
+            className="h-12 rounded-full border border-carbon bg-carbon font-aeonik font-bold text-paper-white hover:bg-carbon/85"
             onClick={() => router.push("/gap")}
           >
             Back to skills
           </Button>
-        </div>
-      </PageShell>
+        </main>
+      </div>
     );
   }
 
   if (!context) {
     return (
-      <PageShell step="interview">
-        <div className="text-muted-foreground py-16 text-center text-sm">Loading...</div>
-      </PageShell>
+      <div className="flex min-h-screen flex-col bg-sky-wash">
+        <LandingNavbar userEmail={userEmail} />
+        <main className="mx-auto flex w-full max-w-[720px] flex-1 items-center justify-center px-5 py-16">
+          <p className="font-aeonik text-sm font-medium text-carbon/60">Loading...</p>
+        </main>
+      </div>
     );
   }
 
@@ -318,36 +342,47 @@ export default function FullInterviewPage() {
   const shownNumber = Math.min(questionNumber, maxQuestions);
 
   return (
-    <PageShell step="interview">
-      <div className="flex flex-col gap-5">
+    <div className="flex min-h-screen flex-col bg-sky-wash">
+      <LandingNavbar userEmail={userEmail} />
+
+      <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col gap-5 px-5 py-12 sm:px-8">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <Trophy className="size-6 text-success" aria-hidden="true" />
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Full interview</h1>
+            <Trophy className="size-6 text-carbon" aria-hidden="true" />
+            <h1 className="font-lateral text-[clamp(26px,5vw,40px)] font-extrabold uppercase leading-[0.85] text-carbon">
+              Full Interview
+            </h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
             {context.practicedSkills.map((name) => (
-              <Badge key={name} variant="secondary" className="text-[11px]">
+              <span
+                key={name}
+                className="rounded-full border border-carbon bg-soft-mist px-2.5 py-0.5 font-aeonik text-[11px] font-bold text-carbon"
+              >
                 {name}
-              </Badge>
+              </span>
             ))}
           </div>
 
-          <XpBar
-            value={shownNumber}
-            max={maxQuestions}
-            label="Interview progress"
-            caption={`Question ${shownNumber} of ~${maxQuestions}`}
-            tone="success"
-          />
+          <div className="flex flex-col gap-1.5 rounded-[20px] border border-carbon bg-paper-white p-4">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-aeonik text-sm font-bold text-carbon">Interview progress</span>
+              <span className="font-aeonik text-xs font-extrabold tabular-nums text-carbon/60">
+                Question {shownNumber} of ~{maxQuestions}
+              </span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full border border-carbon bg-soft-mist">
+              <div
+                className="h-full rounded-full bg-mint-pop transition-[width] duration-500 ease-out"
+                style={{ width: `${(shownNumber / maxQuestions) * 100}%` }}
+              />
+            </div>
+          </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button
+            <button
               type="button"
-              variant={voiceMode ? "default" : "outline"}
-              size="sm"
-              className="h-11 rounded-full font-bold"
               onClick={() => {
                 const next = !voiceMode;
                 setVoiceMode(next);
@@ -358,6 +393,10 @@ export default function FullInterviewPage() {
                   speak(pendingQuestion);
                 }
               }}
+              className={cn(
+                "flex h-11 items-center gap-2 rounded-full border border-carbon px-4 font-aeonik text-sm font-bold text-carbon transition-colors",
+                voiceMode ? "bg-electric-blue text-paper-white" : "bg-paper-white hover:bg-soft-mist"
+              )}
             >
               {voiceMode ? (
                 <Volume2 className="size-4" aria-hidden="true" />
@@ -365,19 +404,20 @@ export default function FullInterviewPage() {
                 <VolumeX className="size-4" aria-hidden="true" />
               )}
               {voiceMode ? "Voice on" : "Voice off"}
-            </Button>
+            </button>
 
             {voiceMode && recognitionSupported && (
-              <Button
+              <button
                 type="button"
-                variant={autoConverse ? "default" : "outline"}
-                size="sm"
-                className="h-11 rounded-full font-bold"
                 onClick={() => {
                   const next = !autoConverse;
                   setAutoConverse(next);
                   if (!next) stopListening();
                 }}
+                className={cn(
+                  "flex h-11 items-center gap-2 rounded-full border border-carbon px-4 font-aeonik text-sm font-bold text-carbon transition-colors",
+                  autoConverse ? "bg-electric-blue text-paper-white" : "bg-paper-white hover:bg-soft-mist"
+                )}
               >
                 {autoConverse ? (
                   <MessageSquare className="size-4" aria-hidden="true" />
@@ -385,7 +425,7 @@ export default function FullInterviewPage() {
                   <Hand className="size-4" aria-hidden="true" />
                 )}
                 {autoConverse ? "Hands-free" : "Manual"}
-              </Button>
+              </button>
             )}
           </div>
         </div>
@@ -395,10 +435,10 @@ export default function FullInterviewPage() {
             <div
               key={i}
               className={cn(
-                "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                "max-w-[85%] rounded-[16px] border border-carbon px-4 py-2.5 font-aeonik text-sm leading-relaxed",
                 message.role === "assistant"
-                  ? "self-start border border-border bg-card"
-                  : "self-end bg-primary text-primary-foreground"
+                  ? "self-start bg-paper-white text-carbon"
+                  : "self-end bg-carbon text-paper-white"
               )}
             >
               {message.text}
@@ -414,14 +454,14 @@ export default function FullInterviewPage() {
                 <button
                   type="button"
                   onClick={() => (speaking ? stopSpeaking() : speak(pendingQuestion))}
-                  className="text-muted-foreground hover:text-foreground ml-1 inline-flex min-h-11 w-fit cursor-pointer items-center gap-1.5 text-xs font-semibold underline underline-offset-2"
+                  className="ml-1 inline-flex min-h-11 w-fit cursor-pointer items-center gap-1.5 font-aeonik text-xs font-bold text-carbon/60 underline underline-offset-2 hover:text-carbon"
                 >
                   <Volume2 className="size-3.5" aria-hidden="true" />
                   {speaking ? "Speaking — tap to stop" : "Replay question"}
                 </button>
               )}
               {usedFallback && (
-                <p className="rounded-xl bg-warning-muted px-3 py-2 text-xs font-semibold text-warning-foreground">
+                <p className="rounded-[16px] border border-carbon bg-sunburst px-3.5 py-2.5 font-aeonik text-xs font-bold text-carbon">
                   The AI interviewer didn&apos;t respond, so this is an offline sample question.
                 </p>
               )}
@@ -430,7 +470,7 @@ export default function FullInterviewPage() {
 
           {(loading || finishing) && (
             <p
-              className="text-muted-foreground flex items-center gap-2 text-sm font-medium"
+              className="flex items-center gap-2 font-aeonik text-sm font-medium text-carbon/60"
               aria-live="polite"
             >
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -439,102 +479,100 @@ export default function FullInterviewPage() {
           )}
 
           {error && (
-            <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+            <p className="rounded-[16px] border border-carbon bg-ember px-3.5 py-2.5 font-aeonik text-sm font-bold text-paper-white">
               {error}
             </p>
           )}
         </div>
 
         {pendingQuestion && !finishing && (
-          <Card className="clay-press">
-            <CardHeader>
-              <CardTitle className="text-base">Your answer</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <div className="flex gap-2">
-                <Input
-                  placeholder={listening ? "Listening..." : "Speak or type your answer..."}
-                  value={answer}
-                  maxLength={MAX_ANSWER_LENGTH}
-                  aria-label="Your answer"
-                  onChange={(e) => {
-                    cancelAutoSend();
-                    setAnswer(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSubmitAnswer();
-                  }}
-                  className="h-11 flex-1 rounded-xl"
-                />
-                {recognitionSupported && (
-                  <Button
-                    type="button"
-                    variant={listening ? "default" : "outline"}
-                    size="icon"
-                    aria-label={listening ? "Stop recording" : "Answer with your voice"}
-                    className={cn("size-11 rounded-xl", listening && "animate-pulse")}
-                    onClick={() => {
-                      if (listening) {
-                        stopListening();
-                      } else {
-                        cancelAutoSend();
-                        explicitDoneRef.current = false;
-                        stopSpeaking();
-                        startListening();
-                      }
-                    }}
-                  >
-                    {listening ? (
-                      <Square className="size-4" aria-hidden="true" />
-                    ) : (
-                      <Mic className="size-4" aria-hidden="true" />
-                    )}
-                  </Button>
-                )}
-              </div>
+          <div className="flex flex-col gap-4 rounded-[30px] border border-carbon bg-paper-white p-6 sm:p-7">
+            <span className="font-aeonik text-base font-extrabold text-carbon">Your answer</span>
 
-              {listening && (
-                <p className="text-primary text-xs font-semibold" aria-live="polite">
-                  Listening — pausing briefly is fine. Say &quot;{VOICE_DONE_KEYWORD}&quot; or tap
-                  stop when you&apos;re finished.
-                </p>
-              )}
-
-              {autoSendPending && (
-                <div className="flex items-center justify-between gap-2 rounded-xl bg-accent/60 px-3 py-2 text-xs font-semibold">
-                  <span>Sending in a moment...</span>
-                  <button
-                    type="button"
-                    onClick={cancelAutoSend}
-                    className="text-primary min-h-11 cursor-pointer font-bold underline underline-offset-2"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-
-              {speechError && (
-                <p className="rounded-xl bg-warning-muted px-3 py-2 text-xs font-semibold text-warning-foreground">
-                  {speechError}
-                </p>
-              )}
-
-              <Button
-                size="lg"
-                className="clay-press h-12 rounded-xl text-base font-extrabold"
-                onClick={() => {
+            <div className="flex gap-2">
+              <Input
+                placeholder={listening ? "Listening..." : "Speak or type your answer..."}
+                value={answer}
+                maxLength={MAX_ANSWER_LENGTH}
+                aria-label="Your answer"
+                onChange={(e) => {
                   cancelAutoSend();
-                  handleSubmitAnswer();
+                  setAnswer(e.target.value);
                 }}
-                disabled={loading || !answer.trim()}
-              >
-                <Send className="size-5" aria-hidden="true" />
-                {isLastQuestion ? "Submit final answer" : "Send"}
-              </Button>
-            </CardContent>
-          </Card>
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSubmitAnswer();
+                }}
+                className="h-11 flex-1 rounded-full border-carbon font-aeonik"
+              />
+              {recognitionSupported && (
+                <button
+                  type="button"
+                  aria-label={listening ? "Stop recording" : "Answer with your voice"}
+                  onClick={() => {
+                    if (listening) {
+                      stopListening();
+                    } else {
+                      cancelAutoSend();
+                      explicitDoneRef.current = false;
+                      stopSpeaking();
+                      startListening();
+                    }
+                  }}
+                  className={cn(
+                    "flex size-11 shrink-0 items-center justify-center rounded-full border border-carbon transition-colors",
+                    listening ? "animate-pulse bg-ember text-paper-white" : "bg-paper-white text-carbon hover:bg-soft-mist"
+                  )}
+                >
+                  {listening ? (
+                    <Square className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Mic className="size-4" aria-hidden="true" />
+                  )}
+                </button>
+              )}
+            </div>
+
+            {listening && (
+              <p className="font-aeonik text-xs font-bold text-carbon" aria-live="polite">
+                Listening — pausing briefly is fine. Say &quot;{VOICE_DONE_KEYWORD}&quot; or tap
+                stop when you&apos;re finished.
+              </p>
+            )}
+
+            {autoSendPending && (
+              <div className="flex items-center justify-between gap-2 rounded-[16px] border border-carbon bg-sky-wash px-3 py-2 font-aeonik text-xs font-bold text-carbon">
+                <span>Sending in a moment...</span>
+                <button
+                  type="button"
+                  onClick={cancelAutoSend}
+                  className="min-h-11 cursor-pointer font-extrabold underline underline-offset-2"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {speechError && (
+              <p className="rounded-[16px] border border-carbon bg-sunburst px-3.5 py-2.5 font-aeonik text-xs font-bold text-carbon">
+                {speechError}
+              </p>
+            )}
+
+            <Button
+              size="lg"
+              className="h-12 rounded-full border border-carbon bg-carbon font-aeonik text-base font-extrabold text-paper-white hover:bg-carbon/85"
+              onClick={() => {
+                cancelAutoSend();
+                handleSubmitAnswer();
+              }}
+              disabled={loading || !answer.trim()}
+            >
+              <Send className="size-5" aria-hidden="true" />
+              {isLastQuestion ? "Submit final answer" : "Send"}
+            </Button>
+          </div>
         )}
-      </div>
-    </PageShell>
+      </main>
+    </div>
   );
 }

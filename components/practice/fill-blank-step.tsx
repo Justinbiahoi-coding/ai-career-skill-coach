@@ -41,15 +41,15 @@ export function FillBlankStepView({ step, onCorrect }: FillBlankStepProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-lg leading-snug font-bold">
+      <p className="font-aeonik text-lg leading-snug font-bold text-carbon">
         {before}
         <span
           className={cn(
-            "mx-1 inline-block min-w-24 rounded-lg border-b-2 border-dashed px-2 text-center",
-            isCorrect ? "border-success text-success" : "border-primary"
+            "mx-1 inline-block min-w-24 rounded-[10px] border-b-2 border-dashed px-2 text-center",
+            isCorrect ? "border-carbon bg-mint-pop" : "border-carbon"
           )}
         >
-          {checked ? step.correctAnswer : value || "      "}
+          {checked ? step.correctAnswer : value || "      "}
         </span>
         {after}
       </p>
@@ -63,7 +63,7 @@ export function FillBlankStepView({ step, onCorrect }: FillBlankStepProps) {
           }}
           placeholder="Type the missing word..."
           aria-label="Fill in the blank"
-          className="h-12 rounded-xl text-base"
+          className="h-12 rounded-full border-carbon font-aeonik text-base"
           autoFocus
         />
       )}
@@ -71,12 +71,12 @@ export function FillBlankStepView({ step, onCorrect }: FillBlankStepProps) {
       {checked && (
         <p
           className={cn(
-            "animate-pop flex items-start gap-2 rounded-xl px-4 py-3 text-sm leading-relaxed",
-            isCorrect ? "bg-success-muted" : "bg-warning-muted"
+            "animate-pop flex items-start gap-2 rounded-[16px] border border-carbon px-4 py-3 font-aeonik text-sm leading-relaxed text-carbon",
+            isCorrect ? "bg-mint-pop" : "bg-sunburst"
           )}
           aria-live="polite"
         >
-          {isCorrect && <Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden="true" />}
+          {isCorrect && <Check className="mt-0.5 size-4 shrink-0 text-carbon" aria-hidden="true" />}
           {step.explanation}
         </p>
       )}
@@ -84,7 +84,7 @@ export function FillBlankStepView({ step, onCorrect }: FillBlankStepProps) {
       {!checked ? (
         <Button
           size="lg"
-          className="clay-press h-12 self-start rounded-xl font-extrabold"
+          className="h-12 self-start rounded-full border border-carbon bg-carbon font-aeonik font-extrabold text-paper-white hover:bg-carbon/85"
           disabled={!value.trim()}
           onClick={handleCheck}
         >
@@ -94,7 +94,7 @@ export function FillBlankStepView({ step, onCorrect }: FillBlankStepProps) {
         <Button
           size="lg"
           variant="outline"
-          className="h-12 self-start rounded-xl font-bold"
+          className="h-12 self-start rounded-full border border-carbon bg-paper-white font-aeonik font-bold text-carbon hover:bg-soft-mist"
           onClick={handleRetry}
         >
           Try again

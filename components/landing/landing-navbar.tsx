@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpen, ClipboardList, LogOut, Menu, MessagesSquare, Search, X } from "lucide-react";
+import { ArrowRight, ClipboardList, LogOut, Menu, Trophy, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -18,11 +18,16 @@ const MARKETING_LINKS = [
 // Signed-in visitors get real destinations instead of marketing anchors —
 // this is the app's only top-level navigation now that /home was folded
 // into /, so it has to reach every core area, not just describe them.
+//
+// Three independent areas, not five linear steps: Find Job only searches and
+// saves, Practice (/gap) is where analysis + lessons actually happen, Mock
+// Test (/mock-test) is its own entry point rather than something unlocked
+// only by finishing Practice first. /learn and /interview are still real
+// routes, but they're reached *from* Practice/Mock Test, not from here.
 const APP_LINKS = [
   { label: "Find Job", href: "/job", icon: Search },
   { label: "Practice", href: "/gap", icon: ClipboardList },
-  { label: "Lessons", href: "/learn", icon: BookOpen },
-  { label: "Mock Test", href: "/interview", icon: MessagesSquare },
+  { label: "Mock Test", href: "/mock-test", icon: Trophy },
 ] as const;
 
 export interface LandingNavbarProps {

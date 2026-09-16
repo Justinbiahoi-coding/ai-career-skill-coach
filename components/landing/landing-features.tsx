@@ -8,9 +8,8 @@ import {
   CheckCircle2,
   Flame,
   QrCode,
-  BookOpen,
   ClipboardList,
-  MessagesSquare,
+  Trophy,
   Search,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -18,9 +17,8 @@ import { motion } from "motion/react";
 /** Where each described feature actually lives, for the row below the cards. */
 const FEATURE_DESTINATIONS = [
   { label: "Find Job", href: "/job", icon: Search },
-  { label: "Spot Your Gap", href: "/gap", icon: ClipboardList },
-  { label: "Practice Lessons", href: "/learn", icon: BookOpen },
-  { label: "Mock Interview", href: "/interview", icon: MessagesSquare },
+  { label: "Practice Room", href: "/gap", icon: ClipboardList },
+  { label: "Mock Test", href: "/mock-test", icon: Trophy },
 ] as const;
 
 export function LandingFeatures() {
