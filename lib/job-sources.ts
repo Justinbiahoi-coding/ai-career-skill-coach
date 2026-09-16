@@ -72,19 +72,46 @@ function decodeEntities(text: string): string {
   });
 }
 
+// Chữ ký nhận diện lỗi "UTF-8 bị đọc nhầm thành Latin-1/Windows-1252": một
+// ký tự UTF-8 nhiều byte như ’ (E2 80 99) khi bị giải mã sai từng byte một ra
+// thành "â" + 1-2 ký tự vùng control (0x80-0x9F) — ví dụ "â€™". Gặp thật ở
+// RemoteOK: field description của họ đôi khi đã hỏng sẵn theo kiểu này trước
+// khi tới mình. Chữ "â" hợp lệ trong tiếng Việt/Pháp luôn đứng trước một chữ
+// cái bình thường, không bao giờ trước ký tự control — nên regex này an toàn,
+// không đụng tới text tiếng Việt/Pháp đúng.
+const MOJIBAKE_SIGNATURE = /â[\x80-\x9f]/;
+
+function fixMojibake(text: string): string {
+  if (!MOJIBAKE_SIGNATURE.test(text)) return text;
+  try {
+    // Coi text đang là chuỗi Latin-1 bị đọc nhầm, lấy lại byte gốc rồi giải
+    // mã đúng UTF-8. Chỉ chạy khi ĐÃ thấy chữ ký lỗi ở trên, để không bao giờ
+    // phá text vốn đã đúng UTF-8 (Buffer.from(x,'latin1') ép mọi ký tự vào
+    // một byte, ký tự nào có code point > 255 sẽ mất dữ liệu ngay).
+    const repaired = Buffer.from(text, "latin1").toString("utf-8");
+    // Nếu repaired vẫn còn ký tự thay thế U+FFFD, việc coi text là Latin-1 sai
+    // hoàn toàn — trả lại bản gốc thay vì một bản còn hỏng hơn.
+    return repaired.includes("�") ? text : repaired;
+  } catch {
+    return text;
+  }
+}
+
 /** Bỏ thẻ HTML, gộp khoảng trắng, cắt còn tối đa `maxChars`. */
 export function stripHtml(html: string, maxChars = MAX_JD_CHARS): string {
-  const text = decodeEntities(
-    html
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      // Giữ ranh giới đoạn/dòng trước khi xoá thẻ, nếu không cả JD dính thành
-      // một khối chữ liền không đọc được.
-      .replace(/<\/(p|div|li|h[1-6]|tr)>/gi, "\n")
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<li[^>]*>/gi, "- ")
-      .replace(/<[^>]+>/g, " ")
-  )
+  // Decode entity TRƯỚC khi xoá thẻ: một số nguồn (RemoteOK) trả JD đã bị
+  // escape kép, vd `&lt;h3&gt;` thay vì `<h3>` thật. Xoá thẻ trước như bản cũ
+  // từng làm thì không nhận ra `&lt;h3&gt;` là thẻ, để lại nguyên trong JD.
+  const decoded = fixMojibake(decodeEntities(fixMojibake(html)));
+  const text = decoded
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    // Giữ ranh giới đoạn/dòng trước khi xoá thẻ, nếu không cả JD dính thành
+    // một khối chữ liền không đọc được.
+    .replace(/<\/(p|div|li|h[1-6]|tr)>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "- ")
+    .replace(/<[^>]+>/g, " ")
     .replace(/[ \t]+/g, " ")
     .replace(/\n\s*\n\s*\n+/g, "\n\n")
     .replace(/^[ \t]+/gm, "")
