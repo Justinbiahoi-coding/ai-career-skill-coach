@@ -84,9 +84,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  if (user && (pathname === "/" || pathname === "/login" || pathname === "/register")) {
+  // "/" is deliberately excluded here: it now renders the hub itself for a
+  // signed-in visitor (see app/(marketing)/page.tsx), so there's nothing to
+  // redirect away from. /login and /register still bounce a signed-in
+  // visitor to / — there's no reason to show them a sign-in form again.
+  if (user && (pathname === "/login" || pathname === "/register")) {
     const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = "/home";
+    homeUrl.pathname = "/";
     homeUrl.search = "";
     return NextResponse.redirect(homeUrl);
   }

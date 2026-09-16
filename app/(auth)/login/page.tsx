@@ -204,7 +204,7 @@ function LoginContent() {
         <div className="mt-8 pt-5 border-t border-carbon/20 text-center text-xs font-medium text-carbon/75">
           Don&apos;t have an account yet?{" "}
           <Link
-            href={`/register${nextPath !== "/home" ? `?next=${encodeURIComponent(nextPath)}` : ""}`}
+            href={`/register${nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : ""}`}
             className="font-bold text-carbon underline decoration-carbon underline-offset-4 hover:opacity-80"
           >
             Create one free

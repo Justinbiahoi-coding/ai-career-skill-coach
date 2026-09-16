@@ -2,19 +2,49 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, BookOpen, ClipboardList, LogOut, Menu, MessagesSquare, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { createClient } from "@/lib/supabase/client";
 
-export function LandingNavbar() {
+const MARKETING_LINKS = [
+  { label: "Overview", href: "#overview" },
+  { label: "5-Step Flow", href: "#how-it-works" },
+  { label: "Features", href: "#features" },
+  { label: "AI Architecture", href: "#ai-spec" },
+  { label: "Team", href: "#team" },
+] as const;
+
+// Signed-in visitors get real destinations instead of marketing anchors —
+// this is the app's only top-level navigation now that /home was folded
+// into /, so it has to reach every core area, not just describe them.
+const APP_LINKS = [
+  { label: "Find Job", href: "/job", icon: Search },
+  { label: "Practice", href: "/gap", icon: ClipboardList },
+  { label: "Lessons", href: "/learn", icon: BookOpen },
+  { label: "Mock Test", href: "/interview", icon: MessagesSquare },
+] as const;
+
+export interface LandingNavbarProps {
+  /** Signed-in user's email, or null/undefined when signed out. */
+  userEmail?: string | null;
+}
+
+export function LandingNavbar({ userEmail }: LandingNavbarProps) {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isSignedIn = Boolean(userEmail);
 
-  const navLinks = [
-    { label: "Overview", href: "#overview" },
-    { label: "5-Step Flow", href: "#how-it-works" },
-    { label: "Features", href: "#features" },
-    { label: "AI Architecture", href: "#ai-spec" },
-    { label: "Team", href: "#team" },
-  ];
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setMobileMenuOpen(false);
+    router.push("/");
+    // Drops the server's cached render of this page, which still holds the
+    // signed-in user; without it the old landing-as-hub view survives the
+    // navigation and getUser() below still reports signed in.
+    router.refresh();
+  }
 
   const marqueeText =
     "JOBLINGO AI • GLOBAL HACKATHON 2026 • AI CAREER SKILL COACH • SKILL GAP DISCOVERY • HANDS-FREE VOICE MOCK INTERVIEW • 5-STEP CLOSED LOOP • ";
@@ -56,50 +86,83 @@ export function LandingNavbar() {
             </div>
           </Link>
 
-          {/* Desktop Pill Navigation */}
+          {/* Desktop Pill Navigation — anchors when signed out, real routes when signed in */}
           <nav className="hidden lg:flex items-center gap-1 rounded-full border border-carbon bg-paper-white p-1.5">
-            {navLinks.map((link) => (
-              <motion.a
-                key={link.href}
-                href={link.href}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className="rounded-full px-4 py-2 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
-              >
-                {link.label}
-              </motion.a>
-            ))}
+            {isSignedIn
+              ? APP_LINKS.map((link) => (
+                  <motion.div
+                    key={link.href}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  >
+                    <Link
+                      href={link.href}
+                      className="flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
+                    >
+                      <link.icon className="size-4" aria-hidden="true" />
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))
+              : MARKETING_LINKS.map((link) => (
+                  <motion.a
+                    key={link.href}
+                    href={link.href}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    className="rounded-full px-4 py-2 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
+                  >
+                    {link.label}
+                  </motion.a>
+                ))}
           </nav>
 
           {/* Desktop Action Buttons: Outlined White + Carbon Filled */}
           <div className="hidden sm:flex items-center gap-3">
-            <motion.div
-              whileHover={{ scale: 1.04, y: -1 }}
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            >
-              <Link
-                href="/login"
-                className="inline-flex cursor-pointer rounded-full border border-carbon bg-paper-white px-5 py-2.5 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
+            {isSignedIn ? (
+              <motion.button
+                type="button"
+                onClick={handleSignOut}
+                whileHover={{ scale: 1.04, y: -1 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-carbon bg-paper-white px-5 py-2.5 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
               >
-                Sign In
-              </Link>
-            </motion.div>
+                <LogOut className="size-4" aria-hidden="true" />
+                Sign Out
+              </motion.button>
+            ) : (
+              <>
+                <motion.div
+                  whileHover={{ scale: 1.04, y: -1 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                >
+                  <Link
+                    href="/login"
+                    className="inline-flex cursor-pointer rounded-full border border-carbon bg-paper-white px-5 py-2.5 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
+                  >
+                    Sign In
+                  </Link>
+                </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            >
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 rounded-full border border-carbon bg-carbon px-6 py-2.5 text-[13px] font-bold tracking-[0.032em] text-paper-white"
-              >
-                <span>Get Started</span>
-                <ArrowRight className="size-4" />
-              </Link>
-            </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05, y: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center gap-2 rounded-full border border-carbon bg-carbon px-6 py-2.5 text-[13px] font-bold tracking-[0.032em] text-paper-white"
+                  >
+                    <span>Get Started</span>
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </motion.div>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -127,31 +190,56 @@ export function LandingNavbar() {
               className="border-t border-carbon bg-paper-white p-6 lg:hidden overflow-hidden"
             >
               <nav className="flex flex-col gap-2.5">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="rounded-full border border-carbon bg-soft-mist px-5 py-3 text-sm font-bold tracking-[0.032em] text-carbon hover:bg-sky-wash transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ))}
+                {isSignedIn
+                  ? APP_LINKS.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2 rounded-full border border-carbon bg-soft-mist px-5 py-3 text-sm font-bold tracking-[0.032em] text-carbon hover:bg-sky-wash transition-colors"
+                      >
+                        <link.icon className="size-4" aria-hidden="true" />
+                        {link.label}
+                      </Link>
+                    ))
+                  : MARKETING_LINKS.map((link) => (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="rounded-full border border-carbon bg-soft-mist px-5 py-3 text-sm font-bold tracking-[0.032em] text-carbon hover:bg-sky-wash transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    ))}
                 <div className="mt-4 flex flex-col gap-3 border-t border-carbon pt-4">
-                  <Link
-                    href="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full rounded-full border border-carbon bg-paper-white py-3 text-center text-sm font-bold tracking-[0.032em] text-carbon hover:bg-soft-mist inline-block"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full rounded-full border border-carbon bg-carbon py-3 text-center text-sm font-bold tracking-[0.032em] text-paper-white inline-block"
-                  >
-                    Get Started
-                  </Link>
+                  {isSignedIn ? (
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="flex w-full items-center justify-center gap-2 rounded-full border border-carbon bg-paper-white py-3 text-center text-sm font-bold tracking-[0.032em] text-carbon hover:bg-soft-mist"
+                    >
+                      <LogOut className="size-4" aria-hidden="true" />
+                      Sign Out
+                    </button>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="w-full rounded-full border border-carbon bg-paper-white py-3 text-center text-sm font-bold tracking-[0.032em] text-carbon hover:bg-soft-mist inline-block"
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/register"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="w-full rounded-full border border-carbon bg-carbon py-3 text-center text-sm font-bold tracking-[0.032em] text-paper-white inline-block"
+                      >
+                        Get Started
+                      </Link>
+                    </>
+                  )}
                 </div>
               </nav>
             </motion.div>

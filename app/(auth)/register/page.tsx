@@ -260,7 +260,7 @@ function RegisterContent() {
         <div className="mt-8 pt-5 border-t border-carbon/20 text-center text-xs font-medium text-carbon/75">
           Already have an account?{" "}
           <Link
-            href={`/login${nextPath !== "/home" ? `?next=${encodeURIComponent(nextPath)}` : ""}`}
+            href={`/login${nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : ""}`}
             className="font-bold text-carbon underline decoration-carbon underline-offset-4 hover:opacity-80"
           >
             Sign in
