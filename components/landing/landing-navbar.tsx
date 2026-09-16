@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ClipboardList, GraduationCap, LogOut, Menu, Trophy, Search, X } from "lucide-react";
+import { ArrowRight, ClipboardList, GraduationCap, LogOut, Menu, PlayCircle, Trophy, Search, Users, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -27,11 +27,18 @@ const MARKETING_LINKS = [
 // lookup tool — real YouTube search results per skill, not a step in the
 // practice flow. /learn and /interview are still real routes, but they're
 // reached *from* Practice/Mock Test, not from here.
+//
+// How it Works / About Team don't have their own app-side pages — they're
+// sections of the landing page (see landing-how-it-works.tsx,
+// landing-team.tsx) — so signed-in users are sent back to "/" with the
+// anchor rather than getting a duplicate page just for this nav item.
 const APP_LINKS = [
   { label: "Find Job", href: "/job", icon: Search },
   { label: "Practice", href: "/gap", icon: ClipboardList },
   { label: "Mock Test", href: "/mock-test", icon: Trophy },
   { label: "Courses", href: "/courses", icon: GraduationCap },
+  { label: "How it Works", href: "/#how-it-works", icon: PlayCircle },
+  { label: "About Team", href: "/#team", icon: Users },
 ] as const;
 
 export interface LandingNavbarProps {
