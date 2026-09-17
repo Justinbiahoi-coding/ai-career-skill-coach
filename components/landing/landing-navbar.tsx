@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 import { getMyProfile } from "@/lib/profile";
+import { getLevelProgress } from "@/lib/leveling";
 import type { Gender, Profile } from "@/lib/types";
 import { cn } from "cn";
 
@@ -79,7 +80,20 @@ export function LandingNavbar({ userEmail }: LandingNavbarProps) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [levelPopoverOpen, setLevelPopoverOpen] = useState(false);
+  const identityPillRef = useRef<HTMLDivElement>(null);
   const isSignedIn = Boolean(userEmail);
+
+  useEffect(() => {
+    if (!levelPopoverOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (identityPillRef.current && !identityPillRef.current.contains(e.target as Node)) {
+        setLevelPopoverOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [levelPopoverOpen]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -193,17 +207,39 @@ export function LandingNavbar({ userEmail }: LandingNavbarProps) {
                     it never flashes an empty shell. */}
                 {profile && (
                   <motion.div
+                    ref={identityPillRef}
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex items-center gap-2 rounded-full border border-carbon bg-paper-white py-1.5 pr-4 pl-2.5"
+                    className="relative flex items-center gap-2 rounded-full border border-carbon bg-paper-white py-1.5 pr-4 pl-2.5"
                   >
-                    {profile.streakDays > 0 && (
-                      <span className="flex items-center gap-1 font-aeonik text-xs font-extrabold tabular-nums text-carbon">
-                        <Flame className="size-4 text-ember" aria-hidden="true" />
-                        {profile.streakDays}
-                      </span>
-                    )}
+                    <span
+                      className={cn(
+                        "flex items-center gap-1 font-aeonik text-xs font-extrabold tabular-nums",
+                        profile.streakDays > 0 ? "text-carbon" : "text-carbon/40"
+                      )}
+                    >
+                      <Flame
+                        className={cn("size-4", profile.streakDays > 0 ? "text-ember" : "text-carbon/30")}
+                        aria-hidden="true"
+                      />
+                      {profile.streakDays}
+                    </span>
+
+                    {/* Level badge: click toggles a popover with the full XP
+                        progress bar rather than showing that bar inline —
+                        the navbar has no spare width for it once 6 nav links
+                        are already in play. */}
+                    <button
+                      type="button"
+                      onClick={() => setLevelPopoverOpen((v) => !v)}
+                      className="cursor-pointer rounded-full border border-carbon bg-sunburst px-2 py-0.5 font-aeonik text-[11px] font-extrabold text-carbon"
+                      aria-expanded={levelPopoverOpen}
+                      aria-label={`Level ${getLevelProgress(profile.xp).level}, view XP progress`}
+                    >
+                      Lv.{getLevelProgress(profile.xp).level}
+                    </button>
+
                     <span
                       className={cn(
                         "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-carbon",
@@ -220,6 +256,45 @@ export function LandingNavbar({ userEmail }: LandingNavbarProps) {
                         {profile.fullName}
                       </span>
                     )}
+
+                    <AnimatePresence>
+                      {levelPopoverOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                          transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                          className="absolute top-full right-0 mt-2 w-56 rounded-[20px] border border-carbon bg-paper-white p-4 shadow-lg"
+                        >
+                          {(() => {
+                            const { level, xpIntoLevel, xpForNextLevel, progressRatio } = getLevelProgress(
+                              profile.xp
+                            );
+                            return (
+                              <div className="flex flex-col gap-2">
+                                <div className="flex items-baseline justify-between">
+                                  <span className="font-aeonik text-sm font-extrabold text-carbon">
+                                    Level {level}
+                                  </span>
+                                  <span className="font-aeonik text-[11px] font-bold tabular-nums text-carbon/60">
+                                    {xpIntoLevel} / {xpForNextLevel} XP
+                                  </span>
+                                </div>
+                                <div className="h-2.5 w-full overflow-hidden rounded-full border border-carbon bg-soft-mist">
+                                  <div
+                                    className="h-full rounded-full bg-sunburst transition-[width] duration-500 ease-out"
+                                    style={{ width: `${Math.min(progressRatio, 1) * 100}%` }}
+                                  />
+                                </div>
+                                <span className="font-aeonik text-[11px] font-medium text-carbon/60">
+                                  {xpForNextLevel - xpIntoLevel} XP to Level {level + 1}
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
                 )}
 
@@ -293,29 +368,59 @@ export function LandingNavbar({ userEmail }: LandingNavbarProps) {
             >
               <nav className="flex flex-col gap-2.5">
                 {isSignedIn && profile && (
-                  <div className="mb-1 flex items-center gap-2 rounded-full border border-carbon bg-soft-mist py-1.5 pr-4 pl-2.5">
-                    {profile.streakDays > 0 && (
-                      <span className="flex items-center gap-1 font-aeonik text-xs font-extrabold tabular-nums text-carbon">
-                        <Flame className="size-4 text-ember" aria-hidden="true" />
+                  <div className="mb-1 flex flex-col gap-2.5 rounded-[20px] border border-carbon bg-soft-mist p-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "flex items-center gap-1 font-aeonik text-xs font-extrabold tabular-nums",
+                          profile.streakDays > 0 ? "text-carbon" : "text-carbon/40"
+                        )}
+                      >
+                        <Flame
+                          className={cn("size-4", profile.streakDays > 0 ? "text-ember" : "text-carbon/30")}
+                          aria-hidden="true"
+                        />
                         {profile.streakDays}
                       </span>
-                    )}
-                    <span
-                      className={cn(
-                        "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-carbon",
-                        AVATAR_STICKER[profile.gender ?? "other"]
-                      )}
-                    >
-                      {(() => {
-                        const AvatarIcon = AVATAR_ICON[profile.gender ?? "other"];
-                        return <AvatarIcon className="size-4.5 text-carbon" aria-hidden="true" />;
-                      })()}
-                    </span>
-                    {profile.fullName && (
-                      <span className="font-aeonik text-[13px] font-extrabold text-carbon">
-                        {profile.fullName}
+                      <span
+                        className={cn(
+                          "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-carbon",
+                          AVATAR_STICKER[profile.gender ?? "other"]
+                        )}
+                      >
+                        {(() => {
+                          const AvatarIcon = AVATAR_ICON[profile.gender ?? "other"];
+                          return <AvatarIcon className="size-4.5 text-carbon" aria-hidden="true" />;
+                        })()}
                       </span>
-                    )}
+                      {profile.fullName && (
+                        <span className="font-aeonik text-[13px] font-extrabold text-carbon">
+                          {profile.fullName}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Mobile has room for the full XP bar inline — no need
+                        for the desktop popover's click-to-reveal pattern. */}
+                    {(() => {
+                      const { level, xpIntoLevel, xpForNextLevel, progressRatio } = getLevelProgress(profile.xp);
+                      return (
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-baseline justify-between">
+                            <span className="font-aeonik text-xs font-extrabold text-carbon">Level {level}</span>
+                            <span className="font-aeonik text-[10px] font-bold tabular-nums text-carbon/60">
+                              {xpIntoLevel} / {xpForNextLevel} XP
+                            </span>
+                          </div>
+                          <div className="h-2 w-full overflow-hidden rounded-full border border-carbon bg-paper-white">
+                            <div
+                              className="h-full rounded-full bg-sunburst transition-[width] duration-500 ease-out"
+                              style={{ width: `${Math.min(progressRatio, 1) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
                 {isSignedIn

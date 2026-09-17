@@ -34,9 +34,22 @@ function rowToProfile(row: {
     fullName: row.full_name,
     gender: row.gender as Gender | null,
     xp: row.xp,
-    streakDays: row.streak_days,
+    // Displayed, not stored, streak: the DB column only updates when
+    // recordActivity() runs, so a student who broke their streak days ago
+    // but hasn't practiced since would otherwise still see yesterday's
+    // number until their next action. Recomputing on every read means
+    // opening the app the morning after a missed day shows 0 immediately,
+    // Duolingo-style, rather than waiting for a new activity to correct it.
+    streakDays: effectiveStreak(row.streak_days, row.last_active_date),
     lastActiveDate: row.last_active_date,
   };
+}
+
+/** A streak survives today or yesterday's last activity; anything older reads as broken (0) until practiced again. */
+function effectiveStreak(storedStreak: number, lastActiveDate: string | null): number {
+  if (!lastActiveDate) return 0;
+  const gap = daysBetween(lastActiveDate, todayUtc());
+  return gap <= 1 ? storedStreak : 0;
 }
 
 /** The signed-in user's profile, or null if they have none yet (pre-migration accounts, or sign-up write failed). */
