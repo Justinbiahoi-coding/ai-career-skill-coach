@@ -1,4 +1,5 @@
 import { createClient } from "./supabase/client";
+import { recordActivity } from "./profile";
 import type { FullInterviewScoreResult, InterviewScoreResult } from "./types";
 
 /**
@@ -45,6 +46,12 @@ export async function persistXp(amount: number): Promise<void> {
     await supabase
       .from("profiles")
       .upsert({ id: userId, xp: nextXp, updated_at: new Date().toISOString() });
+
+    // Earning XP is real practice activity — this is the one call site every
+    // XP-earning action already goes through, so it's the natural place to
+    // tick the streak forward rather than duplicating the call everywhere
+    // XP is awarded.
+    void recordActivity();
   } catch {
     // Swallowed by design — see file header.
   }

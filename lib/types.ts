@@ -276,3 +276,17 @@ export interface CourseSearchResult {
   /** true when the API/quota failed and these are stale cache (or empty) — never fabricated. */
   usedFallback: boolean;
 }
+
+// --- Profile identity: collected once at sign-up, shown in the navbar ---
+export const MAX_DISPLAY_NAME_LENGTH = 8;
+export type Gender = "female" | "male" | "other";
+export const GENDER_OPTIONS: Gender[] = ["female", "male", "other"];
+
+export interface Profile {
+  id: string;
+  fullName: string | null;
+  gender: Gender | null;
+  xp: number;
+  streakDays: number;
+  lastActiveDate: string | null;
+}
