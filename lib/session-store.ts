@@ -1,5 +1,5 @@
 import { markCardCompleted } from "./saved-jobs";
-import { persistInterviewResult, persistXp } from "./progress-store";
+import { persistInterviewResult, persistSkillPracticed, persistXp } from "./progress-store";
 import { GRADEABLE_CARD_KINDS } from "./types";
 import type { FullInterviewScoreResult, InterviewScoreResult, SelectedGap, Skill } from "./types";
 
@@ -94,6 +94,11 @@ export function loadSelectedGap(): SelectedGap | null {
 export function markCardCompletedForSkill(skillName: string, cardKind: string): void {
   if (typeof window === "undefined") return;
   const jobId = loadActiveJobId();
+
+  // Finishing a card either way is real practice activity — persisted
+  // account-wide (not gated on having a jobId) since even a pasted-JD
+  // session that never gets saved is still genuine practice.
+  void persistSkillPracticed(skillName, jobId ?? undefined);
 
   if (jobId) {
     // Fire-and-forget-ish: awaited internally so a failure can be logged,
