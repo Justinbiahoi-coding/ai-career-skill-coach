@@ -59,6 +59,7 @@ export default function FullInterviewPage() {
   const stopListeningRef = useRef<() => void>(() => {});
   const startListeningRef = useRef<() => void>(() => {});
   const speakRef = useRef<(text: string, onEnd?: () => void) => void>(() => {});
+  const stopSpeakingRef = useRef<() => void>(() => {});
   const nudgeInProgressRef = useRef(false);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -108,7 +109,8 @@ export default function FullInterviewPage() {
     stopListeningRef.current = stopListening;
     startListeningRef.current = startListening;
     speakRef.current = speak;
-  }, [stopListening, startListening, speak]);
+    stopSpeakingRef.current = stopSpeaking;
+  }, [stopListening, startListening, speak, stopSpeaking]);
 
   useEffect(() => {
     if (listening) {
@@ -188,6 +190,30 @@ export default function FullInterviewPage() {
     autoSendTimerRef.current = null;
     setAutoSendPending(false);
   }, []);
+
+  // Backgrounding the tab (switch tabs, minimize, lock screen) never
+  // unmounts this page — it's the same SPA route just hidden — so none of
+  // the unmount cleanups in use-speech.ts fire. Without this, the mic stays
+  // hot and the AI keeps talking/advancing turns while the student isn't
+  // even looking, including auto-submitting whatever partial answer was
+  // mid-transcription. Pausing on hide rather than resuming on return is
+  // deliberate: coming back to a mic that silently started listening again,
+  // or a question that starts talking the instant the tab regains focus,
+  // would be its own bad surprise — better to make the student explicitly
+  // tap the mic again once they're actually back.
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (!document.hidden) return;
+      cancelAutoSend();
+      clearSilenceTimer();
+      nudgeInProgressRef.current = false;
+      explicitDoneRef.current = false;
+      stopListeningRef.current();
+      stopSpeakingRef.current();
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [cancelAutoSend, clearSilenceTimer]);
 
   useEffect(() => {
     const stoppedListening = wasListeningRef.current && !listening;
