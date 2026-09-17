@@ -1,12 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ClipboardList, GraduationCap, LogOut, Menu, PlayCircle, Trophy, Search, Users, X } from "lucide-react";
+import {
+  ArrowRight,
+  ClipboardList,
+  Flame,
+  GraduationCap,
+  LogOut,
+  Menu,
+  PlayCircle,
+  Trophy,
+  Search,
+  User,
+  UserRound,
+  Users,
+  X,
+} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
+import { getMyProfile } from "@/lib/profile";
+import type { Gender, Profile } from "@/lib/types";
+import { cn } from "cn";
+
+const AVATAR_ICON: Record<Gender, typeof User> = {
+  male: User,
+  female: UserRound,
+  other: Users,
+};
+
+const AVATAR_STICKER: Record<Gender, string> = {
+  male: "bg-sky-wash",
+  female: "bg-lavender",
+  other: "bg-mint-pop",
+};
 
 const MARKETING_LINKS = [
   { label: "Overview", href: "#overview" },
@@ -49,7 +78,19 @@ export interface LandingNavbarProps {
 export function LandingNavbar({ userEmail }: LandingNavbarProps) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const isSignedIn = Boolean(userEmail);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setProfile(null);
+      return;
+    }
+    getMyProfile()
+      .then(setProfile)
+      .catch(() => setProfile(null));
+  }, [isSignedIn]);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -145,17 +186,55 @@ export function LandingNavbar({ userEmail }: LandingNavbarProps) {
           {/* Desktop Action Buttons: Outlined White + Carbon Filled */}
           <div className="hidden sm:flex items-center gap-3">
             {isSignedIn ? (
-              <motion.button
-                type="button"
-                onClick={handleSignOut}
-                whileHover={{ scale: 1.04, y: -1 }}
-                whileTap={{ scale: 0.96 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-carbon bg-paper-white px-5 py-2.5 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
-              >
-                <LogOut className="size-4" aria-hidden="true" />
-                Sign Out
-              </motion.button>
+              <>
+                {/* Identity pill: streak (left) — avatar (center) — name (right).
+                    Sits left of Sign Out so the two never compete for the
+                    same corner; hidden until the profile actually loads so
+                    it never flashes an empty shell. */}
+                {profile && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center gap-2 rounded-full border border-carbon bg-paper-white py-1.5 pr-4 pl-2.5"
+                  >
+                    {profile.streakDays > 0 && (
+                      <span className="flex items-center gap-1 font-aeonik text-xs font-extrabold tabular-nums text-carbon">
+                        <Flame className="size-4 text-ember" aria-hidden="true" />
+                        {profile.streakDays}
+                      </span>
+                    )}
+                    <span
+                      className={cn(
+                        "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-carbon",
+                        AVATAR_STICKER[profile.gender ?? "other"]
+                      )}
+                    >
+                      {(() => {
+                        const AvatarIcon = AVATAR_ICON[profile.gender ?? "other"];
+                        return <AvatarIcon className="size-4.5 text-carbon" aria-hidden="true" />;
+                      })()}
+                    </span>
+                    {profile.fullName && (
+                      <span className="font-aeonik text-[13px] font-extrabold text-carbon">
+                        {profile.fullName}
+                      </span>
+                    )}
+                  </motion.div>
+                )}
+
+                <motion.button
+                  type="button"
+                  onClick={handleSignOut}
+                  whileHover={{ scale: 1.04, y: -1 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-carbon bg-paper-white px-5 py-2.5 text-[13px] font-bold tracking-[0.032em] text-carbon transition-colors hover:bg-soft-mist"
+                >
+                  <LogOut className="size-4" aria-hidden="true" />
+                  Sign Out
+                </motion.button>
+              </>
             ) : (
               <>
                 <motion.div
@@ -213,6 +292,32 @@ export function LandingNavbar({ userEmail }: LandingNavbarProps) {
               className="border-t border-carbon bg-paper-white p-6 lg:hidden overflow-hidden"
             >
               <nav className="flex flex-col gap-2.5">
+                {isSignedIn && profile && (
+                  <div className="mb-1 flex items-center gap-2 rounded-full border border-carbon bg-soft-mist py-1.5 pr-4 pl-2.5">
+                    {profile.streakDays > 0 && (
+                      <span className="flex items-center gap-1 font-aeonik text-xs font-extrabold tabular-nums text-carbon">
+                        <Flame className="size-4 text-ember" aria-hidden="true" />
+                        {profile.streakDays}
+                      </span>
+                    )}
+                    <span
+                      className={cn(
+                        "flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-carbon",
+                        AVATAR_STICKER[profile.gender ?? "other"]
+                      )}
+                    >
+                      {(() => {
+                        const AvatarIcon = AVATAR_ICON[profile.gender ?? "other"];
+                        return <AvatarIcon className="size-4.5 text-carbon" aria-hidden="true" />;
+                      })()}
+                    </span>
+                    {profile.fullName && (
+                      <span className="font-aeonik text-[13px] font-extrabold text-carbon">
+                        {profile.fullName}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {isSignedIn
                   ? APP_LINKS.map((link) => (
                       <Link

@@ -5,9 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { createProfile } from "@/lib/profile";
 import { safeRedirectPath } from "@/lib/utils";
 import { motion } from "motion/react";
 import { ArrowRight, Loader2, AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
+import { GENDER_OPTIONS, MAX_DISPLAY_NAME_LENGTH } from "@/lib/types";
+import type { Gender } from "@/lib/types";
+import { cn } from "cn";
+
+const GENDER_LABELS: Record<Gender, string> = { female: "Female", male: "Male", other: "Other" };
 
 function RegisterContent() {
   const router = useRouter();
@@ -15,6 +21,8 @@ function RegisterContent() {
   const nextPath = safeRedirectPath(searchParams.get("next"));
 
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [gender, setGender] = useState<Gender | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +34,7 @@ function RegisterContent() {
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!email.trim() || !password) {
+    if (!email.trim() || !password || !fullName.trim() || !gender) {
       setErrorMsg("Please fill in all fields.");
       return;
     }
@@ -62,6 +70,13 @@ function RegisterContent() {
         setErrorMsg(error.message);
         setLoading(false);
         return;
+      }
+
+      if (data.user) {
+        // Best-effort: a failed profile write shouldn't block account
+        // creation — the navbar just falls back to showing nothing until
+        // the user is re-prompted (out of scope here) or a mentor fixes it.
+        await createProfile(data.user.id, fullName, gender).catch(() => {});
       }
 
       // If Supabase has email confirmation disabled, a session is immediately established
@@ -189,6 +204,55 @@ function RegisterContent() {
 
         {/* Registration Form */}
         <form onSubmit={handleRegister} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5 text-left">
+            <div className="flex items-baseline justify-between">
+              <label className="text-xs font-bold tracking-[0.032em] uppercase text-carbon/80">
+                Display Name
+              </label>
+              <span className="font-aeonik text-[11px] font-bold text-carbon/40">
+                {fullName.length}/{MAX_DISPLAY_NAME_LENGTH}
+              </span>
+            </div>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value.slice(0, MAX_DISPLAY_NAME_LENGTH))}
+              placeholder="e.g. Thien"
+              maxLength={MAX_DISPLAY_NAME_LENGTH}
+              required
+              disabled={loading}
+              className="w-full rounded-[16px] border border-carbon bg-paper-white px-4 py-3 text-sm font-medium text-carbon placeholder:text-carbon/35 focus:outline-none focus:ring-2 focus:ring-carbon transition-all"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5 text-left">
+            <label className="text-xs font-bold tracking-[0.032em] uppercase text-carbon/80">
+              Gender
+            </label>
+            <div role="radiogroup" aria-label="Gender" className="grid grid-cols-3 gap-2">
+              {GENDER_OPTIONS.map((option) => {
+                const isSelected = gender === option;
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    disabled={loading}
+                    onClick={() => setGender(option)}
+                    className={cn(
+                      "min-h-11 cursor-pointer rounded-[14px] border border-carbon font-aeonik text-xs font-bold transition-all",
+                      "focus-visible:ring-2 focus-visible:ring-carbon focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+                      isSelected ? "bg-carbon text-paper-white" : "bg-paper-white text-carbon hover:bg-soft-mist"
+                    )}
+                  >
+                    {GENDER_LABELS[option]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="flex flex-col gap-1.5 text-left">
             <label className="text-xs font-bold tracking-[0.032em] uppercase text-carbon/80">
               Email Address
